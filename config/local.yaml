@@ -1,0 +1,12 @@
+env: "local"
+storage_path: "./storage/auth.db"
+grpc:
+  port: 44000
+  timeout: 10h
+clients:
+  auth:
+    address: "localhost:8181"
+    timeout: "4s"
+    retriesCount: 5
+    insecure: true
+app_secret: "yaro-gas"
