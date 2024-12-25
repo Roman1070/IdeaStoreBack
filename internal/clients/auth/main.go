@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	authv1 "idea-store-auth/gen/go/auth"
 	"idea-store-auth/internal/config"
@@ -11,7 +13,9 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 const grpcHost = "localhost"
@@ -74,13 +78,24 @@ func Regsiter(w http.ResponseWriter, r *http.Request) {
 	}
 	registerResponse, err := authClient.api.Register(r.Context(), request)
 	if err != nil {
+		if errors.Is(err, status.Error(codes.AlreadyExists, "User already exists")) {
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(fmt.Sprintf("%s: %v", "User already exists", err.Error())))
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("%s: %v", "Error  during register", err.Error())))
 		return
 	}
 
+	json, err := json.Marshal(registerResponse)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Error marshalling json"))
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(strconv.Itoa(int(registerResponse.UserId))))
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(json)
 }
 
 func grpcAddress(cfg *config.Config) string {
