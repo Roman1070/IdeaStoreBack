@@ -33,9 +33,12 @@ const appID = int32(2)
 const clientAddr = "localhost:8181"
 
 func main() {
+	cfg := config.MustLoad()
+	authClient, _ := New(grpcAddress(cfg), cfg.Clients.Auth.Timeout, cfg.Clients.Auth.RetriesCount)
+
 	router := mux.NewRouter()
-	router.HandleFunc("/register", Regsiter).Methods("POST","OPTIONS")
-	router.HandleFunc("/login", Login).Methods("GET","OPTIONS")
+	router.HandleFunc("/register", authClient.Regsiter).Methods("POST","OPTIONS")
+	router.HandleFunc("/login", authClient.Login).Methods("POST","OPTIONS")
 	fmt.Println("Server is listening...")
 	
 	corsHandler := cors.Default().Handler(router)
@@ -44,26 +47,17 @@ func main() {
 	log.Fatal(http.ListenAndServe(clientAddr, corsHandler))
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-	cfg := config.MustLoad()
-	authClient, err := New(grpcAddress(cfg), cfg.Clients.Auth.Timeout, cfg.Clients.Auth.RetriesCount)
+func (c *Client) Login(w http.ResponseWriter, r *http.Request) {
+	var req registerRequest
 
-	if err != nil {
-		err := ErrorWrapper{Err: err.Error()}
-		w.WriteHeader(http.StatusOK)		
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		json,_:=json.Marshal(err)
-		w.Write(json)
-		return
-	}
+	json.NewDecoder(r.Body).Decode(&req)
 	request := &authv1.LoginRequest{
-		Email:    email,
-		Password: password,
+		Email:    req.Email,
+		Password: req.Password,
 		AppId:    appID,
 	}
-	loginResponse, err := (*authClient).api.Login(context.Background(), request)
+
+	loginResponse, err := c.api.Login(context.Background(), request)
 	if err != nil {
 		if(errors.Is(err, status.Error(codes.InvalidArgument,"Invalid credentials"))){
 			err := ErrorWrapper{Err: "Invalid credentials"}
@@ -71,13 +65,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 			json,_:=json.Marshal(err)
 			w.Write(json)
+
 			return
 		}
+
 		errWrapper := ErrorWrapper{Err: err.Error()}
 		w.WriteHeader(http.StatusOK)		
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		json,_:=json.Marshal(errWrapper)
 		w.Write(json)
+
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -86,26 +83,22 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Write(responseJson)
 }
 
-func Regsiter(w http.ResponseWriter, r *http.Request) {
-	email := r.URL.Query().Get("email")
-	password := r.URL.Query().Get("password")
-	cfg := config.MustLoad()
+type registerRequest struct {
+	Email string `json:"email"`
+	Password string `json:"password"`
+}
 
-	authClient, err := New(grpcAddress(cfg), cfg.Clients.Auth.Timeout, cfg.Clients.Auth.RetriesCount)
 
-	if err != nil {
-		err := ErrorWrapper{Err: err.Error()}
-		w.WriteHeader(http.StatusOK)		
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		json,_:=json.Marshal(err)
-		w.Write(json)
-		return
-	}
+func(c *Client)  Regsiter(w http.ResponseWriter, r *http.Request) {
+	var req registerRequest
+
+	json.NewDecoder(r.Body).Decode(&req)
 	request := &authv1.RegisterRequest{
-		Email:    email,
-		Password: password,
+		Email:    req.Email,
+		Password: req.Password,
 	}
-	registerResponse, err := authClient.api.Register(r.Context(), request)
+
+	registerResponse, err := c.api.Register(r.Context(), request)
 	if err != nil {
 		if errors.Is(err, status.Error(codes.AlreadyExists, "User already exists")) {
 			err := ErrorWrapper{Err: "User already exists"}
