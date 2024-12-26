@@ -7,11 +7,14 @@ import (
 	"fmt"
 	authv1 "idea-store-auth/gen/go/auth"
 	"idea-store-auth/internal/config"
+	"log"
 	"net"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -23,15 +26,22 @@ const grpcHost = "localhost"
 type Client struct {
 	api authv1.AuthClient
 }
-
+type ErrorWrapper struct{
+	Err string `json:"err"`
+}
 const appID = int32(2)
 const clientAddr = "localhost:8181"
 
 func main() {
-	http.HandleFunc("/register", Regsiter)
-	http.HandleFunc("/login", Login)
+	router := mux.NewRouter()
+	router.HandleFunc("/register", Regsiter).Methods("POST","OPTIONS")
+	router.HandleFunc("/login", Login).Methods("GET","OPTIONS")
 	fmt.Println("Server is listening...")
-	http.ListenAndServe(clientAddr, nil)
+	
+	corsHandler := cors.Default().Handler(router)
+
+	// Запускаем сервер с обработчиком Cors
+	log.Fatal(http.ListenAndServe(clientAddr, corsHandler))
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -41,8 +51,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	authClient, err := New(grpcAddress(cfg), cfg.Clients.Auth.Timeout, cfg.Clients.Auth.RetriesCount)
 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf("%s: %v", "Error starting client", err.Error())))
+		err := ErrorWrapper{Err: err.Error()}
+		w.WriteHeader(http.StatusOK)		
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		json,_:=json.Marshal(err)
+		w.Write(json)
 		return
 	}
 	request := &authv1.LoginRequest{
@@ -52,12 +65,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	loginResponse, err := (*authClient).api.Login(context.Background(), request)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf("%s: %v", "Error  during login", err.Error())))
+		err := ErrorWrapper{Err: err.Error()}
+		w.WriteHeader(http.StatusOK)		
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		json,_:=json.Marshal(err)
+		w.Write(json)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(loginResponse.GetToken()))
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	responseJson, _ := json.Marshal(loginResponse)
+	w.Write(responseJson)
 }
 
 func Regsiter(w http.ResponseWriter, r *http.Request) {
@@ -68,8 +86,11 @@ func Regsiter(w http.ResponseWriter, r *http.Request) {
 	authClient, err := New(grpcAddress(cfg), cfg.Clients.Auth.Timeout, cfg.Clients.Auth.RetriesCount)
 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf("%s: %v", "Error starting client", err.Error())))
+		err := ErrorWrapper{Err: err.Error()}
+		w.WriteHeader(http.StatusOK)		
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		json,_:=json.Marshal(err)
+		w.Write(json)
 		return
 	}
 	request := &authv1.RegisterRequest{
@@ -79,23 +100,31 @@ func Regsiter(w http.ResponseWriter, r *http.Request) {
 	registerResponse, err := authClient.api.Register(r.Context(), request)
 	if err != nil {
 		if errors.Is(err, status.Error(codes.AlreadyExists, "User already exists")) {
-			w.WriteHeader(http.StatusConflict)
-			w.Write([]byte(fmt.Sprintf("%s: %v", "User already exists", err.Error())))
+			err := ErrorWrapper{Err: "User already exists"}
+			w.WriteHeader(http.StatusOK)		
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			json,_:=json.Marshal(err)
+			w.Write(json)
+			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("%s: %v", "Error  during register", err.Error())))
 		return
 	}
 
-	json, err := json.Marshal(registerResponse)
+	result, err := json.Marshal(registerResponse)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Error marshalling json"))
+		err := ErrorWrapper{Err: "Error marshaling response"}
+		w.WriteHeader(http.StatusOK)		
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		json,_:=json.Marshal(err)
+		w.Write(json)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(json)
+	w.WriteHeader(http.StatusOK) 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	
+	w.Write(result)
 }
 
 func grpcAddress(cfg *config.Config) string {
