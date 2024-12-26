@@ -65,10 +65,18 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	loginResponse, err := (*authClient).api.Login(context.Background(), request)
 	if err != nil {
-		err := ErrorWrapper{Err: err.Error()}
+		if(errors.Is(err, status.Error(codes.InvalidArgument,"Invalid credentials"))){
+			err := ErrorWrapper{Err: "Invalid credentials"}
+			w.WriteHeader(http.StatusOK)		
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			json,_:=json.Marshal(err)
+			w.Write(json)
+			return
+		}
+		errWrapper := ErrorWrapper{Err: err.Error()}
 		w.WriteHeader(http.StatusOK)		
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		json,_:=json.Marshal(err)
+		json,_:=json.Marshal(errWrapper)
 		w.Write(json)
 		return
 	}
