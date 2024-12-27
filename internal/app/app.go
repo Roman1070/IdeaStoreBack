@@ -32,7 +32,7 @@ func New(
 	authService := auth.New(log, authStorage, authStorage, authStorage, tokenTTL)
 	ideasService := ideas.New(log,ideasStorage)
 
-	grpcApp := grpcApp.New(log, authService, ideasService.Api, grpcPort)
+	grpcApp := grpcApp.New(log, authService, ideasService, grpcPort)
 
 	return &App{
 		GRPCServer: grpcApp,

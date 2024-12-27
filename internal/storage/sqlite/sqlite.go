@@ -29,7 +29,7 @@ func New(storagePath string) (*Storage, error) {
 
 	return &Storage{db: db}, nil
 }
-func (s *Storage) Create(ctx context.Context, idea models.Idea) (int64, error){
+func (s *Storage) CreateIdea(ctx context.Context, idea models.Idea) (int64, error){
 	const op = "storage.sqlite.SaveIdea"
 	
 	stmt, err := s.db.Prepare("INSERT INTO ideas(image,name,description,link,tags) VALUES(?,?,?,?,?)")
@@ -48,7 +48,7 @@ func (s *Storage) Create(ctx context.Context, idea models.Idea) (int64, error){
 	}
 	return id, nil
 }
-func (s *Storage) Get(ctx context.Context, id int64) (models.Idea, error){
+func (s *Storage) GetIdea(ctx context.Context, id int64) (models.Idea, error){
 	const op = "storage.sqlite.GetIdea"
 	
 	stmt, err := s.db.Prepare("SELECT id,image,name,description,link,tags FROM ideas WHERE id = ?")
@@ -66,7 +66,14 @@ func (s *Storage) Get(ctx context.Context, id int64) (models.Idea, error){
 	}
 	return idea, nil
 }
-func (s *Storage) Delete(ctx context.Context, id int64)  (emptypb.Empty, error){
+func (s *Storage) DeleteIdea(ctx context.Context, id int64)  (emptypb.Empty, error){	
+	const op = "storage.sqlite.GetIdea"
+	
+	stmt, err := s.db.Prepare("DELETE FROM ideas WHERE id = ?")
+	stmt.ExecContext(ctx, id)
+	if err != nil {
+		return emptypb.Empty{}, fmt.Errorf("%s: %w", op, err)
+	}
 	return emptypb.Empty{},nil
 }
 func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (int64, error) {
