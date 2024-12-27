@@ -3,7 +3,7 @@ gen:
 start_server:
 	go run cmd/auth/main.go
 start_client:
-	go run internal/clients/auth/main.go
+	go run internal/clients/main.go
 migrate:
 	go build ./cmd/migrator/main.go
 	go run ./cmd/migrator/main.go --storage_path=./storage/ideas.db --migrations_path=./migrations/ideas

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	authv1 "idea-store-auth/gen/go/auth"
+	ideasv1 "idea-store-auth/gen/go/idea"
 	"idea-store-auth/internal/config"
 	"log"
 	"net"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"github.com/rs/cors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -23,8 +25,11 @@ import (
 
 const grpcHost = "localhost"
 
-type Client struct {
-	api authv1.AuthClient
+type AuthClient struct {
+	authAPi authv1.AuthClient
+}
+type IdeasClient struct {
+	api ideasv1.IdeasClient
 }
 type ErrorWrapper struct{
 	Err string `json:"err"`
@@ -34,21 +39,21 @@ const clientAddr = "localhost:8181"
 
 func main() {
 	cfg := config.MustLoad()
-	authClient, _ := New(grpcAddress(cfg), cfg.Clients.Auth.Timeout, cfg.Clients.Auth.RetriesCount)
-
+	authClient, _ := NewAuthClient(grpcAddress(cfg), cfg.Clients.Auth.Timeout, cfg.Clients.Auth.RetriesCount)
+	ideasClient, _ := NewIdeasClient(grpcAddress(cfg), cfg.Clients.Auth.Timeout, cfg.Clients.Auth.RetriesCount)
+	
 	router := mux.NewRouter()
 	router.HandleFunc("/register", authClient.Regsiter).Methods("POST","OPTIONS")
 	router.HandleFunc("/login", authClient.Login).Methods("POST","OPTIONS")
-	router.HandleFunc("/create-pin", authClient.Login).Methods("POST","OPTIONS")
+	router.HandleFunc("/create-pin", ideasClient.Create).Methods("POST","OPTIONS")
 	fmt.Println("Server is listening...")
 	
 	corsHandler := cors.Default().Handler(router)
 
-	// Запускаем сервер с обработчиком Cors
 	log.Fatal(http.ListenAndServe(clientAddr, corsHandler))
 }
 
-func (c *Client) Login(w http.ResponseWriter, r *http.Request) {
+func (c *AuthClient) Login(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 
 	json.NewDecoder(r.Body).Decode(&req)
@@ -58,24 +63,13 @@ func (c *Client) Login(w http.ResponseWriter, r *http.Request) {
 		AppId:    appID,
 	}
 
-	loginResponse, err := c.api.Login(context.Background(), request)
+	loginResponse, err := c.authAPi.Login(context.Background(), request)
 	if err != nil {
 		if(errors.Is(err, status.Error(codes.InvalidArgument,"Invalid credentials"))){
-			err := ErrorWrapper{Err: "Invalid credentials"}
-			w.WriteHeader(http.StatusOK)		
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			json,_:=json.Marshal(err)
-			w.Write(json)
-
-			return
+		writeError(w,"Invalid credentials")
+					return
 		}
-
-		errWrapper := ErrorWrapper{Err: err.Error()}
-		w.WriteHeader(http.StatusOK)		
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		json,_:=json.Marshal(errWrapper)
-		w.Write(json)
-
+		writeError(w,err.Error())
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -90,7 +84,7 @@ type registerRequest struct {
 }
 
 
-func(c *Client)  Regsiter(w http.ResponseWriter, r *http.Request) {
+func(c *AuthClient)  Regsiter(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 
 	json.NewDecoder(r.Body).Decode(&req)
@@ -99,14 +93,10 @@ func(c *Client)  Regsiter(w http.ResponseWriter, r *http.Request) {
 		Password: req.Password,
 	}
 
-	registerResponse, err := c.api.Register(r.Context(), request)
+	registerResponse, err := c.authAPi.Register(r.Context(), request)
 	if err != nil {
 		if errors.Is(err, status.Error(codes.AlreadyExists, "User already exists")) {
-			err := ErrorWrapper{Err: "User already exists"}
-			w.WriteHeader(http.StatusOK)		
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			json,_:=json.Marshal(err)
-			w.Write(json)
+			writeError(w,"User already exists")
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
@@ -116,11 +106,7 @@ func(c *Client)  Regsiter(w http.ResponseWriter, r *http.Request) {
 
 	result, err := json.Marshal(registerResponse)
 	if err != nil {
-		err := ErrorWrapper{Err: "Error marshaling response"}
-		w.WriteHeader(http.StatusOK)		
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		json,_:=json.Marshal(err)
-		w.Write(json)
+		writeError(w,"Error masrhalling response")
 		return
 	}
 	w.WriteHeader(http.StatusOK) 
@@ -128,26 +114,89 @@ func(c *Client)  Regsiter(w http.ResponseWriter, r *http.Request) {
 	
 	w.Write(result)
 }
+type createRequest struct{
+	Image string `json:"image"`
+	Name string `json:"name"`
+	Description string `json:"description"`
+	Link string `json:"link"`
+	Tags string `json:"tags"`
+}
+func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request){
+	var req createRequest
+
+	json.NewDecoder(r.Body).Decode(&req)
+	request := &ideasv1.CreateRequest{
+		Image: req.Image,
+		Name: req.Name,
+		Description: req.Description,
+		Link: req.Link,
+		Tags: req.Tags,
+	}
+	createResponse,err := c.api.Create(r.Context(),request)
+	if err!=nil{
+		writeError(w,err.Error())
+	}
+	
+	result, err := json.Marshal(createResponse)
+	if err!=nil{
+		writeError(w,err.Error())
+	}
+	w.WriteHeader(http.StatusOK) 
+	w.Header().Set("Access-Control-Allow-Origin", "*")	
+	w.Write(result)
+}
 
 func grpcAddress(cfg *config.Config) string {
 	return net.JoinHostPort(grpcHost, strconv.Itoa(cfg.GRPC.Port))
 }
 
-func New(addr string, timeout time.Duration, retriesCount int) (*Client, error) {
+func NewAuthClient(addr string, timeout time.Duration, retriesCount int) (*AuthClient, error) {
 	const op = "client.auth.New"
 
-	/*retryOptions := []grpcretry.CallOption{
+	retryOptions := []grpcretry.CallOption{
 		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),
 		grpcretry.WithMax(uint(retriesCount)),
 		grpcretry.WithPerRetryTimeout(timeout),
-	}*/
+	}
 
-	cc, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	cc, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithChainUnaryInterceptor(
+		grpcretry.UnaryClientInterceptor(retryOptions...),
+	))
 
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	return &Client{
-		api: authv1.NewAuthClient(cc),
+	return &AuthClient{
+		authAPi: authv1.NewAuthClient(cc),
 	}, nil
+}
+
+
+func NewIdeasClient(addr string, timeout time.Duration, retriesCount int) (*IdeasClient, error) {
+	const op = "client.auth.New"
+
+	retryOptions := []grpcretry.CallOption{
+		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),
+		grpcretry.WithMax(uint(retriesCount)),
+		grpcretry.WithPerRetryTimeout(timeout),
+	}
+
+	cc, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithChainUnaryInterceptor(
+		grpcretry.UnaryClientInterceptor(retryOptions...),
+	))
+
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return &IdeasClient{
+		api: ideasv1.NewIdeasClient(cc),
+	}, nil
+}
+
+func writeError(w http.ResponseWriter, err string){
+	errWrapper := ErrorWrapper{Err: err}
+	w.WriteHeader(http.StatusOK)		
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	json,_:=json.Marshal(errWrapper)
+	w.Write(json)
 }
