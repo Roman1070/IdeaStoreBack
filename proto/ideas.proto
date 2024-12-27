@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+package ideas;
+option go_package = "idea-store.ideas.v1;ideasv1";
+
+// Ideas is service for managing ideas.
+service Ideas {
+  // Create new idea
+  rpc Create (CreateRequest) returns (CreateResponse);
+  // Get returns the idea by its id in JSON format.
+  rpc Get (GetRequest) returns (GetResponse);
+  // Delete removes the idea from database by its id
+  rpc Delete (DeleteRequest) returns (google.protobuf.Empty) {}
+}
+
+message CreateRequest {
+  string name = 1;
+  string description = 2;
+  string link = 3;
+  string tags = 4;
+  string image = 5;
+}
+
+message CreateResponse {
+  int64 idea_id = 1; // ID of the created idea.
+}
+
+message GetRequest{
+    int64 idea_id = 1;
+}
+message GetResponse{
+  string name = 1;
+  string description = 2;
+  string link = 3;
+  string tags = 4;
+  string image = 5;
+}
+
+message DeleteRequest{
+    int64 idea_id = 1;
+}

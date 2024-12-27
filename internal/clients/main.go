@@ -39,6 +39,7 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/register", authClient.Regsiter).Methods("POST","OPTIONS")
 	router.HandleFunc("/login", authClient.Login).Methods("POST","OPTIONS")
+	router.HandleFunc("/create-pin", authClient.Login).Methods("POST","OPTIONS")
 	fmt.Println("Server is listening...")
 	
 	corsHandler := cors.Default().Handler(router)

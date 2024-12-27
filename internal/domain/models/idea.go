@@ -1,0 +1,10 @@
+package models
+
+type Idea struct {
+	ID          int64
+	Image       string
+	Name        string
+	Description string
+	Link        string
+	Tags        string
+}

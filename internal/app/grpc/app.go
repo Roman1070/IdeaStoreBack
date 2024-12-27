@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	authgrpc "idea-store-auth/internal/grpc/auth"
+	ideasgrpc "idea-store-auth/internal/grpc/ideas"
 )
 
 type App struct {
@@ -25,6 +26,7 @@ type App struct {
 func New(
 	log *slog.Logger,
 	authService authgrpc.Auth,
+	ideasService ideasgrpc.IdeasAPI,
 	port int,
 ) *App {
 	loggingOpts := []logging.Option{
@@ -49,6 +51,7 @@ func New(
 	))
 
 	authgrpc.Register(gRPCServer, authService)
+	ideasgrpc.Register(gRPCServer,ideasService)
 
 	return &App{
 		log:        log,

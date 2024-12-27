@@ -9,6 +9,7 @@ import (
 	"idea-store-auth/internal/storage"
 
 	"github.com/mattn/go-sqlite3"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Storage struct {
@@ -28,7 +29,46 @@ func New(storagePath string) (*Storage, error) {
 
 	return &Storage{db: db}, nil
 }
-
+func (s *Storage) Create(ctx context.Context, idea models.Idea) (int64, error){
+	const op = "storage.sqlite.SaveIdea"
+	
+	stmt, err := s.db.Prepare("INSERT INTO ideas(image,name,description,link,tags) VALUES(?,?,?,?,?)")
+	if err != nil {
+		return emptyValue, fmt.Errorf("%s: %w", op, err)
+	}
+	
+	res, err := stmt.ExecContext(ctx, idea.Image, idea.Name, idea.Description, idea.Link, idea.Tags)
+	
+	if err != nil {
+		return emptyValue, fmt.Errorf("%s: %w", op, err)
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return emptyValue, fmt.Errorf("%s: %w", op, err)
+	}
+	return id, nil
+}
+func (s *Storage) Get(ctx context.Context, id int64) (models.Idea, error){
+	const op = "storage.sqlite.GetIdea"
+	
+	stmt, err := s.db.Prepare("SELECT id,image,name,description,link,tags FROM ideas WHERE id = ?")
+	if err != nil {
+		return models.Idea{}, fmt.Errorf("%s: %w", op, err)
+	}
+	row := stmt.QueryRowContext(ctx, id)
+	var idea models.Idea
+	err = row.Scan(&idea.ID, &idea.Image, &idea.Name, &idea.Description, &idea.Link,&idea.Tags)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Idea{}, fmt.Errorf("%s: %w", op, storage.ErrAppNotFound)
+		}
+		return models.Idea{}, fmt.Errorf("%s: %w", op, err)
+	}
+	return idea, nil
+}
+func (s *Storage) Delete(ctx context.Context, id int64)  (emptypb.Empty, error){
+	return emptypb.Empty{},nil
+}
 func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (int64, error) {
 	const op = "storage.sqlite.SaveUser"
 	stmt, err := s.db.Prepare("INSERT INTO users(email, pass_hash) VALUES(?,?)")

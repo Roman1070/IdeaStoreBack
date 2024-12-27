@@ -1,5 +1,6 @@
 env: "local"
-storage_path: "./storage/auth.db"
+auth_storage_path: "./storage/auth.db"
+ideas_storage_path: "./storage/ideas.db"
 grpc:
   port: 44000
   timeout: 10h

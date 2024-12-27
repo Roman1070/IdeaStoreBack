@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v5.29.1
-// source: auth/auth.proto
+// source: auth.proto
 
 package authv1
 
@@ -215,5 +215,5 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "auth/auth.proto",
+	Metadata: "auth.proto",
 }
