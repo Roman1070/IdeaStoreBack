@@ -34,7 +34,7 @@ const grpcHost = "localhost"
 
 const clientAddr = "localhost:8182"
 type createRequest struct {
-	Image       string `json:"image"`
+	Image       string
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Link        string `json:"link"`
@@ -57,7 +57,7 @@ func main() {
 }
 
 func GetImages(w http.ResponseWriter, r *http.Request){
-	slog.Info(r.RequestURI)
+	
 	file,err:= os.ReadFile("F:/Roman/WEB/IdeaStoreBack"+r.RequestURI)
 	if err!=nil{
 		slog.Error(err.Error())
@@ -74,11 +74,13 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to create")
 
 	r.ParseMultipartForm(12 << 20)
+	defer r.Body.Close()
 	file, h, err := r.FormFile("image")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	defer file.Close()
 	ext:= filepath.Ext(h.Filename)
 	hash :=md5.Sum([]byte(h.Filename))
 	path:= "./Images/"+hex.EncodeToString(hash[:])+ext
@@ -96,16 +98,14 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	var req createRequest
-	json.NewDecoder(r.Body).Decode(&req)
 	request := &ideasv1.CreateRequest{
 		Image:       hex.EncodeToString(hash[:])+ext,
-		Name:        req.Name,
-		Description: req.Description,
-		Link:        req.Link,
-		Tags:        req.Tags,
+		Name:        r.Form.Get("name"),
+		Description: r.Form.Get("description"),
+		Link:        r.Form.Get("link"),
+		Tags:        r.Form.Get("tags"),
 	}
-	slog.Info(req.Image)
+	
 	createResponse, err := c.api.CreateIdea(r.Context(), request)
 	if err != nil {
 		slog.Error(err.Error())
