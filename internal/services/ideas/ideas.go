@@ -3,9 +3,11 @@ package ideas
 import (
 	"context"
 	"fmt"
+	ideasv1 "idea-store-auth/gen/go/idea"
 	"idea-store-auth/internal/domain/models"
 	"idea-store-auth/internal/grpc/ideas"
 	"log/slog"
+	"strconv"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -23,7 +25,7 @@ func New(log *slog.Logger, ideasApi ideas.Ideas) *Ideas {
 		Api:ideasApi,
 	}
 }
-func (i *Ideas) Create(ctx context.Context, idea models.Idea) (int64, error){
+func (i *Ideas) CreateIdea(ctx context.Context, idea models.Idea) (int64, error){
 	const op = "service.ideas.Create"
 
 	log := i.log.With(
@@ -32,13 +34,13 @@ func (i *Ideas) Create(ctx context.Context, idea models.Idea) (int64, error){
 	)
 	log.Info("Creating an idea...")
 	
-	id, err := i.Api.Create(ctx, idea)
+	id, err := i.Api.CreateIdea(ctx, idea)
 	if err!=nil{
 		return -1, fmt.Errorf("%s: %v", op, "Internal error")
 	}
 	return id, nil
 }
-func (i *Ideas) Get(ctx context.Context, id int64) (models.Idea, error){
+func (i *Ideas) GetIdea(ctx context.Context, id int64) (models.Idea, error){
 	const op = "service.ideas.Create"
 
 	log := i.log.With(
@@ -47,7 +49,7 @@ func (i *Ideas) Get(ctx context.Context, id int64) (models.Idea, error){
 	)
 	log.Info("Getting an idea...")
 
-	idea, err := i.Api.Get(ctx,id)
+	idea, err := i.Api.GetIdea(ctx,id)
 	
 	if err!=nil{
 		return models.Idea{}, fmt.Errorf("%s: %v", op, "Internal error")
@@ -55,7 +57,7 @@ func (i *Ideas) Get(ctx context.Context, id int64) (models.Idea, error){
 	return idea, nil
 }
 
-func (i *Ideas) Delete(ctx context.Context, id int64) (emptypb.Empty, error){
+func (i *Ideas) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error){
 	const op = "service.ideas.Delete"
 
 	log := i.log.With(
@@ -64,9 +66,28 @@ func (i *Ideas) Delete(ctx context.Context, id int64) (emptypb.Empty, error){
 	)
 	log.Info("Deleting an idea...")
 
-	_,err:= i.Api.Delete(ctx,id)
+	_,err:= i.Api.DeleteIdea(ctx,id)
 	if err!=nil{
 		return emptypb.Empty{}, fmt.Errorf("%s: %v", op, "Internal error")
 	}
 	return emptypb.Empty{}, nil
+}
+
+func (i *Ideas) GetAllIdeas(ctx context.Context, e *emptypb.Empty) ([]*ideasv1.IdeaData, error){
+	
+	const op = "service.ideas.GetAllIdeas"
+
+	log := i.log.With(
+		slog.String("op", op),
+	)
+	log.Info("Getting all ideas...")
+
+	ideas, err := i.Api.GetAllIdeas(ctx,e )
+	
+	if err!=nil{
+		log.Error(err.Error())
+		return nil, fmt.Errorf("%s: %v", op, "Internal error")
+	}
+	log.Info(strconv.Itoa(len(ideas)))
+	return ideas, nil
 }

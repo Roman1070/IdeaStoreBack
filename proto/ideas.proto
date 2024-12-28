@@ -7,11 +7,13 @@ option go_package = "idea-store.ideas.v1;ideasv1";
 // Ideas is service for managing ideas.
 service Ideas {
   // Create new idea
-  rpc Create (CreateRequest) returns (CreateResponse);
+  rpc CreateIdea (CreateRequest) returns (CreateResponse);
   // Get returns the idea by its id in JSON format.
-  rpc Get (GetRequest) returns (GetResponse);
+  rpc GetIdea (GetRequest) returns (GetResponse);
   // Delete removes the idea from database by its id
-  rpc Delete (DeleteRequest) returns (google.protobuf.Empty) {}
+  rpc DeleteIdea (DeleteRequest) returns (google.protobuf.Empty) {}
+  //GetAllIdeas retrurs all ideas deom database
+  rpc GetAllIdeas(google.protobuf.Empty) returns (GetAllResponse);
 }
 
 message CreateRequest {
@@ -40,3 +42,16 @@ message GetResponse{
 message DeleteRequest{
     int64 idea_id = 1;
 }
+
+message IdeaData {
+  int64 idea_id = 1;
+  string name = 2;
+  string description = 3;
+  string link = 4;
+  string tags = 5;
+  string image = 6;
+}
+
+message GetAllResponse{
+  repeated IdeaData ideas =1;
+} 

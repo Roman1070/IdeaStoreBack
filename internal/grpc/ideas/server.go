@@ -13,15 +13,16 @@ import (
 )
 
 type Ideas interface {
-	Create(
+	CreateIdea(
 		ctx context.Context,
 		idea models.Idea) (id int64, err error)
 
-	Get(
+	GetIdea(
 		ctx context.Context,
 		id int64,
 	) (idea models.Idea, err error)
-	Delete(ctx context.Context, id int64) (emptypb.Empty, error)
+	DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error)
+	GetAllIdeas(ctx context.Context, _ *emptypb.Empty) ([]*ideasv1.IdeaData, error)
 }
 type serverAPI struct {
 	ideasv1.UnimplementedIdeasServer
@@ -30,10 +31,10 @@ type serverAPI struct {
 func Register(gRPC *grpc.Server, ideas Ideas) {
 	ideasv1.RegisterIdeasServer(gRPC, &serverAPI{ideas: ideas})
 }
-func (s *serverAPI) Create(ctx context.Context,req *ideasv1.CreateRequest) (*ideasv1.CreateResponse, error){
+func (s *serverAPI) CreateIdea(ctx context.Context,req *ideasv1.CreateRequest) (*ideasv1.CreateResponse, error){
 	slog.Info("started to save an idea...")
 
-	id,err:=s.ideas.Create(ctx,models.Idea{Image: req.Image, Name: req.Name,Description: req.Description, Link: req.Link, Tags: req.Tags})
+	id,err:=s.ideas.CreateIdea(ctx,models.Idea{Image: req.Image, Name: req.Name,Description: req.Description, Link: req.Link, Tags: req.Tags})
 	if err!=nil{
 		slog.Error(err.Error())
 		return nil, status.Error(codes.Internal, "Internal error")
@@ -41,22 +42,32 @@ func (s *serverAPI) Create(ctx context.Context,req *ideasv1.CreateRequest) (*ide
 	resp := &ideasv1.CreateResponse{IdeaId: id}
 	return resp,nil
 }
-func (s *serverAPI) Get(ctx context.Context,req *ideasv1.GetRequest) ( *ideasv1.GetResponse, error){
+func (s *serverAPI) GetIdea(ctx context.Context,req *ideasv1.GetRequest) ( *ideasv1.GetResponse, error){
 	slog.Info("started to get idea")
 	
-	idea, err := s.ideas.Get(ctx, req.IdeaId)
+	idea, err := s.ideas.GetIdea(ctx, req.IdeaId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 	resp := &ideasv1.GetResponse{Name: idea.Name, Image: idea.Image, Description: idea.Description, Link: idea.Link, Tags: idea.Tags}
 	return resp, nil
 }
-func (s *serverAPI) Delete(ctx context.Context,req *ideasv1.DeleteRequest) (*emptypb.Empty, error){
+func (s *serverAPI) DeleteIdea(ctx context.Context,req *ideasv1.DeleteRequest) (*emptypb.Empty, error){
 	slog.Info("started to delete an idea")
-	_, err := s.ideas.Delete(ctx,req.IdeaId)
+	_, err := s.ideas.DeleteIdea(ctx,req.IdeaId)
 	
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 	return nil,nil
+}
+func (s *serverAPI) GetAllIdeas(ctx context.Context, e *emptypb.Empty) (*ideasv1.GetAllResponse, error){
+	
+	slog.Info("started to get all ideas")
+	ideas, err := s.ideas.GetAllIdeas(ctx,e)
+	
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error getting all ideas")
+	}
+	return &ideasv1.GetAllResponse{Ideas:ideas},nil
 }

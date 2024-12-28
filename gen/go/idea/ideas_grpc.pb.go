@@ -24,11 +24,13 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IdeasClient interface {
 	// Create new idea
-	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
+	CreateIdea(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
 	// Get returns the idea by its id in JSON format.
-	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
+	GetIdea(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	// Delete removes the idea from database by its id
-	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	DeleteIdea(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// GetAllIdeas retrurs all ideas deom database
+	GetAllIdeas(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllResponse, error)
 }
 
 type ideasClient struct {
@@ -39,27 +41,36 @@ func NewIdeasClient(cc grpc.ClientConnInterface) IdeasClient {
 	return &ideasClient{cc}
 }
 
-func (c *ideasClient) Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
+func (c *ideasClient) CreateIdea(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
 	out := new(CreateResponse)
-	err := c.cc.Invoke(ctx, "/ideas.Ideas/Create", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ideas.Ideas/CreateIdea", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *ideasClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+func (c *ideasClient) GetIdea(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
 	out := new(GetResponse)
-	err := c.cc.Invoke(ctx, "/ideas.Ideas/Get", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ideas.Ideas/GetIdea", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *ideasClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *ideasClient) DeleteIdea(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/ideas.Ideas/Delete", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ideas.Ideas/DeleteIdea", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ideasClient) GetAllIdeas(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllResponse, error) {
+	out := new(GetAllResponse)
+	err := c.cc.Invoke(ctx, "/ideas.Ideas/GetAllIdeas", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,11 +82,13 @@ func (c *ideasClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grp
 // for forward compatibility
 type IdeasServer interface {
 	// Create new idea
-	Create(context.Context, *CreateRequest) (*CreateResponse, error)
+	CreateIdea(context.Context, *CreateRequest) (*CreateResponse, error)
 	// Get returns the idea by its id in JSON format.
-	Get(context.Context, *GetRequest) (*GetResponse, error)
+	GetIdea(context.Context, *GetRequest) (*GetResponse, error)
 	// Delete removes the idea from database by its id
-	Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error)
+	DeleteIdea(context.Context, *DeleteRequest) (*emptypb.Empty, error)
+	// GetAllIdeas retrurs all ideas deom database
+	GetAllIdeas(context.Context, *emptypb.Empty) (*GetAllResponse, error)
 	mustEmbedUnimplementedIdeasServer()
 }
 
@@ -83,14 +96,17 @@ type IdeasServer interface {
 type UnimplementedIdeasServer struct {
 }
 
-func (UnimplementedIdeasServer) Create(context.Context, *CreateRequest) (*CreateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+func (UnimplementedIdeasServer) CreateIdea(context.Context, *CreateRequest) (*CreateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateIdea not implemented")
 }
-func (UnimplementedIdeasServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+func (UnimplementedIdeasServer) GetIdea(context.Context, *GetRequest) (*GetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetIdea not implemented")
 }
-func (UnimplementedIdeasServer) Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+func (UnimplementedIdeasServer) DeleteIdea(context.Context, *DeleteRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteIdea not implemented")
+}
+func (UnimplementedIdeasServer) GetAllIdeas(context.Context, *emptypb.Empty) (*GetAllResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllIdeas not implemented")
 }
 func (UnimplementedIdeasServer) mustEmbedUnimplementedIdeasServer() {}
 
@@ -105,56 +121,74 @@ func RegisterIdeasServer(s grpc.ServiceRegistrar, srv IdeasServer) {
 	s.RegisterService(&Ideas_ServiceDesc, srv)
 }
 
-func _Ideas_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Ideas_CreateIdea_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IdeasServer).Create(ctx, in)
+		return srv.(IdeasServer).CreateIdea(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ideas.Ideas/Create",
+		FullMethod: "/ideas.Ideas/CreateIdea",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IdeasServer).Create(ctx, req.(*CreateRequest))
+		return srv.(IdeasServer).CreateIdea(ctx, req.(*CreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Ideas_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Ideas_GetIdea_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IdeasServer).Get(ctx, in)
+		return srv.(IdeasServer).GetIdea(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ideas.Ideas/Get",
+		FullMethod: "/ideas.Ideas/GetIdea",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IdeasServer).Get(ctx, req.(*GetRequest))
+		return srv.(IdeasServer).GetIdea(ctx, req.(*GetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Ideas_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Ideas_DeleteIdea_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IdeasServer).Delete(ctx, in)
+		return srv.(IdeasServer).DeleteIdea(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ideas.Ideas/Delete",
+		FullMethod: "/ideas.Ideas/DeleteIdea",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IdeasServer).Delete(ctx, req.(*DeleteRequest))
+		return srv.(IdeasServer).DeleteIdea(ctx, req.(*DeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ideas_GetAllIdeas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdeasServer).GetAllIdeas(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ideas.Ideas/GetAllIdeas",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdeasServer).GetAllIdeas(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -167,16 +201,20 @@ var Ideas_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*IdeasServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Create",
-			Handler:    _Ideas_Create_Handler,
+			MethodName: "CreateIdea",
+			Handler:    _Ideas_CreateIdea_Handler,
 		},
 		{
-			MethodName: "Get",
-			Handler:    _Ideas_Get_Handler,
+			MethodName: "GetIdea",
+			Handler:    _Ideas_GetIdea_Handler,
 		},
 		{
-			MethodName: "Delete",
-			Handler:    _Ideas_Delete_Handler,
+			MethodName: "DeleteIdea",
+			Handler:    _Ideas_DeleteIdea_Handler,
+		},
+		{
+			MethodName: "GetAllIdeas",
+			Handler:    _Ideas_GetAllIdeas_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
