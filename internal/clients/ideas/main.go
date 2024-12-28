@@ -84,7 +84,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	var req createRequest
 	json.NewDecoder(r.Body).Decode(&req)
 	request := &ideasv1.CreateRequest{
-		Image:       path,
+		Image:       hex.EncodeToString(hash[:])+ext,
 		Name:        req.Name,
 		Description: req.Description,
 		Link:        req.Link,
