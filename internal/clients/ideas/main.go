@@ -66,7 +66,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	ext:= filepath.Ext(h.Filename)
 	hash :=md5.Sum([]byte(h.Filename))
-	path:= "./Images/"+hex.EncodeToString(hash[:])+ext
+	path:= "F:/Roman/WEB/IdeaStoreFront/Images/"+hex.EncodeToString(hash[:])+ext
 	tmpfile, err := os.Create(path)
 	
 	if err != nil {
