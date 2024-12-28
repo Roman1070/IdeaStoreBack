@@ -2,7 +2,7 @@ package tests
 
 import (
 	authv1 "idea-store-auth/gen/go/auth"
-	"idea-store-auth/tests/suite"
+	authSuite "idea-store-auth/tests/suite/auth"
 	"testing"
 	"time"
 
@@ -21,7 +21,7 @@ const (
 )
 
 func TestRegister_Login_HappyPath(t *testing.T) {
-	ctx, st := suite.New(t)
+	ctx, st := authSuite.New(t)
 
 	email := gofakeit.Email()
 	pass := randomFakePassword()
@@ -64,7 +64,7 @@ func TestRegister_Login_HappyPath(t *testing.T) {
 }
 
 func TestRegisterLogin_DuplicatedRegistration(t *testing.T) {
-	ctx, st := suite.New(t)
+	ctx, st := authSuite.New(t)
 
 	email := gofakeit.Email()
 	pass := randomFakePassword()

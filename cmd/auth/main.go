@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"idea-store-auth/internal/app"
+	appAuth "idea-store-auth/internal/app/auth"
 	"idea-store-auth/internal/config"
 	"idea-store-auth/internal/lib/logger/handlers/slogpretty"
 )
@@ -22,10 +22,10 @@ func main() {
 
 	log := setupLogger(cfg.Env)
 
-	application := app.New(log, cfg.GRPC.Port, cfg.AuthStoragePath,cfg.IdeasStoragePath, cfg.TokenTTL)
+	authApp := appAuth.New(log, cfg.GRPC.AuthMS.Port, cfg.AuthStoragePath, cfg.TokenTTL)
 
 	go func() {
-		application.GRPCServer.MustRun()
+		authApp.GRPCServer.MustRun()
 	}()
 
 	stop := make(chan os.Signal, 1)
@@ -33,7 +33,7 @@ func main() {
 
 	<-stop
 
-	application.GRPCServer.Stop()
+	authApp.GRPCServer.Stop()
 	log.Info("Gracefully stopped")
 }
 

@@ -27,8 +27,13 @@ type Client struct {
 }
 type ClientsConfig struct {
 	Auth Client `yaml:"auth"`
+	Ideas Client `yaml:"ideas"`
 }
 type GRPCConfig struct {
+	AuthMS MicroserviceGRPCConfig `yaml:"auth"`
+	IdeasMS MicroserviceGRPCConfig `yaml:"ideas"` 
+}
+type MicroserviceGRPCConfig struct{
 	Port    int           `yaml:"port"`
 	Timeout time.Duration `yaml:"timeout"`
 }

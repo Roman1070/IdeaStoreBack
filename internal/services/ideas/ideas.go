@@ -12,18 +12,18 @@ import (
 
 type Ideas struct {
 	log *slog.Logger
-	Api ideas.IdeasAPI
+	Api ideas.Ideas
 }
 
 
 // New returns a new instance of the Auth service.
-func New(log *slog.Logger, ideasApi ideas.IdeasAPI) *Ideas {
+func New(log *slog.Logger, ideasApi ideas.Ideas) *Ideas {
 	return &Ideas{
 		log:         log,
 		Api:ideasApi,
 	}
 }
-func (i *Ideas) CreateIdea(ctx context.Context, idea models.Idea) (int64, error){
+func (i *Ideas) Create(ctx context.Context, idea models.Idea) (int64, error){
 	const op = "service.ideas.Create"
 
 	log := i.log.With(
@@ -32,13 +32,13 @@ func (i *Ideas) CreateIdea(ctx context.Context, idea models.Idea) (int64, error)
 	)
 	log.Info("Creating an idea...")
 	
-	id, err := i.Api.CreateIdea(ctx, idea)
+	id, err := i.Api.Create(ctx, idea)
 	if err!=nil{
 		return -1, fmt.Errorf("%s: %v", op, "Internal error")
 	}
 	return id, nil
 }
-func (i *Ideas) GetIdea(ctx context.Context, id int64) (models.Idea, error){
+func (i *Ideas) Get(ctx context.Context, id int64) (models.Idea, error){
 	const op = "service.ideas.Create"
 
 	log := i.log.With(
@@ -47,7 +47,7 @@ func (i *Ideas) GetIdea(ctx context.Context, id int64) (models.Idea, error){
 	)
 	log.Info("Getting an idea...")
 
-	idea, err := i.Api.GetIdea(ctx,id)
+	idea, err := i.Api.Get(ctx,id)
 	
 	if err!=nil{
 		return models.Idea{}, fmt.Errorf("%s: %v", op, "Internal error")
@@ -55,7 +55,7 @@ func (i *Ideas) GetIdea(ctx context.Context, id int64) (models.Idea, error){
 	return idea, nil
 }
 
-func (i *Ideas) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error){
+func (i *Ideas) Delete(ctx context.Context, id int64) (emptypb.Empty, error){
 	const op = "service.ideas.Delete"
 
 	log := i.log.With(
@@ -64,7 +64,7 @@ func (i *Ideas) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error)
 	)
 	log.Info("Deleting an idea...")
 
-	_,err:= i.Api.DeleteIdea(ctx,id)
+	_,err:= i.Api.Delete(ctx,id)
 	if err!=nil{
 		return emptypb.Empty{}, fmt.Errorf("%s: %v", op, "Internal error")
 	}

@@ -2,11 +2,20 @@ env: "local"
 auth_storage_path: "./storage/auth.db"
 ideas_storage_path: "./storage/ideas.db"
 grpc:
-  port: 44000
-  timeout: 10h
+  auth:
+    port: 44000
+    timeout: 10h
+  ideas:
+    port: 44001
+    timeout: 10s
 clients:
   auth:
     address: "localhost:8181"
+    timeout: "4s"
+    retriesCount: 5
+    insecure: true
+  ideas:
+    address: "localhost:8182"
     timeout: "4s"
     retriesCount: 5
     insecure: true
