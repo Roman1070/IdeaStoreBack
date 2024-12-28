@@ -48,11 +48,26 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/create-pin", ideasClient.Create).Methods("POST","OPTIONS")
 	router.HandleFunc("/get-ideas", ideasClient.GetAllIdeas).Methods("GET","OPTIONS")
+	router.HandleFunc("/images/{name}", GetImages).Methods("GET","OPTIONS")
 	fmt.Println("Server is listening...")
 	
-	corsHandler := cors.Default().Handler(router)
+	corsHandler := cors.AllowAll().Handler(router)
 
 	log.Fatal(http.ListenAndServe(clientAddr, corsHandler))
+}
+
+func GetImages(w http.ResponseWriter, r *http.Request){
+	slog.Info(r.RequestURI)
+	file,err:= os.ReadFile("F:/Roman/WEB/IdeaStoreBack"+r.RequestURI)
+	if err!=nil{
+		slog.Error(err.Error())
+		utils.WriteError(w,err.Error())
+	}
+	
+	
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "image/*")
+	w.Write(file)
 }
 
 func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
