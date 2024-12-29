@@ -33,12 +33,12 @@ func New(storagePath string) (*Storage, error) {
 func (s *Storage) CreateIdea(ctx context.Context, idea models.Idea) (int64, error){
 	const op = "storage.sqlite.SaveIdea"
 	
-	stmt, err := s.db.Prepare("INSERT INTO ideas(image,name,description,link,tags) VALUES(?,?,?,?,?)")
+	stmt, err := s.db.Prepare("INSERT INTO ideas(image,name,description,link,tags) VALUES(?,?,?,?,?,?)")
 	if err != nil {
 		return emptyValue, fmt.Errorf("%s: %w", op, err)
 	}
 	
-	res, err := stmt.ExecContext(ctx, idea.Image, idea.Name, idea.Description, idea.Link, idea.Tags)
+	res, err := stmt.ExecContext(ctx, idea.Image, idea.Name, idea.Description, idea.Link, idea.Tags, idea.UserID)
 	
 	if err != nil {
 		return emptyValue, fmt.Errorf("%s: %w", op, err)

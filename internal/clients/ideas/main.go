@@ -7,6 +7,7 @@ import (
 	"fmt"
 	ideasv1 "idea-store-auth/gen/go/idea"
 	"idea-store-auth/internal/config"
+	"idea-store-auth/internal/middlewares"
 	"idea-store-auth/internal/utils"
 	"io"
 	"log"
@@ -18,9 +19,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
-	"github.com/rs/cors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -44,11 +45,10 @@ func main() {
 	router.HandleFunc("/get-ideas", ideasClient.GetAllIdeas).Methods("GET","OPTIONS")
 	router.HandleFunc("/get-idea", ideasClient.GetIdea).Methods("GET","OPTIONS")
 	router.HandleFunc("/images/{name}", GetImages).Methods("GET","OPTIONS")
+	handler:= middlewares.CorsMiddleware(router)
 	fmt.Println("Server is listening...")
-	
-	corsHandler := cors.AllowAll().Handler(router)
 
-	log.Fatal(http.ListenAndServe(clientAddr, corsHandler))
+	log.Fatal(http.ListenAndServe(clientAddr, handler))
 }
 
 func GetImages(w http.ResponseWriter, r *http.Request){
@@ -96,13 +96,37 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request){
 	}
 	
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(result)
 }
 
 func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to create")
-
+	
+	for i := 0; i < len(r.Cookies()); i++ {
+		slog.Info(r.Cookies()[i].String())
+	}
+	tokenCookie,err:= r.Cookie("token")
+	if err!=nil{
+		slog.Error(err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+	
+	claims := jwt.MapClaims{}
+	_, err = jwt.ParseWithClaims(tokenCookie.String(), claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte("<YOUR VERIFICATION KEY>"), nil
+	})
+	if err!=nil{
+		slog.Error(err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+	userId,err:=strconv.ParseInt(claims["uid"].(string),10,64)
+	if err!=nil{
+		slog.Error(err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
 	r.ParseMultipartForm(12 << 20)
 	defer r.Body.Close()
 	file, h, err := r.FormFile("image")
@@ -134,6 +158,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 		Description: r.Form.Get("description"),
 		Link:        r.Form.Get("link"),
 		Tags:        r.Form.Get("tags"),
+		UserId: userId,
 	}
 	
 	createResponse, err := c.api.CreateIdea(r.Context(), request)
@@ -150,7 +175,6 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(result)
 }
 func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request){
@@ -167,7 +191,6 @@ func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request){
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(result)
 }
 func NewIdeasClient(addr string, timeout time.Duration, retriesCount int) (*IdeasClient, error) {

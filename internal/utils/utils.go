@@ -6,7 +6,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 )
+const DefaultSessionLifetime = 10 * time.Hour 
+var DefaultSessionLifetimeString = strconv.Itoa(int(DefaultSessionLifetime.Seconds()))
 
 type ErrorWrapper struct{
 	Err string `json:"err"`

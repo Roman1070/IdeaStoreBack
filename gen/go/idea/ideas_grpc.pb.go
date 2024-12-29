@@ -31,6 +31,8 @@ type IdeasClient interface {
 	DeleteIdea(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetAllIdeas retrurs all ideas deom database
 	GetAllIdeas(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllResponse, error)
+	// ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
+	ToggleSaveIdea(ctx context.Context, in *ToggleSaveRequest, opts ...grpc.CallOption) (*ToggleSaveResponse, error)
 }
 
 type ideasClient struct {
@@ -77,6 +79,15 @@ func (c *ideasClient) GetAllIdeas(ctx context.Context, in *emptypb.Empty, opts .
 	return out, nil
 }
 
+func (c *ideasClient) ToggleSaveIdea(ctx context.Context, in *ToggleSaveRequest, opts ...grpc.CallOption) (*ToggleSaveResponse, error) {
+	out := new(ToggleSaveResponse)
+	err := c.cc.Invoke(ctx, "/ideas.Ideas/ToggleSaveIdea", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IdeasServer is the server API for Ideas service.
 // All implementations must embed UnimplementedIdeasServer
 // for forward compatibility
@@ -89,6 +100,8 @@ type IdeasServer interface {
 	DeleteIdea(context.Context, *DeleteRequest) (*emptypb.Empty, error)
 	// GetAllIdeas retrurs all ideas deom database
 	GetAllIdeas(context.Context, *emptypb.Empty) (*GetAllResponse, error)
+	// ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
+	ToggleSaveIdea(context.Context, *ToggleSaveRequest) (*ToggleSaveResponse, error)
 	mustEmbedUnimplementedIdeasServer()
 }
 
@@ -107,6 +120,9 @@ func (UnimplementedIdeasServer) DeleteIdea(context.Context, *DeleteRequest) (*em
 }
 func (UnimplementedIdeasServer) GetAllIdeas(context.Context, *emptypb.Empty) (*GetAllResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllIdeas not implemented")
+}
+func (UnimplementedIdeasServer) ToggleSaveIdea(context.Context, *ToggleSaveRequest) (*ToggleSaveResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToggleSaveIdea not implemented")
 }
 func (UnimplementedIdeasServer) mustEmbedUnimplementedIdeasServer() {}
 
@@ -193,6 +209,24 @@ func _Ideas_GetAllIdeas_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Ideas_ToggleSaveIdea_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ToggleSaveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdeasServer).ToggleSaveIdea(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ideas.Ideas/ToggleSaveIdea",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdeasServer).ToggleSaveIdea(ctx, req.(*ToggleSaveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Ideas_ServiceDesc is the grpc.ServiceDesc for Ideas service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -215,6 +249,10 @@ var Ideas_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllIdeas",
 			Handler:    _Ideas_GetAllIdeas_Handler,
+		},
+		{
+			MethodName: "ToggleSaveIdea",
+			Handler:    _Ideas_ToggleSaveIdea_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
