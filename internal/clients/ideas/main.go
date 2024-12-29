@@ -25,6 +25,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -87,14 +88,15 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request){
 		utils.WriteError(w,err.Error())
 		return
 	}
-	
-	result, err := json.Marshal(resp)
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
+   
+	result, err :=  m.Marshal(resp)
 	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, err.Error())
 		return
 	}
-	
+	slog.Info(string(result))
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }

@@ -52,13 +52,13 @@ func (s *Storage) CreateIdea(ctx context.Context, idea models.Idea) (int64, erro
 func (s *Storage) GetIdea(ctx context.Context, id int64) (models.Idea, error){
 	const op = "storage.sqlite.GetIdea"
 	
-	stmt, err := s.db.Prepare("SELECT id,image,name,description,link,tags FROM ideas WHERE id = ?")
+	stmt, err := s.db.Prepare("SELECT id,image,name,description,link,tags,user_id,likes_count FROM ideas WHERE id = ?")
 	if err != nil {
 		return models.Idea{}, fmt.Errorf("%s: %w", op, err)
 	}
 	row := stmt.QueryRowContext(ctx, id)
 	var idea models.Idea
-	err = row.Scan(&idea.ID, &idea.Image, &idea.Name, &idea.Description, &idea.Link,&idea.Tags)
+	err = row.Scan(&idea.ID, &idea.Image, &idea.Name, &idea.Description, &idea.Link,&idea.Tags, &idea.UserID, &idea.Likes)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Idea{}, fmt.Errorf("%s: %w", op, storage.ErrAppNotFound)

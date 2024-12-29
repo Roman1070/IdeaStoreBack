@@ -8,4 +8,5 @@ type Idea struct {
 	Link        string `json:"link"`
 	Tags        string `json:"tags"`
 	UserID      int64  `json:"user_id"`
+	Likes       int    `json:"likes"`
 }

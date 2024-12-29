@@ -1,6 +1,7 @@
 env: "local"
 auth_storage_path: "./storage/auth.db"
 ideas_storage_path: "./storage/ideas.db"
+token_ttl: 24h
 grpc:
   auth:
     port: 44000

@@ -37,7 +37,7 @@ func (s *serverAPI) CreateIdea(ctx context.Context,req *ideasv1.CreateRequest) (
 	id,err:=s.ideas.CreateIdea(ctx,models.Idea{Image: req.Image, Name: req.Name,Description: req.Description, Link: req.Link, Tags: req.Tags, UserID: req.UserId})
 	if err!=nil{
 		slog.Error(err.Error())
-		return nil, status.Error(codes.Internal, "Internal error")
+		return nil, status.Error(codes.Internal, "Internal error creating idea")
 	}
 	resp := &ideasv1.CreateResponse{IdeaId: id}
 	return resp,nil
@@ -47,9 +47,9 @@ func (s *serverAPI) GetIdea(ctx context.Context,req *ideasv1.GetRequest) ( *idea
 	
 	idea, err := s.ideas.GetIdea(ctx, req.IdeaId)
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error")
+		return nil, status.Error(codes.Internal, "Internal error getting idea")
 	}
-	resp := &ideasv1.GetResponse{Name: idea.Name, Image: idea.Image, Description: idea.Description, Link: idea.Link, Tags: idea.Tags}
+	resp := &ideasv1.GetResponse{Name: idea.Name, Image: idea.Image, Description: idea.Description, Link: idea.Link, Tags: idea.Tags, Likes: int32(idea.Likes)}
 	return resp, nil
 }
 func (s *serverAPI) DeleteIdea(ctx context.Context,req *ideasv1.DeleteRequest) (*emptypb.Empty, error){
@@ -57,7 +57,7 @@ func (s *serverAPI) DeleteIdea(ctx context.Context,req *ideasv1.DeleteRequest) (
 	_, err := s.ideas.DeleteIdea(ctx,req.IdeaId)
 	
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error")
+		return nil, status.Error(codes.Internal, "Internal error deleting idea")
 	}
 	return nil,nil
 }

@@ -41,6 +41,8 @@ message GetResponse{
   string link = 3;
   string tags = 4;
   string image = 5;
+  int64 user_id = 6;
+  int32 likes=7;
 }
 
 message DeleteRequest{
