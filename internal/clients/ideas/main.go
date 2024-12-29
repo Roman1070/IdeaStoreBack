@@ -101,10 +101,6 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request){
 
 func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to create")
-	
-	for i := 0; i < len(r.Cookies()); i++ {
-		slog.Info(r.Cookies()[i].String())
-	}
 	tokenCookie,err:= r.Cookie("token")
 	if err!=nil{
 		slog.Error(err.Error())
@@ -113,20 +109,19 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	claims := jwt.MapClaims{}
-	_, err = jwt.ParseWithClaims(tokenCookie.String(), claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("<YOUR VERIFICATION KEY>"), nil
+	tokenStr :=tokenCookie.String()[6:]
+	_, err = jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte("yaro-gas"), nil
 	})
 	if err!=nil{
 		slog.Error(err.Error())
 		utils.WriteError(w, err.Error())
 		return
 	}
-	userId,err:=strconv.ParseInt(claims["uid"].(string),10,64)
-	if err!=nil{
-		slog.Error(err.Error())
-		utils.WriteError(w, err.Error())
-		return
-	}
+	userId :=claims["uid"].(float64)
+	userIdStr :=fmt.Sprint(userId)
+	userIdInt, _ := strconv.ParseInt(userIdStr,10,64)
+	
 	r.ParseMultipartForm(12 << 20)
 	defer r.Body.Close()
 	file, h, err := r.FormFile("image")
@@ -158,7 +153,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 		Description: r.Form.Get("description"),
 		Link:        r.Form.Get("link"),
 		Tags:        r.Form.Get("tags"),
-		UserId: userId,
+		UserId: userIdInt,
 	}
 	
 	createResponse, err := c.api.CreateIdea(r.Context(), request)
