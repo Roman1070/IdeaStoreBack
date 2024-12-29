@@ -1,12 +1,12 @@
 gen:
 	protoc -I proto proto/*.proto --go_out=./gen/go/ --go_opt=paths=source_relative --go-grpc_out=./gen/go/ --go-grpc_opt=paths=source_relative
-start_auth_server:
+auth_server:
 	go run cmd/auth/main.go
-start_ideas_server:
+ideas_server:
 	go run cmd/ideas/main.go
-start_auth_client:
+auth_client:
 	go run internal/clients/auth/main.go
-start_ideas_client:
+ideas_client:
 	go run internal/clients/ideas/main.go
 migrate:
 	go build ./cmd/migrator/main.go

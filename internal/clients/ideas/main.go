@@ -33,13 +33,7 @@ type IdeasClient struct {
 const grpcHost = "localhost"
 
 const clientAddr = "localhost:8182"
-type createRequest struct {
-	Image       string
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Link        string `json:"link"`
-	Tags        string `json:"tags"`
-}
+
 
 func main() {
 	cfg := config.MustLoad()
@@ -48,6 +42,7 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/create-pin", ideasClient.Create).Methods("POST","OPTIONS")
 	router.HandleFunc("/get-ideas", ideasClient.GetAllIdeas).Methods("GET","OPTIONS")
+	router.HandleFunc("/get-idea", ideasClient.GetIdea).Methods("GET","OPTIONS")
 	router.HandleFunc("/images/{name}", GetImages).Methods("GET","OPTIONS")
 	fmt.Println("Server is listening...")
 	
@@ -68,6 +63,40 @@ func GetImages(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "image/*")
 	w.Write(file)
+}
+
+type getIdeaRequest struct{
+	Id int64 `json:"id"`
+}
+func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request){
+	slog.Info("Client started to get idea")
+
+	var req getIdeaRequest
+	var err error
+	req.Id, err = strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w,err.Error())
+		return
+	}
+
+	resp,err := c.api.GetIdea(r.Context(),&ideasv1.GetRequest{IdeaId: req.Id})
+	if err!=nil{
+		slog.Error(err.Error())
+		utils.WriteError(w,err.Error())
+		return
+	}
+	
+	result, err := json.Marshal(resp)
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+	
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write(result)
 }
 
 func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
