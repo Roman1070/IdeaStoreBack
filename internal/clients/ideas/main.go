@@ -57,6 +57,7 @@ func GetImages(w http.ResponseWriter, r *http.Request){
 	if err!=nil{
 		slog.Error(err.Error())
 		utils.WriteError(w,err.Error())
+		return
 	}
 	
 	
