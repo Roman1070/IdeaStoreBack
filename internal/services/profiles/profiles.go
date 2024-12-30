@@ -65,3 +65,15 @@ func (p *Profiles) ToggleSaveIdea(ctx context.Context, userId,ideaId,boardId int
 	}
 	return resp,nil
 }
+
+func(p *Profiles) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool,error){
+	slog.Info("service start IsIdeaSaved")
+
+	resp, err:= p.Api.IsIdeaSaved(ctx,userId,ideaId)
+
+	if err!=nil{
+		slog.Error("service IsIdeaSaved error: "+err.Error())
+		return false,err
+	}
+	return resp,nil
+}

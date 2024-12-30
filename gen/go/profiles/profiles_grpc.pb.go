@@ -27,6 +27,7 @@ type ProfilesClient interface {
 	GetProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileResponse, error)
 	// ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
 	ToggleSaveIdea(ctx context.Context, in *ToggleSaveRequest, opts ...grpc.CallOption) (*ToggleSaveResponse, error)
+	IsIdeaSaved(ctx context.Context, in *IsIdeaSavedRequest, opts ...grpc.CallOption) (*IsIdeaSavedResponse, error)
 }
 
 type profilesClient struct {
@@ -64,6 +65,15 @@ func (c *profilesClient) ToggleSaveIdea(ctx context.Context, in *ToggleSaveReque
 	return out, nil
 }
 
+func (c *profilesClient) IsIdeaSaved(ctx context.Context, in *IsIdeaSavedRequest, opts ...grpc.CallOption) (*IsIdeaSavedResponse, error) {
+	out := new(IsIdeaSavedResponse)
+	err := c.cc.Invoke(ctx, "/profiles.Profiles/IsIdeaSaved", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProfilesServer is the server API for Profiles service.
 // All implementations must embed UnimplementedProfilesServer
 // for forward compatibility
@@ -72,6 +82,7 @@ type ProfilesServer interface {
 	GetProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
 	// ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
 	ToggleSaveIdea(context.Context, *ToggleSaveRequest) (*ToggleSaveResponse, error)
+	IsIdeaSaved(context.Context, *IsIdeaSavedRequest) (*IsIdeaSavedResponse, error)
 	mustEmbedUnimplementedProfilesServer()
 }
 
@@ -87,6 +98,9 @@ func (UnimplementedProfilesServer) GetProfile(context.Context, *GetProfileReques
 }
 func (UnimplementedProfilesServer) ToggleSaveIdea(context.Context, *ToggleSaveRequest) (*ToggleSaveResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToggleSaveIdea not implemented")
+}
+func (UnimplementedProfilesServer) IsIdeaSaved(context.Context, *IsIdeaSavedRequest) (*IsIdeaSavedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsIdeaSaved not implemented")
 }
 func (UnimplementedProfilesServer) mustEmbedUnimplementedProfilesServer() {}
 
@@ -155,6 +169,24 @@ func _Profiles_ToggleSaveIdea_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Profiles_IsIdeaSaved_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsIdeaSavedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfilesServer).IsIdeaSaved(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/profiles.Profiles/IsIdeaSaved",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfilesServer).IsIdeaSaved(ctx, req.(*IsIdeaSavedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Profiles_ServiceDesc is the grpc.ServiceDesc for Profiles service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -173,6 +205,10 @@ var Profiles_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ToggleSaveIdea",
 			Handler:    _Profiles_ToggleSaveIdea_Handler,
+		},
+		{
+			MethodName: "IsIdeaSaved",
+			Handler:    _Profiles_IsIdeaSaved_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

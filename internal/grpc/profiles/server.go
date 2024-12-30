@@ -15,6 +15,7 @@ type Profiles interface {
 	CreateProfile(ctx context.Context, id int64, name,email string) (*emptypb.Empty,error)
 	GetProfile(ctx context.Context, id int64) (models.Profile, error)
 	ToggleSaveIdea(ctx context.Context, userId,ideaId,boardId int64) (bool,error)
+	IsIdeaSaved(ctx context.Context, userId,ideaId int64) (bool,error)
 }
 
 type serverAPI struct{
@@ -68,5 +69,18 @@ func(s *serverAPI) ToggleSaveIdea(ctx context.Context, req *profilesv1.ToggleSav
 	}
 	return &profilesv1.ToggleSaveResponse{
 		NowSaved: resp,
+	},nil
+}
+
+func(s *serverAPI) IsIdeaSaved(ctx context.Context, req *profilesv1.IsIdeaSavedRequest) (*profilesv1.IsIdeaSavedResponse, error){
+	slog.Info("grpc start IsIdeaSaved")
+
+	resp, err:= s.profiles.IsIdeaSaved(ctx,req.UserId,req.IdeaId)
+	if err!=nil{
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("grpc error IsIdeaSaved: "+err.Error())
+	}
+	return &profilesv1.IsIdeaSavedResponse{
+		Saved: resp,
 	},nil
 }

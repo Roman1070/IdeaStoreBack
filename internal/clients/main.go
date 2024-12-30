@@ -42,6 +42,7 @@ func main() {
 	router.HandleFunc("/profile", profilesClient.CreateProfile).Methods("POST","OPTIONS")
 	router.HandleFunc("/profile", profilesClient.GetProfile).Methods("GET","OPTIONS")
 	router.HandleFunc("/toggle-save-idea", profilesClient.ToggleSaveIdea).Methods("GET","OPTIONS")
+	router.HandleFunc("/is-idea-saved", profilesClient.IsIdeaSaved).Methods("GET","OPTIONS")
 	
 	handler := middlewares.CorsMiddleware(router)
 	fmt.Println("Server is listening...")
@@ -62,6 +63,9 @@ func grpcProfilesAddress(cfg *config.Config) string {
 	return net.JoinHostPort(grpcHost, strconv.Itoa(cfg.GRPC.ProfilesMS.Port))
 }
 func GetUserIdByRequestWithCookie(r *http.Request) (int64,error){	
+	for _,cookie := range r.Cookies(){
+		fmt.Println(cookie.String())
+	}
 	tokenCookie,err:= r.Cookie("token")
 	if err!=nil{
 		slog.Error(err.Error())

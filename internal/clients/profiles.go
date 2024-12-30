@@ -122,7 +122,40 @@ func (c *ProfilesClient) ToggleSaveIdea(w http.ResponseWriter, r *http.Request){
 		utils.WriteError(w,err.Error())
 		return
 	}
-	result, err := json.Marshal(resp)
+	m:= protojson.MarshalOptions{EmitDefaultValues: true}
+	result, err := m.Marshal(resp)
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+
+func (c *ProfilesClient) IsIdeaSaved(w http.ResponseWriter, r *http.Request){
+	
+	userId, err:= GetUserIdByRequestWithCookie(r)
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
+	
+	ideaId, err := strconv.ParseInt(r.URL.Query().Get("id"),10,64)
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
+	resp, err:= c.api.IsIdeaSaved(r.Context(),&profilesv1.IsIdeaSavedRequest{
+		UserId: userId,
+		IdeaId: ideaId,
+	})
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
+	m:= protojson.MarshalOptions{EmitDefaultValues: true}
+	result, err := m.Marshal(resp)
 	if err!=nil{
 		utils.WriteError(w,err.Error())
 		return

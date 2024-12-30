@@ -95,9 +95,13 @@ func (s* Storage) ToggleSaveIdea(ctx context.Context, userId,ideaId, boardId int
 	if slices.Contains(ideasIds,ideaId){
 		var newIdeasStr string
 		if(string(ideasIdsStr[0])==fmt.Sprint(ideaId)){
-			newIdeasStr = strings.Replace(ideasIdsStr,fmt.Sprint(ideaId),"",1)
+			if(len(ideasIdsStr)==1) {
+				newIdeasStr =""
+			}else{
+				newIdeasStr =strings.Trim(strings.Replace(ideasIdsStr,fmt.Sprint(ideaId)+" ","",1)," ")
+			}
 		}else{
-			newIdeasStr = strings.Replace(ideasIdsStr," "+fmt.Sprint(ideaId),"",1)
+			newIdeasStr = strings.Trim(strings.Replace(ideasIdsStr," "+fmt.Sprint(ideaId),"",1)," ")
 		}
 		stmt,err = tx.Prepare("UPDATE profiles SET savedIdeas = ? WHERE id=?")
 		if err!=nil{
@@ -106,7 +110,7 @@ func (s* Storage) ToggleSaveIdea(ctx context.Context, userId,ideaId, boardId int
 		}
 		stmt.ExecContext(ctx,newIdeasStr,userId)
 		tx.Commit()
-		//TODO: убрать идею с доски
+		//TODO: убрать идею с доски gRPC
 		return false,nil
 	}else{
 		var newIdeasStr string
@@ -123,7 +127,30 @@ func (s* Storage) ToggleSaveIdea(ctx context.Context, userId,ideaId, boardId int
 		}
 		stmt.ExecContext(ctx,newIdeasStr,userId)
 		tx.Commit()
-		//TODO: Добавить идею на доску
+		//TODO: Добавить идею на доску gRPC
 		return true,nil
 	}
+}
+
+func (s *Storage) IsIdeaSaved(ctx context.Context, userId, ideaId int64)(bool,error){
+	slog.Info("storage start IsIdeaSaved")
+
+	stmt,err:= s.db.Prepare("SELECT savedIdeas FROM profiles WHERE id = ?")
+	if err!=nil{
+		slog.Error("storage IsIdeaSaved Prepare error: "+err.Error())
+		return false, err
+	}
+	row:= stmt.QueryRowContext(ctx,userId)
+	var ideasStr string
+	err = row.Scan(&ideasStr)
+	if err!=nil{
+		slog.Error("storage IsIdeaSaved error: "+err.Error())
+		return false, err
+	}
+	idsSlice,err := ParseIdsSqlite(ideasStr)
+	if err!=nil{
+		slog.Error("storage IsIdeaSaved error: "+err.Error())
+		return false, err
+	}
+	return slices.Contains(idsSlice,ideaId), nil
 }
