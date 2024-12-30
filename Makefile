@@ -13,7 +13,7 @@ boards_server:
 profiles_server:
 	go run cmd/profiles/main.go
 client:
-	go run internal/clients/main.go internal/clients/auth.go internal/clients/ideas.go internal/clients/boards.go
+	go run internal/clients/main.go internal/clients/auth.go internal/clients/ideas.go internal/clients/boards.go internal/clients/profiles.go
 migrate_ideas:
 	go build ./cmd/migrator/main.go
 	go run ./cmd/migrator/main.go --storage_path=./storage/ideas.db --migrations_path=./migrations/ideas

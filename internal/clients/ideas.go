@@ -15,7 +15,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -77,26 +76,12 @@ func GetImages(w http.ResponseWriter, r *http.Request){
 
 func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to create")
-	tokenCookie,err:= r.Cookie("token")
-	if err!=nil{
-		slog.Error(err.Error())
-		utils.WriteError(w, err.Error())
-		return
-	}
 	
-	claims := jwt.MapClaims{}
-	tokenStr :=tokenCookie.String()[6:]
-	_, err = jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("yaro-gas"), nil
-	})
+	userId,err := GetUserIdByRequestWithCookie(r)
 	if err!=nil{
-		slog.Error(err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Error parsing JWT: "+err.Error())
 		return
 	}
-	userId :=claims["uid"].(float64)
-	userIdStr :=fmt.Sprint(userId)
-	userIdInt, _ := strconv.ParseInt(userIdStr,10,64)
 	
 	r.ParseMultipartForm(12 << 20)
 	defer r.Body.Close()
@@ -129,7 +114,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 		Description: r.Form.Get("description"),
 		Link:        r.Form.Get("link"),
 		Tags:        r.Form.Get("tags"),
-		UserId: userIdInt,
+		UserId: userId,
 	}
 	
 	createResponse, err := c.api.CreateIdea(r.Context(), request)
