@@ -1,7 +1,9 @@
 env: "local"
 auth_storage_path: "./storage/auth.db"
 ideas_storage_path: "./storage/ideas.db"
-token_ttl: 24h
+boards_storage_path: "./storage/boards.db"
+profiles_storage_path: "./storage/profiles.db"
+token_ttl: 72h
 grpc:
   auth:
     port: 44000
@@ -9,14 +11,26 @@ grpc:
   ideas:
     port: 44001
     timeout: 10s
+  boards:
+    port: 44002
+    timeout: 10s
+  profiles:
+    port: 44003
+    timeout: 10s
 clients:
   auth:
-    address: "localhost:8181"
     timeout: "4s"
     retriesCount: 5
     insecure: true
   ideas:
-    address: "localhost:8182"
+    timeout: "4s"
+    retriesCount: 5
+    insecure: true
+  boards:
+    timeout: "4s"
+    retriesCount: 5
+    insecure: true
+  profiles:
     timeout: "4s"
     retriesCount: 5
     insecure: true

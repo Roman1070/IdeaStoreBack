@@ -28,10 +28,14 @@ type Client struct {
 type ClientsConfig struct {
 	Auth Client `yaml:"auth"`
 	Ideas Client `yaml:"ideas"`
+	Boards Client `yaml:"boards"`
+	Profiles Client `yaml:"profiles"`
 }
 type GRPCConfig struct {
 	AuthMS MicroserviceGRPCConfig `yaml:"auth"`
 	IdeasMS MicroserviceGRPCConfig `yaml:"ideas"` 
+	BoardsMS MicroserviceGRPCConfig `yaml:"boards"`
+	ProfilesMS MicroserviceGRPCConfig `yaml:"profiles"` 
 }
 type MicroserviceGRPCConfig struct{
 	Port    int           `yaml:"port"`

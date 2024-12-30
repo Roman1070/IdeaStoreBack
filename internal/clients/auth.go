@@ -6,44 +6,20 @@ import (
 	"errors"
 	"fmt"
 	authv1 "idea-store-auth/gen/go/auth"
-	"idea-store-auth/internal/config"
 	"idea-store-auth/internal/utils"
-	"log"
-	"net"
 	"net/http"
-	"strconv"
 	"time"
 
-	"github.com/gorilla/mux"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
-	"github.com/rs/cors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
-const grpcHost = "localhost"
 type AuthClient struct {
 	authAPi authv1.AuthClient
 }
 const appID = 2
-const clientAddr = "localhost:8181"
-
-
-func main(){
-	
-	cfg := config.MustLoad()
-	authClient, _ := NewAuthClient(grpcAddress(cfg), cfg.Clients.Auth.Timeout, cfg.Clients.Auth.RetriesCount)
-	
-	router := mux.NewRouter()
-	router.HandleFunc("/register", authClient.Regsiter).Methods("POST","OPTIONS")
-	router.HandleFunc("/login", authClient.Login).Methods("POST","OPTIONS")
-	fmt.Println("Server is listening...")
-	
-	corsHandler := cors.Default().Handler(router)
-
-	log.Fatal(http.ListenAndServe(clientAddr, corsHandler))
-}
 
 func (c *AuthClient) Login(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
@@ -125,8 +101,4 @@ func NewAuthClient(addr string, timeout time.Duration, retriesCount int) (*AuthC
 	return &AuthClient{
 		authAPi: authv1.NewAuthClient(cc),
 	}, nil
-}
-
-func grpcAddress(cfg *config.Config) string {
-	return net.JoinHostPort(grpcHost, strconv.Itoa(cfg.GRPC.AuthMS.Port))
 }

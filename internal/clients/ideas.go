@@ -6,13 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	ideasv1 "idea-store-auth/gen/go/idea"
-	"idea-store-auth/internal/config"
-	"idea-store-auth/internal/middlewares"
 	"idea-store-auth/internal/utils"
 	"io"
-	"log"
 	"log/slog"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,7 +16,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/gorilla/mux"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -32,41 +27,6 @@ import (
 type IdeasClient struct {
 	api ideasv1.IdeasClient
 }
-const grpcHost = "localhost"
-
-const clientAddr = "localhost:8182"
-
-
-func main() {
-	cfg := config.MustLoad()
-	ideasClient, _ := NewIdeasClient(grpcAddress(cfg), cfg.Clients.Ideas.Timeout, cfg.Clients.Ideas.RetriesCount)
-	
-	router := mux.NewRouter()
-	router.HandleFunc("/create-pin", ideasClient.Create).Methods("POST","OPTIONS")
-	router.HandleFunc("/get-ideas", ideasClient.GetAllIdeas).Methods("GET","OPTIONS")
-	router.HandleFunc("/get-idea", ideasClient.GetIdea).Methods("GET","OPTIONS")
-	router.HandleFunc("/images/{name}", GetImages).Methods("GET","OPTIONS")
-	handler:= middlewares.CorsMiddleware(router)
-	fmt.Println("Server is listening...")
-
-	log.Fatal(http.ListenAndServe(clientAddr, handler))
-}
-
-func GetImages(w http.ResponseWriter, r *http.Request){
-	
-	file,err:= os.ReadFile("F:/Roman/WEB/IdeaStoreBack"+r.RequestURI)
-	if err!=nil{
-		slog.Error(err.Error())
-		utils.WriteError(w,err.Error())
-		return
-	}
-	
-	
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "image/*")
-	w.Write(file)
-}
-
 type getIdeaRequest struct{
 	Id int64 `json:"id"`
 }
@@ -99,6 +59,20 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request){
 	slog.Info(string(result))
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
+}
+func GetImages(w http.ResponseWriter, r *http.Request){
+	
+	file,err:= os.ReadFile("F:/Roman/WEB/IdeaStoreBack"+r.RequestURI)
+	if err!=nil{
+		slog.Error(err.Error())
+		utils.WriteError(w,err.Error())
+		return
+	}
+	
+	
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "image/*")
+	w.Write(file)
 }
 
 func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
@@ -209,7 +183,4 @@ func NewIdeasClient(addr string, timeout time.Duration, retriesCount int) (*Idea
 	return &IdeasClient{
 		api: ideasv1.NewIdeasClient(cc),
 	}, nil
-}
-func grpcAddress(cfg *config.Config) string {
-	return net.JoinHostPort(grpcHost, strconv.Itoa(cfg.GRPC.IdeasMS.Port))
 }

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+package boards;
+option go_package = "idea-store.boards.v1;boardsv1";
+
+service Boards{
+    rpc CreateBoard(CreateBoardRequest) returns (CreateBoardResponse);
+    rpc GetBoard(GetBoardRequest) returns (GetBoardResponse);
+    rpc GetAllBoards(google.protobuf.Empty) returns (GetAllBoardsResponse);
+}
+
+message CreateBoardRequest{
+    string name = 1;
+}
+message CreateBoardResponse{
+    int64 id = 1;
+}
+message GetBoardRequest{
+    int64 id = 1;
+}
+message GetBoardResponse{
+    string name = 1;
+    repeated int64 ideas_ids = 2;
+}
+message BoardData{
+    int64 id = 1;
+    string name = 2;
+    repeated int64 ideas_ids=3;
+}
+message GetAllBoardsResponse{
+    repeated BoardData boards = 1;
+}

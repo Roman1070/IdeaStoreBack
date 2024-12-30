@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+package profiles;
+option go_package = "idea-store.profiles.v1;profilesv1";
+
+service Profiles{
+    rpc CreateProfile(CreateProfileRequest) returns (google.protobuf.Empty) {}
+    rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+    //ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
+    rpc ToggleSaveIdea(ToggleSaveRequest) returns (ToggleSaveResponse);
+}
+
+message ToggleSaveRequest{
+  int64 idea_id = 1;
+  int64 board_id = 2;
+}
+message ToggleSaveResponse{
+  bool now_saved = 1;
+}
+message CreateProfileRequest{
+    string email = 1;
+    string avatarImage = 2;
+    string name = 3;
+}
+message ProfileData{
+    int64 id = 1;
+    string email = 2;
+    string avatarImage = 3;
+    string name = 4;
+    string description = 5;
+    string link = 6;
+    repeated int64 boards = 7;
+    repeated int64 saved_ideas = 8;
+}
+message GetProfileRequest{
+    int64 id = 1;
+}
+message GetProfileResponse{
+    ProfileData data = 1;
+}

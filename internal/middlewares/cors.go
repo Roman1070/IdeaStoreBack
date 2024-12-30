@@ -8,11 +8,9 @@ import (
 func setupCORS(w http.ResponseWriter, req *http.Request, sessionLifetime string) {
 	allowedOrigins := map[string]struct{}{
 		"http://localhost:3000":      {},
-		"http://localhost:8181":      {},
-		"http://localhost:8182":      {},
+		"http://localhost:8000":      {},
 		"http://127.0.0.1:3000":      {},
-		"http://127.0.0.1:8181":      {},
-		"http://127.0.0.1:8182":      {},
+		"http://127.0.0.1:8000":      {},
 	}
 	origin := req.Header.Get("Origin")
 	if _, ok := allowedOrigins[origin]; ok {

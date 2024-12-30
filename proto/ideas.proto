@@ -14,8 +14,6 @@ service Ideas {
   rpc DeleteIdea (DeleteRequest) returns (google.protobuf.Empty) {}
   //GetAllIdeas retrurs all ideas deom database
   rpc GetAllIdeas(google.protobuf.Empty) returns (GetAllResponse);
-  //ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
-  rpc ToggleSaveIdea(ToggleSaveRequest) returns (ToggleSaveResponse);
 
 }
 
@@ -61,11 +59,3 @@ message IdeaData {
 message GetAllResponse{
   repeated IdeaData ideas =1;
 } 
-
-message ToggleSaveRequest{
-  int64 idea_id = 1;
-  int64 board_id = 2;
-}
-message ToggleSaveResponse{
-  bool now_saved = 1;
-}
