@@ -1,13 +1,12 @@
 package main
 
 import (
+	common "idea-store-auth/cmd"
+	appProfiles "idea-store-auth/internal/app/profiles"
+	"idea-store-auth/internal/config"
 	"os"
 	"os/signal"
 	"syscall"
-
-	common "idea-store-auth/cmd"
-	appIdeas "idea-store-auth/internal/app/ideas"
-	"idea-store-auth/internal/config"
 )
 
 func main() {
@@ -15,10 +14,10 @@ func main() {
 
 	log := common.SetupLogger(cfg.Env)
 
-	ideasApp := appIdeas.New(log, cfg.GRPC.IdeasMS.Port, cfg.IdeasStoragePath)
+	profilesApp := appProfiles.New(log, cfg.GRPC.ProfilesMS.Port, cfg.ProfilesStoragePath)
 
 	go func() {
-		ideasApp.GRPCServer.MustRun()
+		profilesApp.GRPCServer.MustRun()
 	}()
 
 	stop := make(chan os.Signal, 1)
@@ -26,6 +25,6 @@ func main() {
 
 	<-stop
 
-	ideasApp.GRPCServer.Stop()
+	profilesApp.GRPCServer.Stop()
 	log.Info("Gracefully stopped")
 }

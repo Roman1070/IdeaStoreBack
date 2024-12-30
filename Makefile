@@ -10,11 +10,16 @@ ideas_server:
 	go run cmd/ideas/main.go
 boards_server:
 	go run cmd/boards/main.go
+profiles_server:
+	go run cmd/profiles/main.go
 client:
 	go run internal/clients/main.go internal/clients/auth.go internal/clients/ideas.go internal/clients/boards.go
 migrate_ideas:
 	go build ./cmd/migrator/main.go
 	go run ./cmd/migrator/main.go --storage_path=./storage/ideas.db --migrations_path=./migrations/ideas
+migrate_profiles:
+	go build ./cmd/migrator/main.go
+	go run ./cmd/migrator/main.go --storage_path=./storage/profiles.db --migrations_path=./migrations/profiles
 	
 migrate_boards:
 	go build ./cmd/migrator/main.go

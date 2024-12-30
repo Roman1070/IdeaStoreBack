@@ -48,3 +48,6 @@ func MoveFile(sourcePath, destPath string) error {
     }
     return nil
 }
+func Remove(slice []int, s int) []int {
+    return append(slice[:s], slice[s+1:]...)
+}

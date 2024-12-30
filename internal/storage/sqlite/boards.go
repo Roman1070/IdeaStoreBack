@@ -54,7 +54,7 @@ func (s *Storage) GetBoard(ctx context.Context, id int64) (models.Board, error){
 	}
 	var ids []int64
 	if len(idsString)>0{
-		ids,err= parseIdeasIds(idsString)
+		ids,err= ParseIdsSqlite(idsString)
 		if err!=nil{
 			slog.Error(err.Error())
 			return models.Board{}, fmt.Errorf("internal error %v", err.Error())
@@ -93,7 +93,7 @@ func (s *Storage) GetAllBoards(ctx context.Context, e *emptypb.Empty) ([]*boards
 		}
 		var ids []int64
 		if len(ideasStr)>0{
-			ids,err= parseIdeasIds(ideasStr)
+			ids,err= ParseIdsSqlite(ideasStr)
 			if err!=nil{
 				slog.Error(err.Error())
 				slog.Error(err.Error())
@@ -106,13 +106,16 @@ func (s *Storage) GetAllBoards(ctx context.Context, e *emptypb.Empty) ([]*boards
 	return boards,nil
 }
 
-func parseIdeasIds(str string) ([]int64, error){
-	idsSlice:= strings.Split(str," ")
+func ParseIdsSqlite(str string) ([]int64, error){
+	if len(str)==0 {
+		return []int64{},nil
+	}
+	slice:= strings.Split(str," ")
 	var ids []int64
-	for _,i:= range idsSlice{
+	for _,i:= range slice{
 		val, err := strconv.ParseInt(i,10,64)
 		if err!=nil{
-			return nil, fmt.Errorf("error parsing idea id %v", i)
+			return nil, fmt.Errorf("error parsing id %v", i)
 		}
 		ids = append(ids, val)
 	}

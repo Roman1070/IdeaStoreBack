@@ -17,7 +17,7 @@ type Ideas struct {
 }
 
 
-// New returns a new instance of the Auth service.
+// New returns a new instance of the Ideas service.
 func New(log *slog.Logger, ideasApi ideas.Ideas) *Ideas {
 	return &Ideas{
 		log:         log,

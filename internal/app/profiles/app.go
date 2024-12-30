@@ -1,9 +1,9 @@
-package app
+package profiles
 
 import (
 	common "idea-store-auth/internal/app"
-	grpcApp "idea-store-auth/internal/app/grpc/ideas"
-	"idea-store-auth/internal/services/ideas"
+	grpcApp "idea-store-auth/internal/app/grpc/profiles"
+	"idea-store-auth/internal/services/profiles"
 	"idea-store-auth/internal/storage/sqlite"
 	"log/slog"
 )
@@ -17,14 +17,14 @@ func New(
 	grpcPort int,
 	storagePath string,
 ) *App {
-	ideasStorage, err := sqlite.New(storagePath)
+	storage, err := sqlite.New(storagePath)
 	if err != nil {
 		panic(err)
 	}
 
-	ideasService := ideas.New(log, ideasStorage)
+	profilesService := profiles.New(log, storage)
 
-	grpcApp := grpcApp.New(log, ideasService, grpcPort)
+	grpcApp := grpcApp.New(log, profilesService, grpcPort)
 
 	return &App{
 		GRPCServer: grpcApp,
