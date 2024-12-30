@@ -2,11 +2,10 @@ package app
 
 import (
 	common "idea-store-auth/internal/app"
-	grpcApp "idea-store-auth/internal/app/grpc/ideas"
-	"idea-store-auth/internal/services/ideas"
+	grpcApp "idea-store-auth/internal/app/grpc/boards"
+	"idea-store-auth/internal/services/boards"
 	"idea-store-auth/internal/storage/sqlite"
 	"log/slog"
-	"time"
 )
 
 type App struct {
@@ -17,16 +16,15 @@ func New(
 	log *slog.Logger,
 	grpcPort int,
 	storagePath string,
-	tokenTTL time.Duration,
 ) *App {
-	ideasStorage, err := sqlite.New(storagePath)
+	boardsStorage, err := sqlite.New(storagePath)
 	if err != nil {
 		panic(err)
 	}
 
-	ideasService := ideas.New(log, ideasStorage)
+	boardsService := boards.New(log, boardsStorage)
 
-	grpcApp := grpcApp.New(log, ideasService, grpcPort)
+	grpcApp := grpcApp.New(log, boardsService, grpcPort)
 
 	return &App{
 		GRPCServer: grpcApp,

@@ -1,6 +1,7 @@
 package app
 
 import (
+	common "idea-store-auth/internal/app"
 	grpcApp "idea-store-auth/internal/app/grpc/auth"
 	"idea-store-auth/internal/services/auth"
 	"idea-store-auth/internal/storage/sqlite"
@@ -9,7 +10,7 @@ import (
 )
 
 type App struct {
-	GRPCServer *grpcApp.App
+	GRPCServer *common.App
 }
 
 func New(

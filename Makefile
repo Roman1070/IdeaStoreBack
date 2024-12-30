@@ -8,11 +8,17 @@ auth_server:
 	go run cmd/auth/main.go
 ideas_server:
 	go run cmd/ideas/main.go
+boards_server:
+	go run cmd/boards/main.go
 client:
-	go run internal/clients/main.go internal/clients/auth.go internal/clients/ideas.go
+	go run internal/clients/main.go internal/clients/auth.go internal/clients/ideas.go internal/clients/boards.go
 migrate_ideas:
 	go build ./cmd/migrator/main.go
 	go run ./cmd/migrator/main.go --storage_path=./storage/ideas.db --migrations_path=./migrations/ideas
+	
+migrate_boards:
+	go build ./cmd/migrator/main.go
+	go run ./cmd/migrator/main.go --storage_path=./storage/boards.db --migrations_path=./migrations/boards
 
 	
 migrate_test:

@@ -165,7 +165,7 @@ func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request){
 	w.Write(result)
 }
 func NewIdeasClient(addr string, timeout time.Duration, retriesCount int) (*IdeasClient, error) {
-	const op = "client.auth.New"
+	const op = "client.ideas.New"
 
 	retryOptions := []grpcretry.CallOption{
 		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),

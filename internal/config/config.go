@@ -13,6 +13,9 @@ type Config struct {
 	Env            string     `yaml:"env" env-default:"local"`
 	AuthStoragePath    string     `yaml:"auth_storage_path" env-required:"true"`
 	IdeasStoragePath    string     `yaml:"ideas_storage_path" env-required:"true"`
+	BoardsStoragePath    string     `yaml:"boards_storage_path" env-required:"true"`
+	ProfilesStoragePath    string     `yaml:"profiles_storage_path" env-required:"true"`
+	
 	GRPC           GRPCConfig `yaml:"grpc"`
 	MigrationsPath string
 	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`

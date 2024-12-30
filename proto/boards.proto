@@ -20,8 +20,9 @@ message GetBoardRequest{
     int64 id = 1;
 }
 message GetBoardResponse{
-    string name = 1;
-    repeated int64 ideas_ids = 2;
+    int64 id = 1;
+    string name = 2;
+    repeated int64 ideas_ids = 3;
 }
 message BoardData{
     int64 id = 1;

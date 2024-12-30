@@ -7,7 +7,6 @@ import (
 	"idea-store-auth/internal/domain/models"
 	"idea-store-auth/internal/grpc/ideas"
 	"log/slog"
-	"strconv"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -88,6 +87,6 @@ func (i *Ideas) GetAllIdeas(ctx context.Context, e *emptypb.Empty) ([]*ideasv1.I
 		log.Error(err.Error())
 		return nil, fmt.Errorf("%s: %v", op, "Internal error")
 	}
-	log.Info(strconv.Itoa(len(ideas)))
+	
 	return ideas, nil
 }

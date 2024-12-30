@@ -10,13 +10,13 @@ import (
 	"google.golang.org/grpc/status"
 
 	common "idea-store-auth/internal/app"
-	ideasgrpc "idea-store-auth/internal/grpc/ideas"
+	boardsgrpc "idea-store-auth/internal/grpc/boards"
 )
 
 // New creates new gRPC server app.
 func New(
 	log *slog.Logger,
-	ideasService ideasgrpc.Ideas,
+	authService boardsgrpc.Boards,
 	port int,
 ) *common.App {
 	loggingOpts := []logging.Option{
@@ -40,7 +40,7 @@ func New(
 		logging.UnaryServerInterceptor(common.InterceptorLogger(log), loggingOpts...),
 	))
 
-	ideasgrpc.Register(gRPCServer, ideasService)
+	boardsgrpc.Register(gRPCServer, authService)
 
 	return &common.App{
 		Log:        log,
