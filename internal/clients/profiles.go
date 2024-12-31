@@ -42,21 +42,21 @@ func NewProfilesClient(addr string, timeout time.Duration, retriesCount int) (*P
 	}, nil
 }
 
-func (c *ProfilesClient) CreateProfile(w http.ResponseWriter, r *http.Request){
-	type request struct{
-		Id int64 `json:"id"`
+func (c *ProfilesClient) CreateProfile(w http.ResponseWriter, r *http.Request) {
+	type request struct {
+		Id    int64  `json:"id"`
 		Email string `json:"email"`
-		Name string `json:"name"`
-	} 
+		Name  string `json:"name"`
+	}
 	var req request
 
 	json.NewDecoder(r.Body).Decode(&req)
-	_,err :=c.api.CreateProfile(r.Context(),&profilesv1.CreateProfileRequest{
-		Id: req.Id,
+	_, err := c.api.CreateProfile(r.Context(), &profilesv1.CreateProfileRequest{
+		Id:    req.Id,
 		Email: req.Email,
-		Name: req.Name,
+		Name:  req.Name,
 	})
-	if err!=nil{
+	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, "Error creatingprofile: "+err.Error())
 		return
@@ -64,68 +64,68 @@ func (c *ProfilesClient) CreateProfile(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(http.StatusOK)
 }
 
-func (c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request){
-	id,err:= strconv.ParseInt(r.URL.Query().Get("id"),10,64)
-	
-	if err!=nil{
+func (c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+
+	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, "Error getting profile: "+err.Error())
 		return
 	}
-	resp, err:= c.api.GetProfile(r.Context(),&profilesv1.GetProfileRequest{
+	resp, err := c.api.GetProfile(r.Context(), &profilesv1.GetProfileRequest{
 		Id: id,
 	})
-	
-	if err!=nil{
+
+	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, "Error getting profile: "+err.Error())
 		return
 	}
-	
+
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
-   
-	result, err :=  m.Marshal(resp)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+
+	result, err := m.Marshal(resp)
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
 
-func (c *ProfilesClient) ToggleSaveIdea(w http.ResponseWriter, r *http.Request){
-	userId, err:= GetUserIdByRequestWithCookie(r)
+func (c *ProfilesClient) ToggleSaveIdea(w http.ResponseWriter, r *http.Request) {
+	userId, err := GetUserIdByRequestWithCookie(r)
 
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 
-	boardId,err:= strconv.ParseInt(r.URL.Query().Get("board_id"),10,64)	
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	boardId, err := strconv.ParseInt(r.URL.Query().Get("board_id"), 10, 64)
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 
-	ideaId,err:= strconv.ParseInt(r.URL.Query().Get("idea_id"),10,64)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	ideaId, err := strconv.ParseInt(r.URL.Query().Get("idea_id"), 10, 64)
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	resp, err:= c.api.ToggleSaveIdea(r.Context(),&profilesv1.ToggleSaveRequest{
-		UserId: userId,
+	resp, err := c.api.ToggleSaveIdea(r.Context(), &profilesv1.ToggleSaveRequest{
+		UserId:  userId,
 		BoardId: boardId,
-		IdeaId: ideaId,
+		IdeaId:  ideaId,
 	})
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	m:= protojson.MarshalOptions{EmitDefaultValues: true}
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
 	result, err := m.Marshal(resp)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 
@@ -133,34 +133,63 @@ func (c *ProfilesClient) ToggleSaveIdea(w http.ResponseWriter, r *http.Request){
 	w.Write(result)
 }
 
-func (c *ProfilesClient) IsIdeaSaved(w http.ResponseWriter, r *http.Request){
-	
-	userId, err:= GetUserIdByRequestWithCookie(r)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
-		return
-	}
-	
-	ideaId, err := strconv.ParseInt(r.URL.Query().Get("id"),10,64)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
-		return
-	}
-	resp, err:= c.api.IsIdeaSaved(r.Context(),&profilesv1.IsIdeaSavedRequest{
-		UserId: userId,
-		IdeaId: ideaId,
-	})
-	if err!=nil{
-		utils.WriteError(w,err.Error())
-		return
-	}
-	m:= protojson.MarshalOptions{EmitDefaultValues: true}
-	result, err := m.Marshal(resp)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+func (c *ProfilesClient) IsIdeaSaved(w http.ResponseWriter, r *http.Request) {
+
+	userId, err := GetUserIdByRequestWithCookie(r)
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 
+	ideaId, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	resp, err := c.api.IsIdeaSaved(r.Context(), &profilesv1.IsIdeaSavedRequest{
+		UserId: userId,
+		IdeaId: ideaId,
+	})
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
+	result, err := m.Marshal(resp)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+
+func (c *ProfilesClient) GetSavedIdeas(w http.ResponseWriter, r *http.Request) {
+
+	userId, err := GetUserIdByRequestWithCookie(r)
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	resp, err := c.api.GetSavedIdeas(r.Context(), &profilesv1.GetSavedIdeasRequest{
+		UserId: userId,
+	})
+	if err != nil {
+		slog.Error("c.api.GetSavedIdeas err: " + err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	result, err := json.Marshal(resp)
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+	slog.Info("saved ideas: " + string(result))
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }

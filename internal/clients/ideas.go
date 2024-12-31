@@ -26,10 +26,11 @@ import (
 type IdeasClient struct {
 	api ideasv1.IdeasClient
 }
-type getIdeaRequest struct{
+type getIdeaRequest struct {
 	Id int64 `json:"id"`
 }
-func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request){
+
+func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to get idea")
 
 	var req getIdeaRequest
@@ -37,19 +38,19 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request){
 	req.Id, err = strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
 	if err != nil {
 		slog.Error(err.Error())
-		utils.WriteError(w,err.Error())
+		utils.WriteError(w, err.Error())
 		return
 	}
 
-	resp,err := c.api.GetIdea(r.Context(),&ideasv1.GetRequest{IdeaId: req.Id})
-	if err!=nil{
+	resp, err := c.api.GetIdea(r.Context(), &ideasv1.GetRequest{IdeaId: req.Id})
+	if err != nil {
 		slog.Error(err.Error())
-		utils.WriteError(w,err.Error())
+		utils.WriteError(w, err.Error())
 		return
 	}
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
-   
-	result, err :=  m.Marshal(resp)
+
+	result, err := m.Marshal(resp)
 	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, err.Error())
@@ -59,16 +60,15 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
-func GetImages(w http.ResponseWriter, r *http.Request){
-	
-	file,err:= os.ReadFile("F:/Roman/WEB/IdeaStoreBack"+r.RequestURI)
-	if err!=nil{
+func GetImages(w http.ResponseWriter, r *http.Request) {
+
+	file, err := os.ReadFile("E:/web/IdeaStoreBack" + r.RequestURI)
+	if err != nil {
 		slog.Error(err.Error())
-		utils.WriteError(w,err.Error())
+		utils.WriteError(w, err.Error())
 		return
 	}
-	
-	
+
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "image/*")
 	w.Write(file)
@@ -76,47 +76,51 @@ func GetImages(w http.ResponseWriter, r *http.Request){
 
 func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to create")
-	
-	userId,err := GetUserIdByRequestWithCookie(r)
-	if err!=nil{
+
+	userId, err := GetUserIdByRequestWithCookie(r)
+	if err != nil {
+		slog.Error(err.Error())
 		utils.WriteError(w, "Error parsing JWT: "+err.Error())
 		return
 	}
-	
+
 	r.ParseMultipartForm(12 << 20)
 	defer r.Body.Close()
 	file, h, err := r.FormFile("image")
 	if err != nil {
+		slog.Error(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
-	ext:= filepath.Ext(h.Filename)
-	hash :=md5.Sum([]byte(h.Filename))
-	path:= "./Images/"+hex.EncodeToString(hash[:])+ext
+	ext := filepath.Ext(h.Filename)
+	hash := md5.Sum([]byte(h.Filename))
+	path := "./images/" + hex.EncodeToString(hash[:]) + ext
 	tmpfile, err := os.Create(path)
-	
+
 	if err != nil {
+		slog.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer tmpfile.Close()
-	
+
 	_, err = io.Copy(tmpfile, file)
 	if err != nil {
+		slog.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	
+
 	request := &ideasv1.CreateRequest{
-		Image:       hex.EncodeToString(hash[:])+ext,
+		Image:       hex.EncodeToString(hash[:]) + ext,
 		Name:        r.Form.Get("name"),
 		Description: r.Form.Get("description"),
 		Link:        r.Form.Get("link"),
 		Tags:        r.Form.Get("tags"),
-		UserId: userId,
+		UserId:      userId,
 	}
-	
+
 	createResponse, err := c.api.CreateIdea(r.Context(), request)
 	if err != nil {
 		slog.Error(err.Error())
@@ -129,20 +133,20 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, err.Error())
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
-func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request){
+func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to get ideas")
-	resp,err:= c.api.GetAllIdeas(r.Context(),&emptypb.Empty{})
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	resp, err := c.api.GetAllIdeas(r.Context(), &emptypb.Empty{})
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 	result, err := json.Marshal(resp.Ideas)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 

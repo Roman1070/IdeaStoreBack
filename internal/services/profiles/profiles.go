@@ -2,6 +2,7 @@ package profiles
 
 import (
 	"context"
+	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
 	"idea-store-auth/internal/grpc/profiles"
 	"log/slog"
@@ -14,66 +15,78 @@ type Profiles struct {
 	Api profiles.Profiles
 }
 
-func New(log *slog.Logger, api profiles.Profiles) *Profiles{
+func New(log *slog.Logger, api profiles.Profiles) *Profiles {
 	return &Profiles{
-		Log:log,
-		Api:api,
+		Log: log,
+		Api: api,
 	}
 }
 
-func (p *Profiles) CreateProfile(ctx context.Context, id int64, name,email string) (*emptypb.Empty,error){
+func (p *Profiles) CreateProfile(ctx context.Context, id int64, name, email string) (*emptypb.Empty, error) {
 	slog.Info("service start CreateProfile")
 
-	_,err:= p.Api.CreateProfile(ctx,id,name,email)
+	_, err := p.Api.CreateProfile(ctx, id, name, email)
 
-	if err!=nil{
-		slog.Error("service CreateProfile error: "+err.Error())
-		return nil,err
+	if err != nil {
+		slog.Error("service CreateProfile error: " + err.Error())
+		return nil, err
 	}
-	return &emptypb.Empty{},nil
+	return &emptypb.Empty{}, nil
 }
-func(p *Profiles) GetProfile(ctx context.Context, id int64) (models.Profile, error){
+func (p *Profiles) GetProfile(ctx context.Context, id int64) (models.Profile, error) {
 	slog.Info("service start GetProfile")
 
-	resp, err:= p.Api.GetProfile(ctx,id)
+	resp, err := p.Api.GetProfile(ctx, id)
 
-	if err!=nil{
-		slog.Error("service GetProfile error: "+err.Error())
-		return models.Profile{},err
+	if err != nil {
+		slog.Error("service GetProfile error: " + err.Error())
+		return models.Profile{}, err
 	}
 
 	return models.Profile{
-		ID: resp.ID,
-		Name: resp.Name,
+		ID:          resp.ID,
+		Name:        resp.Name,
 		AvatarImage: resp.AvatarImage,
 		Description: resp.Description,
-		Link: resp.Link,
-		Email: resp.Email,
-		Boards: resp.Boards,
-		SavedIdeas: resp.SavedIdeas,
-	},nil
+		Link:        resp.Link,
+		Email:       resp.Email,
+		Boards:      resp.Boards,
+		SavedIdeas:  resp.SavedIdeas,
+	}, nil
 }
 
-func (p *Profiles) ToggleSaveIdea(ctx context.Context, userId,ideaId,boardId int64) (bool, error){
+func (p *Profiles) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error) {
 	slog.Info("service start ToggleSaveIdea")
 
-	resp, err:= p.Api.ToggleSaveIdea(ctx,userId,ideaId,boardId)
+	resp, err := p.Api.ToggleSaveIdea(ctx, userId, ideaId, boardId)
 
-	if err!=nil{
-		slog.Error("service ToggleSaveIdea error: "+err.Error())
-		return false,err
+	if err != nil {
+		slog.Error("service ToggleSaveIdea error: " + err.Error())
+		return false, err
 	}
-	return resp,nil
+	return resp, nil
 }
 
-func(p *Profiles) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool,error){
+func (p *Profiles) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, error) {
 	slog.Info("service start IsIdeaSaved")
 
-	resp, err:= p.Api.IsIdeaSaved(ctx,userId,ideaId)
+	resp, err := p.Api.IsIdeaSaved(ctx, userId, ideaId)
 
-	if err!=nil{
-		slog.Error("service IsIdeaSaved error: "+err.Error())
-		return false,err
+	if err != nil {
+		slog.Error("service IsIdeaSaved error: " + err.Error())
+		return false, err
 	}
-	return resp,nil
+	return resp, nil
+}
+
+func (p *Profiles) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error) {
+	slog.Info("service start GetSavedIdeas")
+
+	resp, err := p.Api.GetSavedIdeas(ctx, userId)
+
+	if err != nil {
+		slog.Error("service GetSavedIdeas error: " + err.Error())
+		return nil, err
+	}
+	return resp, nil
 }

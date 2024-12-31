@@ -8,6 +8,7 @@ import (
 	ideasv1 "idea-store-auth/gen/go/idea"
 	"idea-store-auth/internal/domain/models"
 	"idea-store-auth/internal/storage"
+	"log/slog"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -17,16 +18,19 @@ func (s *Storage) CreateIdea(ctx context.Context, idea models.Idea) (int64, erro
 
 	stmt, err := s.db.Prepare("INSERT INTO ideas(image,name,description,link,tags,user_id) VALUES(?,?,?,?,?,?)")
 	if err != nil {
+		slog.Error("CreateIdea storage Prepare error: " + err.Error())
 		return emptyValue, fmt.Errorf("%s: %w", op, err)
 	}
 
 	res, err := stmt.ExecContext(ctx, idea.Image, idea.Name, idea.Description, idea.Link, idea.Tags, idea.UserID)
 
 	if err != nil {
+		slog.Error("CreateIdea storage ExecContext error: " + err.Error())
 		return emptyValue, fmt.Errorf("%s: %w", op, err)
 	}
 	id, err := res.LastInsertId()
 	if err != nil {
+		slog.Error("CreateIdea storage LastInsertId error: " + err.Error())
 		return emptyValue, fmt.Errorf("%s: %w", op, err)
 	}
 	return id, nil
