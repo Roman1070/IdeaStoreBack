@@ -103,15 +103,15 @@ func (s *Storage) SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved
 	tx.Commit()
 	return &emptypb.Empty{}, nil
 }
-func (s *Storage) GetAllBoards(ctx context.Context, e *emptypb.Empty) ([]*boardsv1.BoardData, error) {
+func (s *Storage) GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.BoardData, error) {
 	const op = "storage.sqlite.GetAllBoards"
 
-	stmt, err := s.db.Prepare("SELECT id,name,ideas_ids FROM boards")
+	stmt, err := s.db.Prepare("SELECT id,name,ideas_ids FROM boards WHERE user_id = ?")
 	if err != nil {
 		slog.Error(err.Error())
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	rows, err := stmt.QueryContext(ctx)
+	rows, err := stmt.QueryContext(ctx,userId)
 	if err != nil {
 		slog.Error(err.Error())
 		return nil, err

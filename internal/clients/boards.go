@@ -15,7 +15,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type BoardsClient struct {
@@ -103,12 +102,18 @@ func (c *BoardsClient) GetBoard(w http.ResponseWriter, r *http.Request){
 }
 func (c *BoardsClient) GetAllBoards(w http.ResponseWriter, r *http.Request){
 	const op = "client.boards.GetAll"
-
+	userId, err := GetUserIdByRequestWithCookie(r)
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
 	log :=slog.With(slog.String("op",op))
 
 	log.Info("started to get aall boards")
 
-	resp, err:= c.api.GetAllBoards(r.Context(),&emptypb.Empty{})
+	resp, err:= c.api.GetAllBoards(r.Context(),&boardsv1.GetAllBoardsRequest{
+		UserId: userId,
+	})
 	if err!=nil{
 		utils.WriteError(w,err.Error())
 		return

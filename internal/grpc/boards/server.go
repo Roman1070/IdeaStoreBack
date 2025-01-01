@@ -15,7 +15,7 @@ import (
 type Boards interface {
 	CreateBoard(ctx context.Context, name string, userId int64) (int64, error)
 	GetBoard(ctx context.Context, id int64) (models.Board, error)
-	GetAllBoards(ctx context.Context, e *emptypb.Empty) ([]*boardsv1.BoardData, error)
+	GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.BoardData, error)
 	SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved bool) (*emptypb.Empty, error)
 }
 
@@ -50,10 +50,10 @@ func (s *serverAPI) GetBoard(ctx context.Context, req *boardsv1.GetBoardRequest)
 	return resp, nil
 }
 
-func (s *serverAPI) GetAllBoards(ctx context.Context, e *emptypb.Empty) (*boardsv1.GetAllBoardsResponse, error) {
+func (s *serverAPI) GetAllBoards(ctx context.Context, req *boardsv1.GetAllBoardsRequest) (*boardsv1.GetAllBoardsResponse, error) {
 
 	slog.Info("started to get all ideas")
-	boards, err := s.boards.GetAllBoards(ctx, e)
+	boards, err := s.boards.GetAllBoards(ctx, req.UserId)
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error getting all ideas")

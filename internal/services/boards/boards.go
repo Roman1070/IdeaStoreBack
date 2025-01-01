@@ -55,13 +55,13 @@ func (b *Boards) GetBoard(ctx context.Context, id int64) (models.Board, error) {
 	return board, nil
 }
 
-func (b *Boards) GetAllBoards(ctx context.Context, e *emptypb.Empty) ([]*boardsv1.BoardData, error) {
+func (b *Boards) GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.BoardData, error) {
 
 	const op = "service.boards.GetAll"
 
 	slog.Info("Getting all boards...")
 
-	board, err := b.Api.GetAllBoards(ctx, e)
+	board, err := b.Api.GetAllBoards(ctx, userId)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", op, "Internal error getting board")
 	}

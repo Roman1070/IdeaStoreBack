@@ -25,7 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type BoardsClient interface {
 	CreateBoard(ctx context.Context, in *CreateBoardRequest, opts ...grpc.CallOption) (*CreateBoardResponse, error)
 	GetBoard(ctx context.Context, in *GetBoardRequest, opts ...grpc.CallOption) (*GetBoardResponse, error)
-	GetAllBoards(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllBoardsResponse, error)
+	GetAllBoards(ctx context.Context, in *GetAllBoardsRequest, opts ...grpc.CallOption) (*GetAllBoardsResponse, error)
 	SetIdeaSaved(ctx context.Context, in *SetIdeaSavedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -55,7 +55,7 @@ func (c *boardsClient) GetBoard(ctx context.Context, in *GetBoardRequest, opts .
 	return out, nil
 }
 
-func (c *boardsClient) GetAllBoards(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllBoardsResponse, error) {
+func (c *boardsClient) GetAllBoards(ctx context.Context, in *GetAllBoardsRequest, opts ...grpc.CallOption) (*GetAllBoardsResponse, error) {
 	out := new(GetAllBoardsResponse)
 	err := c.cc.Invoke(ctx, "/boards.Boards/GetAllBoards", in, out, opts...)
 	if err != nil {
@@ -79,7 +79,7 @@ func (c *boardsClient) SetIdeaSaved(ctx context.Context, in *SetIdeaSavedRequest
 type BoardsServer interface {
 	CreateBoard(context.Context, *CreateBoardRequest) (*CreateBoardResponse, error)
 	GetBoard(context.Context, *GetBoardRequest) (*GetBoardResponse, error)
-	GetAllBoards(context.Context, *emptypb.Empty) (*GetAllBoardsResponse, error)
+	GetAllBoards(context.Context, *GetAllBoardsRequest) (*GetAllBoardsResponse, error)
 	SetIdeaSaved(context.Context, *SetIdeaSavedRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedBoardsServer()
 }
@@ -94,7 +94,7 @@ func (UnimplementedBoardsServer) CreateBoard(context.Context, *CreateBoardReques
 func (UnimplementedBoardsServer) GetBoard(context.Context, *GetBoardRequest) (*GetBoardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBoard not implemented")
 }
-func (UnimplementedBoardsServer) GetAllBoards(context.Context, *emptypb.Empty) (*GetAllBoardsResponse, error) {
+func (UnimplementedBoardsServer) GetAllBoards(context.Context, *GetAllBoardsRequest) (*GetAllBoardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllBoards not implemented")
 }
 func (UnimplementedBoardsServer) SetIdeaSaved(context.Context, *SetIdeaSavedRequest) (*emptypb.Empty, error) {
@@ -150,7 +150,7 @@ func _Boards_GetBoard_Handler(srv interface{}, ctx context.Context, dec func(int
 }
 
 func _Boards_GetAllBoards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(GetAllBoardsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func _Boards_GetAllBoards_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/boards.Boards/GetAllBoards",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BoardsServer).GetAllBoards(ctx, req.(*emptypb.Empty))
+		return srv.(BoardsServer).GetAllBoards(ctx, req.(*GetAllBoardsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
