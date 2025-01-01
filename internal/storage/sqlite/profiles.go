@@ -68,8 +68,9 @@ func (s *Storage) GetProfile(ctx context.Context, id int64) (models.Profile, err
 	return profile, nil
 }
 
+//TODO: если убрать на доске сохраненную идею, из доски она не уберется
 func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error) {
-	slog.Info("storage start ToggleSaveIdea")
+	slog.Info("storage start ToggleSaveIdea, boardId = "+fmt.Sprint(boardId))
 
 	tx, err := s.db.Begin()
 	if err != nil {
