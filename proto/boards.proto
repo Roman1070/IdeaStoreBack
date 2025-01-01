@@ -8,6 +8,13 @@ service Boards{
     rpc CreateBoard(CreateBoardRequest) returns (CreateBoardResponse);
     rpc GetBoard(GetBoardRequest) returns (GetBoardResponse);
     rpc GetAllBoards(google.protobuf.Empty) returns (GetAllBoardsResponse);
+    rpc SetIdeaSaved(SetIdeaSavedRequest) returns (google.protobuf.Empty) {}
+}
+
+message SetIdeaSavedRequest{
+    int64 idea_id = 1;
+    int64 board_id = 2;
+    bool saved = 3;
 }
 
 message CreateBoardRequest{

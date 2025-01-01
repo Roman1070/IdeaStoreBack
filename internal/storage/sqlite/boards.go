@@ -9,7 +9,6 @@ import (
 	"idea-store-auth/internal/domain/models"
 	"idea-store-auth/internal/storage"
 	"log/slog"
-	"strconv"
 	"strings"
 
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -23,7 +22,7 @@ func (s *Storage) CreateBoard(ctx context.Context, name string) (int64, error) {
 		return emptyValue, fmt.Errorf("%s: %w", op, err)
 	}
 
-	res, err := stmt.ExecContext(ctx,name,"")
+	res, err := stmt.ExecContext(ctx, name, "")
 
 	if err != nil {
 		return emptyValue, fmt.Errorf("%s: %w", op, err)
@@ -35,8 +34,8 @@ func (s *Storage) CreateBoard(ctx context.Context, name string) (int64, error) {
 	return id, nil
 }
 
-func (s *Storage) GetBoard(ctx context.Context, id int64) (models.Board, error){
-	
+func (s *Storage) GetBoard(ctx context.Context, id int64) (models.Board, error) {
+
 	const op = "storage.sqlite.CreateBoard"
 
 	stmt, err := s.db.Prepare("SELECT id,name,ideas_ids FROM boards WHERE id=?")
@@ -46,25 +45,65 @@ func (s *Storage) GetBoard(ctx context.Context, id int64) (models.Board, error){
 	}
 	var board models.Board
 	var idsString string
-	row:= stmt.QueryRowContext(ctx,id)
+	row := stmt.QueryRowContext(ctx, id)
 	err = row.Scan(&board.ID, &board.Name, &idsString)
-	if err!=nil{
+	if err != nil {
 		slog.Error(err.Error())
 		return models.Board{}, fmt.Errorf("internal error %v", err.Error())
 	}
 	var ids []int64
-	if len(idsString)>0{
-		ids,err= ParseIdsSqlite(idsString)
-		if err!=nil{
+	if len(idsString) > 0 {
+		ids, err = ParseIdsSqlite(idsString)
+		if err != nil {
 			slog.Error(err.Error())
 			return models.Board{}, fmt.Errorf("internal error %v", err.Error())
 		}
 	}
-	board.IdeasIds=ids
+	board.IdeasIds = ids
 	return board, nil
 }
+func (s *Storage) SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved bool) (*emptypb.Empty, error) {
+	slog.Info("storage started SetIdeaSaved")
+	tx, err := s.db.Begin()
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("storage error SetIdeaSaved : %v", err.Error())
+	}
+	stmt, err := tx.Prepare("SELECT ideas_ids FROM boards WHERE id = ?")
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("storage error SetIdeaSaved : %v", err.Error())
+	}
+	var idsString string
+	var newIdsString string
+	row := stmt.QueryRowContext(ctx, boardId)
+	err = row.Scan(&idsString)
 
-func (s *Storage) GetAllBoards(ctx context.Context, e *emptypb.Empty) ([]*boardsv1.BoardData, error){
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("internal error %v", err.Error())
+	}
+	if saved {
+		newIdsString = idsString + " " + fmt.Sprint(ideaId)
+	} else {
+		newIdsString = strings.Replace(idsString, fmt.Sprint(ideaId), "", 1)
+	}
+	newIdsString = strings.Trim(strings.ReplaceAll(newIdsString, "  ", " "), " ")
+	stmt, err = tx.Prepare("UPDATE boards SET ideas_ids = ? WHERE id = ?")
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("storage error SetIdeaSaved : %v", err.Error())
+	}
+	_, err = stmt.ExecContext(ctx, newIdsString, boardId)
+
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("storage error SetIdeaSaved : %v", err.Error())
+	}
+	tx.Commit()
+	return &emptypb.Empty{}, nil
+}
+func (s *Storage) GetAllBoards(ctx context.Context, e *emptypb.Empty) ([]*boardsv1.BoardData, error) {
 	const op = "storage.sqlite.GetAllBoards"
 
 	stmt, err := s.db.Prepare("SELECT id,name,ideas_ids FROM boards")
@@ -92,32 +131,16 @@ func (s *Storage) GetAllBoards(ctx context.Context, e *emptypb.Empty) ([]*boards
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		var ids []int64
-		if len(ideasStr)>0{
-			ids,err= ParseIdsSqlite(ideasStr)
-			if err!=nil{
+		if len(ideasStr) > 0 {
+			ids, err = ParseIdsSqlite(ideasStr)
+			if err != nil {
 				slog.Error(err.Error())
 				slog.Error(err.Error())
 				return nil, fmt.Errorf("internal error %v", err.Error())
 			}
 		}
-		board.IdeasIds=ids
+		board.IdeasIds = ids
 		boards = append(boards, board)
 	}
-	return boards,nil
-}
-
-func ParseIdsSqlite(str string) ([]int64, error){
-	if len(str)==0 {
-		return []int64{},nil
-	}
-	slice:= strings.Split(str," ")
-	var ids []int64
-	for _,i:= range slice{
-		val, err := strconv.ParseInt(i,10,64)
-		if err!=nil{
-			return nil, fmt.Errorf("error parsing id %v", i)
-		}
-		ids = append(ids, val)
-	}
-	return ids,nil
+	return boards, nil
 }

@@ -4,8 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	common "idea-store-auth/cmd"
+	boardsv1 "idea-store-auth/gen/go/boards"
 	ideasv1 "idea-store-auth/gen/go/idea"
 	"idea-store-auth/internal/config"
+	"strconv"
+	"strings"
 	"time"
 
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
@@ -15,8 +18,9 @@ import (
 )
 
 type Storage struct {
-	db          *sql.DB
-	ideasClient ideasv1.IdeasClient
+	db           *sql.DB
+	ideasClient  ideasv1.IdeasClient
+	boardsClient boardsv1.BoardsClient
 }
 
 const emptyValue = -1
@@ -44,5 +48,31 @@ func New(storagePath string) (*Storage, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &Storage{db: db, ideasClient: ideasv1.NewIdeasClient(ideasClient)}, nil
+	boardsClient, err := grpc.NewClient(common.GrpcBoardsAddress(cfg),
+		grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithChainUnaryInterceptor(
+			grpcretry.UnaryClientInterceptor(retryOptions...),
+		))
+
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &Storage{db: db, ideasClient: ideasv1.NewIdeasClient(ideasClient),
+		boardsClient: boardsv1.NewBoardsClient(boardsClient)}, nil
+}
+
+func ParseIdsSqlite(str string) ([]int64, error) {
+	if len(str) == 0 {
+		return []int64{}, nil
+	}
+	slice := strings.Split(str, " ")
+	var ids []int64
+	for _, i := range slice {
+		val, err := strconv.ParseInt(i, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing id %v", i)
+		}
+		ids = append(ids, val)
+	}
+	return ids, nil
 }

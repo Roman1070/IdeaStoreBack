@@ -65,7 +65,7 @@ func (c *ProfilesClient) CreateProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	userId, err := GetUserIdByRequestWithCookie(r)
 
 	if err != nil {
 		slog.Error(err.Error())
@@ -73,7 +73,7 @@ func (c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp, err := c.api.GetProfile(r.Context(), &profilesv1.GetProfileRequest{
-		Id: id,
+		Id: userId,
 	})
 
 	if err != nil {
@@ -189,7 +189,7 @@ func (c *ProfilesClient) GetSavedIdeas(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, err.Error())
 		return
 	}
-	slog.Info("saved ideas: " + string(result))
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }

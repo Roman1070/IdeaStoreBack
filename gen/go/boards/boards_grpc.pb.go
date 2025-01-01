@@ -26,6 +26,7 @@ type BoardsClient interface {
 	CreateBoard(ctx context.Context, in *CreateBoardRequest, opts ...grpc.CallOption) (*CreateBoardResponse, error)
 	GetBoard(ctx context.Context, in *GetBoardRequest, opts ...grpc.CallOption) (*GetBoardResponse, error)
 	GetAllBoards(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllBoardsResponse, error)
+	SetIdeaSaved(ctx context.Context, in *SetIdeaSavedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type boardsClient struct {
@@ -63,6 +64,15 @@ func (c *boardsClient) GetAllBoards(ctx context.Context, in *emptypb.Empty, opts
 	return out, nil
 }
 
+func (c *boardsClient) SetIdeaSaved(ctx context.Context, in *SetIdeaSavedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/boards.Boards/SetIdeaSaved", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BoardsServer is the server API for Boards service.
 // All implementations must embed UnimplementedBoardsServer
 // for forward compatibility
@@ -70,6 +80,7 @@ type BoardsServer interface {
 	CreateBoard(context.Context, *CreateBoardRequest) (*CreateBoardResponse, error)
 	GetBoard(context.Context, *GetBoardRequest) (*GetBoardResponse, error)
 	GetAllBoards(context.Context, *emptypb.Empty) (*GetAllBoardsResponse, error)
+	SetIdeaSaved(context.Context, *SetIdeaSavedRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedBoardsServer()
 }
 
@@ -85,6 +96,9 @@ func (UnimplementedBoardsServer) GetBoard(context.Context, *GetBoardRequest) (*G
 }
 func (UnimplementedBoardsServer) GetAllBoards(context.Context, *emptypb.Empty) (*GetAllBoardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllBoards not implemented")
+}
+func (UnimplementedBoardsServer) SetIdeaSaved(context.Context, *SetIdeaSavedRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetIdeaSaved not implemented")
 }
 func (UnimplementedBoardsServer) mustEmbedUnimplementedBoardsServer() {}
 
@@ -153,6 +167,24 @@ func _Boards_GetAllBoards_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Boards_SetIdeaSaved_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetIdeaSavedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BoardsServer).SetIdeaSaved(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/boards.Boards/SetIdeaSaved",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BoardsServer).SetIdeaSaved(ctx, req.(*SetIdeaSavedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Boards_ServiceDesc is the grpc.ServiceDesc for Boards service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -171,6 +203,10 @@ var Boards_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllBoards",
 			Handler:    _Boards_GetAllBoards_Handler,
+		},
+		{
+			MethodName: "SetIdeaSaved",
+			Handler:    _Boards_SetIdeaSaved_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

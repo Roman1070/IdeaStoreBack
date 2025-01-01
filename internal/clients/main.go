@@ -51,9 +51,7 @@ func main() {
 }
 
 func GetUserIdByRequestWithCookie(r *http.Request) (int64, error) {
-	for _, cookie := range r.Cookies() {
-		fmt.Println(cookie.String())
-	}
+
 	tokenCookie, err := r.Cookie("token")
 	if err != nil {
 		slog.Error(err.Error())

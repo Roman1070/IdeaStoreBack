@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"fmt"
+	boardsv1 "idea-store-auth/gen/go/boards"
 	ideasv1 "idea-store-auth/gen/go/idea"
 	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
@@ -109,7 +110,11 @@ func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId in
 		}
 		stmt.ExecContext(ctx, newIdeasStr, userId)
 		tx.Commit()
-		//TODO: убрать идею с доски gRPC
+		s.boardsClient.SetIdeaSaved(ctx, &boardsv1.SetIdeaSavedRequest{
+			IdeaId:  ideaId,
+			BoardId: boardId,
+			Saved:   false,
+		})
 		return false, nil
 	} else {
 		var newIdeasStr string
@@ -126,7 +131,11 @@ func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId in
 		}
 		stmt.ExecContext(ctx, newIdeasStr, userId)
 		tx.Commit()
-		//TODO: Добавить идею на доску gRPC
+		s.boardsClient.SetIdeaSaved(ctx, &boardsv1.SetIdeaSavedRequest{
+			IdeaId:  ideaId,
+			BoardId: boardId,
+			Saved:   true,
+		})
 		return true, nil
 	}
 }

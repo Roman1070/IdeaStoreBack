@@ -13,9 +13,10 @@ import (
 )
 
 type Boards interface {
-	CreateBoard(ctx context.Context, name string) (int64,error)
+	CreateBoard(ctx context.Context, name string) (int64, error)
 	GetBoard(ctx context.Context, id int64) (models.Board, error)
-	GetAllBoards(ctx context.Context,e *emptypb.Empty) ([]*boardsv1.BoardData, error)
+	GetAllBoards(ctx context.Context, e *emptypb.Empty) ([]*boardsv1.BoardData, error)
+	SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved bool) (*emptypb.Empty, error)
 }
 
 type serverAPI struct {
@@ -27,20 +28,20 @@ func Register(gRPC *grpc.Server, boards Boards) {
 	boardsv1.RegisterBoardsServer(gRPC, &serverAPI{boards: boards})
 }
 
-func (s *serverAPI) CreateBoard(ctx context.Context,req *boardsv1.CreateBoardRequest) (*boardsv1.CreateBoardResponse, error){
+func (s *serverAPI) CreateBoard(ctx context.Context, req *boardsv1.CreateBoardRequest) (*boardsv1.CreateBoardResponse, error) {
 	slog.Info("started to save an idea...")
 
-	id,err:=s.boards.CreateBoard(ctx,req.Name)
-	if err!=nil{
+	id, err := s.boards.CreateBoard(ctx, req.Name)
+	if err != nil {
 		slog.Error(err.Error())
 		return nil, status.Error(codes.Internal, "Internal error creating board")
 	}
 	resp := &boardsv1.CreateBoardResponse{Id: id}
-	return resp,nil
+	return resp, nil
 }
-func (s *serverAPI) GetBoard(ctx context.Context,req *boardsv1.GetBoardRequest) ( *boardsv1.GetBoardResponse, error){
+func (s *serverAPI) GetBoard(ctx context.Context, req *boardsv1.GetBoardRequest) (*boardsv1.GetBoardResponse, error) {
 	slog.Info("started to get a board")
-	
+
 	board, err := s.boards.GetBoard(ctx, req.Id)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error getting board")
@@ -49,13 +50,24 @@ func (s *serverAPI) GetBoard(ctx context.Context,req *boardsv1.GetBoardRequest) 
 	return resp, nil
 }
 
-func (s *serverAPI) GetAllBoards(ctx context.Context, e *emptypb.Empty) (*boardsv1.GetAllBoardsResponse, error){
-	
+func (s *serverAPI) GetAllBoards(ctx context.Context, e *emptypb.Empty) (*boardsv1.GetAllBoardsResponse, error) {
+
 	slog.Info("started to get all ideas")
-	boards, err := s.boards.GetAllBoards(ctx,e)
-	
+	boards, err := s.boards.GetAllBoards(ctx, e)
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error getting all ideas")
 	}
-	return &boardsv1.GetAllBoardsResponse{Boards: boards},nil
+	return &boardsv1.GetAllBoardsResponse{Boards: boards}, nil
+}
+
+func (s *serverAPI) SetIdeaSaved(ctx context.Context, req *boardsv1.SetIdeaSavedRequest) (*emptypb.Empty, error) {
+
+	slog.Info("started to SetIdeaSaved grpc")
+	_, err := s.boards.SetIdeaSaved(ctx, req.BoardId, req.IdeaId, req.Saved)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error SetIdeaSaved")
+	}
+	return &emptypb.Empty{}, nil
 }
