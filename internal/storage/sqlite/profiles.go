@@ -204,3 +204,27 @@ func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv
 	}
 	return ideas, nil
 }
+
+func (s *Storage) GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, error) {
+	slog.Info("storage started GetSavedIdeasIds")
+
+	stmt, err := s.db.Prepare("SELECT savedIdeas FROM profiles WHERE id = ?")
+	if err != nil {
+		slog.Error("storage GetSavedIdeasIds error: " + err.Error())
+		return nil, fmt.Errorf("sotrage GetSavedIdeasIds error: " + err.Error())
+	}
+
+	row := stmt.QueryRow(userId)
+	var idsStr string
+	err = row.Scan(&idsStr)
+	if err != nil {
+		slog.Error("storage GetSavedIdeasIds error: " + err.Error())
+		return nil, fmt.Errorf("sotrage GetSavedIdeasIds error: " + err.Error())
+	}
+	result, err := ParseIdsSqlite(idsStr)
+	if err != nil {
+		slog.Error("storage GetSavedIdeasIds error: " + err.Error())
+		return nil, fmt.Errorf("sotrage GetSavedIdeasIds error: " + err.Error())
+	}
+	return result, nil
+}

@@ -30,9 +30,7 @@ type IdeasClient interface {
 	// Delete removes the idea from database by its id
 	DeleteIdea(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetAllIdeas retrurs all ideas deom database
-	GetAllIdeas(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllResponse, error)
-	// ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
-	ToggleSaveIdea(ctx context.Context, in *ToggleSaveRequest, opts ...grpc.CallOption) (*ToggleSaveResponse, error)
+	GetAllIdeas(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error)
 }
 
 type ideasClient struct {
@@ -70,18 +68,9 @@ func (c *ideasClient) DeleteIdea(ctx context.Context, in *DeleteRequest, opts ..
 	return out, nil
 }
 
-func (c *ideasClient) GetAllIdeas(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllResponse, error) {
+func (c *ideasClient) GetAllIdeas(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error) {
 	out := new(GetAllResponse)
 	err := c.cc.Invoke(ctx, "/ideas.Ideas/GetAllIdeas", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *ideasClient) ToggleSaveIdea(ctx context.Context, in *ToggleSaveRequest, opts ...grpc.CallOption) (*ToggleSaveResponse, error) {
-	out := new(ToggleSaveResponse)
-	err := c.cc.Invoke(ctx, "/ideas.Ideas/ToggleSaveIdea", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -99,9 +88,7 @@ type IdeasServer interface {
 	// Delete removes the idea from database by its id
 	DeleteIdea(context.Context, *DeleteRequest) (*emptypb.Empty, error)
 	// GetAllIdeas retrurs all ideas deom database
-	GetAllIdeas(context.Context, *emptypb.Empty) (*GetAllResponse, error)
-	// ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
-	ToggleSaveIdea(context.Context, *ToggleSaveRequest) (*ToggleSaveResponse, error)
+	GetAllIdeas(context.Context, *GetAllRequest) (*GetAllResponse, error)
 	mustEmbedUnimplementedIdeasServer()
 }
 
@@ -118,11 +105,8 @@ func (UnimplementedIdeasServer) GetIdea(context.Context, *GetRequest) (*GetRespo
 func (UnimplementedIdeasServer) DeleteIdea(context.Context, *DeleteRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteIdea not implemented")
 }
-func (UnimplementedIdeasServer) GetAllIdeas(context.Context, *emptypb.Empty) (*GetAllResponse, error) {
+func (UnimplementedIdeasServer) GetAllIdeas(context.Context, *GetAllRequest) (*GetAllResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllIdeas not implemented")
-}
-func (UnimplementedIdeasServer) ToggleSaveIdea(context.Context, *ToggleSaveRequest) (*ToggleSaveResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ToggleSaveIdea not implemented")
 }
 func (UnimplementedIdeasServer) mustEmbedUnimplementedIdeasServer() {}
 
@@ -192,7 +176,7 @@ func _Ideas_DeleteIdea_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _Ideas_GetAllIdeas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(GetAllRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -204,25 +188,7 @@ func _Ideas_GetAllIdeas_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: "/ideas.Ideas/GetAllIdeas",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IdeasServer).GetAllIdeas(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Ideas_ToggleSaveIdea_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ToggleSaveRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(IdeasServer).ToggleSaveIdea(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ideas.Ideas/ToggleSaveIdea",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IdeasServer).ToggleSaveIdea(ctx, req.(*ToggleSaveRequest))
+		return srv.(IdeasServer).GetAllIdeas(ctx, req.(*GetAllRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -249,10 +215,6 @@ var Ideas_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllIdeas",
 			Handler:    _Ideas_GetAllIdeas_Handler,
-		},
-		{
-			MethodName: "ToggleSaveIdea",
-			Handler:    _Ideas_ToggleSaveIdea_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

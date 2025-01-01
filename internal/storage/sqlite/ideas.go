@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	ideasv1 "idea-store-auth/gen/go/idea"
+	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
 	"idea-store-auth/internal/storage"
 	"log/slog"
+	"slices"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -63,9 +65,18 @@ func (s *Storage) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, erro
 	}
 	return emptypb.Empty{}, nil
 }
-func (s *Storage) GetAllIdeas(ctx context.Context, _ *emptypb.Empty) ([]*ideasv1.IdeaData, error) {
+func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaData, error) {
 	const op = "storage.sqlite.GetIdea"
-
+	var savedIdsReponse *profilesv1.GetSavedIdeasIdsResponse
+	var err error
+	if userId != -1 {
+		savedIdsReponse, err = s.profilesClient.GetSavedIdeasIds(ctx, &profilesv1.GetSavedIdeasIdsRequest{
+			UserId: userId,
+		})
+	}
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 	stmt, err := s.db.Prepare("SELECT id,image,name,description,link,tags FROM ideas")
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -79,6 +90,9 @@ func (s *Storage) GetAllIdeas(ctx context.Context, _ *emptypb.Empty) ([]*ideasv1
 	for rows.Next() {
 		idea := new(ideasv1.IdeaData)
 		err = rows.Scan(&idea.IdeaId, &idea.Image, &idea.Name, &idea.Description, &idea.Link, &idea.Tags)
+		if userId != -1 {
+			idea.Saved = slices.Contains(savedIdsReponse.IdeasIds, idea.IdeaId)
+		}
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, fmt.Errorf("%s: %w", op, storage.ErrAppNotFound)

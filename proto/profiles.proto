@@ -11,8 +11,14 @@ service Profiles{
     rpc ToggleSaveIdea(ToggleSaveRequest) returns (ToggleSaveResponse);
     rpc IsIdeaSaved(IsIdeaSavedRequest) returns (IsIdeaSavedResponse);
     rpc GetSavedIdeas(GetSavedIdeasRequest) returns (GetSavedIdeasResponse);
+    rpc GetSavedIdeasIds(GetSavedIdeasIdsRequest) returns (GetSavedIdeasIdsResponse);
 }
-
+message GetSavedIdeasIdsRequest{
+    int64 user_id = 1;
+}
+message GetSavedIdeasIdsResponse{
+    repeated int64 ideas_ids = 1;
+}
 message ToggleSaveRequest{
     int64 user_id = 1;
   int64 idea_id = 2;

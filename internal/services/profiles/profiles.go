@@ -90,3 +90,15 @@ func (p *Profiles) GetSavedIdeas(ctx context.Context, userId int64) ([]*profiles
 	}
 	return resp, nil
 }
+
+func (p *Profiles) GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, error) {
+	slog.Info("service start GetSavedIdeasIds")
+
+	resp, err := p.Api.GetSavedIdeasIds(ctx, userId)
+
+	if err != nil {
+		slog.Error("service GetSavedIdeas error: " + err.Error())
+		return nil, err
+	}
+	return resp, nil
+}

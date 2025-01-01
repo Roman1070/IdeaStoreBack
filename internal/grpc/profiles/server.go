@@ -17,6 +17,7 @@ type Profiles interface {
 	ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error)
 	IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, error)
 	GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error)
+	GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, error)
 }
 
 type serverAPI struct {
@@ -97,5 +98,18 @@ func (s *serverAPI) GetSavedIdeas(ctx context.Context, req *profilesv1.GetSavedI
 	}
 	return &profilesv1.GetSavedIdeasResponse{
 		Ideas: resp,
+	}, nil
+}
+
+func (s *serverAPI) GetSavedIdeasIds(ctx context.Context, req *profilesv1.GetSavedIdeasIdsRequest) (*profilesv1.GetSavedIdeasIdsResponse, error) {
+	slog.Info("grpc start GetSavedIdeasIds")
+
+	resp, err := s.profiles.GetSavedIdeasIds(ctx, req.UserId)
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("grpc error GetSavedIdeasIds: " + err.Error())
+	}
+	return &profilesv1.GetSavedIdeasIdsResponse{
+		IdeasIds: resp,
 	}, nil
 }

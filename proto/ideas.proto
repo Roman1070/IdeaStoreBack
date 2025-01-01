@@ -13,8 +13,12 @@ service Ideas {
   // Delete removes the idea from database by its id
   rpc DeleteIdea (DeleteRequest) returns (google.protobuf.Empty) {}
   //GetAllIdeas retrurs all ideas deom database
-  rpc GetAllIdeas(google.protobuf.Empty) returns (GetAllResponse);
+  rpc GetAllIdeas(GetAllRequest) returns (GetAllResponse);
 
+}
+
+message GetAllRequest{
+  int64 user_id=1;
 }
 
 message CreateRequest {
@@ -54,6 +58,7 @@ message IdeaData {
   string link = 4;
   string tags = 5;
   string image = 6;
+  bool saved = 7;
 }
 
 message GetAllResponse{

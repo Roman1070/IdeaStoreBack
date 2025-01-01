@@ -6,6 +6,7 @@ import (
 	common "idea-store-auth/cmd"
 	boardsv1 "idea-store-auth/gen/go/boards"
 	ideasv1 "idea-store-auth/gen/go/idea"
+	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/config"
 	"strconv"
 	"strings"
@@ -18,9 +19,10 @@ import (
 )
 
 type Storage struct {
-	db           *sql.DB
-	ideasClient  ideasv1.IdeasClient
-	boardsClient boardsv1.BoardsClient
+	db             *sql.DB
+	ideasClient    ideasv1.IdeasClient
+	boardsClient   boardsv1.BoardsClient
+	profilesClient profilesv1.ProfilesClient
 }
 
 const emptyValue = -1
@@ -57,8 +59,18 @@ func New(storagePath string) (*Storage, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
+	profilesClient, err := grpc.NewClient(common.GrpcProfilesAddress(cfg),
+		grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithChainUnaryInterceptor(
+			grpcretry.UnaryClientInterceptor(retryOptions...),
+		))
+
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
 	return &Storage{db: db, ideasClient: ideasv1.NewIdeasClient(ideasClient),
-		boardsClient: boardsv1.NewBoardsClient(boardsClient)}, nil
+		boardsClient:   boardsv1.NewBoardsClient(boardsClient),
+		profilesClient: profilesv1.NewProfilesClient(profilesClient)}, nil
 }
 
 func ParseIdsSqlite(str string) ([]int64, error) {

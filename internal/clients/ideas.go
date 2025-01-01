@@ -20,7 +20,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type IdeasClient struct {
@@ -139,7 +138,11 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 }
 func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to get ideas")
-	resp, err := c.api.GetAllIdeas(r.Context(), &emptypb.Empty{})
+
+	userId, _ := GetUserIdByRequestWithCookie(r)
+	resp, err := c.api.GetAllIdeas(r.Context(), &ideasv1.GetAllRequest{
+		UserId: userId,
+	})
 	if err != nil {
 		utils.WriteError(w, err.Error())
 		return
