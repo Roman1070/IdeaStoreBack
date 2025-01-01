@@ -110,11 +110,13 @@ func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId in
 		}
 		stmt.ExecContext(ctx, newIdeasStr, userId)
 		tx.Commit()
-		s.boardsClient.SetIdeaSaved(ctx, &boardsv1.SetIdeaSavedRequest{
-			IdeaId:  ideaId,
-			BoardId: boardId,
-			Saved:   false,
-		})
+		if boardId!=-1{
+			s.boardsClient.SetIdeaSaved(ctx, &boardsv1.SetIdeaSavedRequest{
+				IdeaId:  ideaId,
+				BoardId: boardId,
+				Saved:   false,
+			})
+		}
 		return false, nil
 	} else {
 		var newIdeasStr string
@@ -131,11 +133,13 @@ func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId in
 		}
 		stmt.ExecContext(ctx, newIdeasStr, userId)
 		tx.Commit()
-		s.boardsClient.SetIdeaSaved(ctx, &boardsv1.SetIdeaSavedRequest{
-			IdeaId:  ideaId,
-			BoardId: boardId,
-			Saved:   true,
-		})
+		if boardId!=-1{
+			s.boardsClient.SetIdeaSaved(ctx, &boardsv1.SetIdeaSavedRequest{
+				IdeaId:  ideaId,
+				BoardId: boardId,
+				Saved:   true,
+			})
+		}
 		return true, nil
 	}
 }

@@ -14,15 +14,15 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *Storage) CreateBoard(ctx context.Context, name string) (int64, error) {
+func (s *Storage) CreateBoard(ctx context.Context, name string, userId int64) (int64, error) {
 	const op = "storage.sqlite.CreateBoard"
 
-	stmt, err := s.db.Prepare("INSERT INTO boards(name,ideas_ids) VALUES(?,?)")
+	stmt, err := s.db.Prepare("INSERT INTO boards(name,ideas_ids,user_id) VALUES(?,?,?)")
 	if err != nil {
 		return emptyValue, fmt.Errorf("%s: %w", op, err)
 	}
 
-	res, err := stmt.ExecContext(ctx, name, "")
+	res, err := stmt.ExecContext(ctx, name, "",userId)
 
 	if err != nil {
 		return emptyValue, fmt.Errorf("%s: %w", op, err)

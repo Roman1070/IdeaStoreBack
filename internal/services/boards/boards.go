@@ -23,7 +23,7 @@ func New(log *slog.Logger, boardsApi boards.Boards) *Boards {
 		Api: boardsApi,
 	}
 }
-func (b *Boards) CreateBoard(ctx context.Context, name string) (int64, error) {
+func (b *Boards) CreateBoard(ctx context.Context, name string, userId int64) (int64, error) {
 	const op = "service.boards.Create"
 
 	log := b.log.With(
@@ -32,7 +32,7 @@ func (b *Boards) CreateBoard(ctx context.Context, name string) (int64, error) {
 	)
 	log.Info("Creating a board...")
 
-	id, err := b.Api.CreateBoard(ctx, name)
+	id, err := b.Api.CreateBoard(ctx, name,userId)
 	if err != nil {
 		return -1, fmt.Errorf("%s: %v", op, "Internal error creating board")
 	}

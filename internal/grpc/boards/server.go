@@ -13,7 +13,7 @@ import (
 )
 
 type Boards interface {
-	CreateBoard(ctx context.Context, name string) (int64, error)
+	CreateBoard(ctx context.Context, name string, userId int64) (int64, error)
 	GetBoard(ctx context.Context, id int64) (models.Board, error)
 	GetAllBoards(ctx context.Context, e *emptypb.Empty) ([]*boardsv1.BoardData, error)
 	SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved bool) (*emptypb.Empty, error)
@@ -31,7 +31,7 @@ func Register(gRPC *grpc.Server, boards Boards) {
 func (s *serverAPI) CreateBoard(ctx context.Context, req *boardsv1.CreateBoardRequest) (*boardsv1.CreateBoardResponse, error) {
 	slog.Info("started to save an idea...")
 
-	id, err := s.boards.CreateBoard(ctx, req.Name)
+	id, err := s.boards.CreateBoard(ctx, req.Name, req.UserId)
 	if err != nil {
 		slog.Error(err.Error())
 		return nil, status.Error(codes.Internal, "Internal error creating board")

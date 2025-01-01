@@ -19,6 +19,7 @@ message SetIdeaSavedRequest{
 
 message CreateBoardRequest{
     string name = 1;
+    int64 user_id = 2;
 }
 message CreateBoardResponse{
     int64 id = 1;
