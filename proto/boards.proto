@@ -9,6 +9,14 @@ service Boards{
     rpc GetBoard(GetBoardRequest) returns (GetBoardResponse);
     rpc GetAllBoards(GetAllBoardsRequest) returns (GetAllBoardsResponse);
     rpc SetIdeaSaved(SetIdeaSavedRequest) returns (google.protobuf.Empty) {}
+    rpc GetIdeasInBoard(GetIdeasInBoardRequest) returns (GetIdeasInBoardResponse);
+}
+
+message GetIdeasInBoardRequest{
+    int64 board_id = 1;
+}
+message GetIdeasInBoardResponse{
+    repeated IdeaData ideas = 1;
 }
 
 message GetAllBoardsRequest{
@@ -43,4 +51,10 @@ message BoardData{
 }
 message GetAllBoardsResponse{
     repeated BoardData boards = 1;
+}
+
+message IdeaData {
+  int64 idea_id = 1;
+  string name = 2;
+  string image = 3;
 }

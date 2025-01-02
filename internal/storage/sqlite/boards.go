@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	boardsv1 "idea-store-auth/gen/go/boards"
+	ideasv1 "idea-store-auth/gen/go/idea"
 	"idea-store-auth/internal/domain/models"
 	"idea-store-auth/internal/storage"
 	"log/slog"
@@ -143,4 +144,44 @@ func (s *Storage) GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.B
 		boards = append(boards, board)
 	}
 	return boards, nil
+}
+
+func (s *Storage) GetIdeasInBoard(ctx context.Context, boardId int64)([]*boardsv1.IdeaData, error){
+	const op = "storage.sqlite.GetAllBoards"
+
+	stmt, err := s.db.Prepare("SELECT ideas_ids FROM boards WHERE id = ?")
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	row:= stmt.QueryRowContext(ctx,boardId)
+	var idsStr string
+	err = row.Scan(&idsStr)
+	if err!=nil{
+		slog.Error("Error scanning ideas_ids")
+		return nil, fmt.Errorf("internal storage error: %v",err.Error())
+	}
+	idsSlice,err:= ParseIdsSqlite(idsStr)
+	if err!=nil{
+		slog.Error("Error parsing ideas_ids")
+		return nil, fmt.Errorf("internal storage error: %v",err.Error())
+	}
+	//TODO: сделать за один запрос
+	var result []*boardsv1.IdeaData
+	for _,id := range idsSlice{
+		idea,err := s.ideasClient.GetIdea(ctx,&ideasv1.GetRequest{
+			IdeaId: id,
+		})
+		if err!=nil{
+			slog.Error("Error parsing ideas_ids")
+			return nil, fmt.Errorf("internal storage error: %v",err.Error())
+		}
+		result = append(result, &boardsv1.IdeaData{
+			IdeaId: id,
+			Image: idea.Image,
+			Name: idea.Name,
+		})
+	}
+
+	return result,nil
 }

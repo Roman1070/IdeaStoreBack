@@ -17,6 +17,7 @@ type Boards interface {
 	GetBoard(ctx context.Context, id int64) (models.Board, error)
 	GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.BoardData, error)
 	SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved bool) (*emptypb.Empty, error)
+	GetIdeasInBoard(ctx context.Context, boardId int64) ([]*boardsv1.IdeaData, error)
 }
 
 type serverAPI struct {
@@ -70,4 +71,17 @@ func (s *serverAPI) SetIdeaSaved(ctx context.Context, req *boardsv1.SetIdeaSaved
 		return nil, status.Error(codes.Internal, "Internal error SetIdeaSaved")
 	}
 	return &emptypb.Empty{}, nil
+}
+
+func (s *serverAPI) GetIdeasInBoard(ctx context.Context, req *boardsv1.GetIdeasInBoardRequest) (*boardsv1.GetIdeasInBoardResponse, error){
+	
+	slog.Info("started to GetIdeasInBoard grpc")
+	ideas, err := s.boards.GetIdeasInBoard(ctx, req.BoardId)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error SetIdeaSaved")
+	}
+	return &boardsv1.GetIdeasInBoardResponse{
+		Ideas: ideas,
+	}, nil
 }

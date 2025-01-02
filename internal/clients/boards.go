@@ -128,3 +128,27 @@ func (c *BoardsClient) GetAllBoards(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
+
+func (c *BoardsClient) GetIdeasInBoard(w http.ResponseWriter, r * http.Request){
+	boardId,err := strconv.ParseInt(r.URL.Query().Get("id"),10,64)
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
+	resp,err:=c.api.GetIdeasInBoard(r.Context(),&boardsv1.GetIdeasInBoardRequest{
+		BoardId: boardId,
+	})
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
+	
+	result, err := json.Marshal(resp.Ideas)
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
+	
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}

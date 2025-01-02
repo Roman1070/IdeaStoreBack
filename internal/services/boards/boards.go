@@ -80,3 +80,16 @@ func (b *Boards) SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved 
 	}
 	return &emptypb.Empty{}, nil
 }
+
+func(b * Boards) GetIdeasInBoard(ctx context.Context, boardId int64) ([]*boardsv1.IdeaData, error){
+	
+	const op = "service.boards.GetIdeasInBoard"
+
+	slog.Info("started GetIdeasInBoard...")
+
+	ideas, err := b.Api.GetIdeasInBoard(ctx, boardId)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %v", op, "Internal error SetIdeaSaved")
+	}
+	return ideas, nil
+}
