@@ -88,3 +88,19 @@ func ParseIdsSqlite(str string) ([]int64, error) {
 	}
 	return ids, nil
 }
+
+func ParseIdPairs(str string)([]ideaBoardPair, error){
+	if len(str) == 0 {
+		return []ideaBoardPair{}, nil
+	}
+	slice := strings.Split(str, " ")
+	var pairs []ideaBoardPair
+	for _, i := range slice {
+		val, err := parseIdeaBoardPair(i)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing savedIdeas str %v", i)
+		}
+		pairs = append(pairs, val)
+	}
+	return pairs, nil
+}

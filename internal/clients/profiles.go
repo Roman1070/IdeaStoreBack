@@ -89,7 +89,7 @@ func (c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, err.Error())
 		return
 	}
-
+	
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }

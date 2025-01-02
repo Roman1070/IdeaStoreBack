@@ -8,7 +8,7 @@ import (
 	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
 	"log/slog"
-	"slices"
+	"strconv"
 	"strings"
 
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -52,12 +52,12 @@ func (s *Storage) GetProfile(ctx context.Context, id int64) (models.Profile, err
 		slog.Error("storage GetProfile error scaninng row: " + err.Error())
 		return models.Profile{}, err
 	}
-
-	profile.SavedIdeas, err = ParseIdsSqlite(ideasStr)
+	pairsSlice,err :=ParseIdPairs(ideasStr)
 	if err != nil {
-		slog.Error("storage GetProfile error parsing ideas ids: " + err.Error())
+		slog.Error("storage GetProfile error parsing ideas-board: " + err.Error())
 		return models.Profile{}, err
 	}
+	profile.SavedIdeas= toGRPCFormat(pairsSlice)
 	profile.Boards, err = ParseIdsSqlite(boardsStr)
 
 	if err != nil {
@@ -67,7 +67,6 @@ func (s *Storage) GetProfile(ctx context.Context, id int64) (models.Profile, err
 
 	return profile, nil
 }
-
 //TODO: если убрать на доске сохраненную идею, из доски она не уберется
 func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error) {
 	slog.Info("storage start ToggleSaveIdea, boardId = "+fmt.Sprint(boardId))
@@ -85,23 +84,25 @@ func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId in
 	}
 	row := stmt.QueryRowContext(ctx, userId)
 	var ideasIdsStr string
-	var ideasIds []int64
+	var idsPairs []ideaBoardPair
 	err = row.Scan(&ideasIdsStr)
 	if err != nil {
 		slog.Error("storage ToggleSaveIdea Scan error: " + err.Error())
 		return false, err
 	}
-	ideasIds, err = ParseIdsSqlite(ideasIdsStr)
+	idsPairs, err = ParseIdPairs(ideasIdsStr)
 	if err != nil {
 		slog.Error("storage ToggleSaveIdea ideas parse error: " + err.Error())
 		return false, err
 	}
-	if slices.Contains(ideasIds, ideaId) {
+	fmt.Println("ids pairs: "+fmt.Sprint(idsPairs))
+	pair:=getPairByIdea(idsPairs, ideaId)
+	if  pair!=nil {
 		var newIdeasStr string
-		if len(ideasIds) == 1 {
+		if len(idsPairs) == 1 {
 			newIdeasStr = ""
 		} else {
-			newIdeasStr = strings.Trim(strings.Replace(ideasIdsStr, fmt.Sprint(ideaId), "", 1), " ")
+			newIdeasStr = strings.Trim(strings.Replace(ideasIdsStr, pair.toString(), "", 1), " ")
 			newIdeasStr = strings.ReplaceAll(newIdeasStr, "  ", " ")
 		}
 		stmt, err = tx.Prepare("UPDATE profiles SET savedIdeas = ? WHERE id=?")
@@ -121,10 +122,11 @@ func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId in
 		return false, nil
 	} else {
 		var newIdeasStr string
+			pair:= ideaBoardPair{ideaId: ideaId, boardId: boardId}
 		if len(ideasIdsStr) == 0 {
-			newIdeasStr = fmt.Sprint(ideaId)
+			newIdeasStr = pair.toString()
 		} else {
-			newIdeasStr = ideasIdsStr + " " + fmt.Sprint(ideaId)
+			newIdeasStr = ideasIdsStr + " " +  pair.toString()
 		}
 
 		stmt, err = tx.Prepare("UPDATE profiles SET savedIdeas = ? WHERE id=?")
@@ -160,12 +162,12 @@ func (s *Storage) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, 
 		slog.Error("storage IsIdeaSaved error: " + err.Error())
 		return false, err
 	}
-	idsSlice, err := ParseIdsSqlite(ideasStr)
+	pairsSlice, err := ParseIdPairs(ideasStr)
 	if err != nil {
 		slog.Error("storage IsIdeaSaved error: " + err.Error())
 		return false, err
 	}
-	return slices.Contains(idsSlice, ideaId), nil
+	return getPairByIdea(pairsSlice,ideaId)!=nil, nil
 }
 
 func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error) {
@@ -183,28 +185,29 @@ func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv
 		slog.Error("storage IsIdeaSaved error: " + err.Error())
 		return nil, err
 	}
-	idsSlice, err := ParseIdsSqlite(ideasStr)
+	pairsSlice, err := ParseIdPairs(ideasStr)
 	if err != nil {
 		slog.Error("storage IsIdeaSaved error: " + err.Error())
 		return nil, err
 	}
 	var ideas []*profilesv1.IdeaData
-	for _, id := range idsSlice {
+	for _, pair := range pairsSlice {
 
 		resp, err := s.ideasClient.GetIdea(ctx, &ideasv1.GetRequest{
-			IdeaId: id,
+			IdeaId: pair.ideaId,
 		})
 		if err != nil {
 			slog.Error("storage IsIdeaSaved error: " + err.Error())
 			return nil, err
 		}
 		ideas = append(ideas, &profilesv1.IdeaData{
-			IdeaId:      id,
+			IdeaId:      pair.ideaId,
 			Name:        resp.Name,
 			Description: resp.Description,
 			Link:        resp.Link,
 			Image:       resp.Image,
 			Tags:        resp.Tags,
+			BoardId: pair.boardId,
 		})
 	}
 	return ideas, nil
@@ -226,10 +229,61 @@ func (s *Storage) GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, 
 		slog.Error("storage GetSavedIdeasIds error: " + err.Error())
 		return nil, fmt.Errorf("sotrage GetSavedIdeasIds error: " + err.Error())
 	}
-	result, err := ParseIdsSqlite(idsStr)
+	pairs, err := ParseIdPairs(idsStr)
 	if err != nil {
 		slog.Error("storage GetSavedIdeasIds error: " + err.Error())
 		return nil, fmt.Errorf("sotrage GetSavedIdeasIds error: " + err.Error())
 	}
-	return result, nil
+	return getIdeasIds(pairs), nil
+}
+
+
+
+type ideaBoardPair struct{
+	ideaId int64
+	boardId int64
+}
+
+func (p *ideaBoardPair) toString() string{
+	return fmt.Sprint(p.ideaId)+":"+fmt.Sprint(p.boardId)
+}
+func getIdeasIds(slice []ideaBoardPair) []int64{
+	var ids []int64
+	for _, pair := range slice{
+		ids = append(ids, pair.ideaId)
+	}
+	return ids
+}
+func getPairByIdea(slice []ideaBoardPair, id int64) (*ideaBoardPair){
+	for _,pair := range slice{
+		if pair.ideaId == id{
+			return &pair
+		}
+	}
+	return nil
+}
+func parseIdeaBoardPair(s string) (ideaBoardPair, error){
+	slice:= strings.Split(s,":")
+	ideaId, err :=strconv.ParseInt(slice[0],10,64)
+	if err!=nil{
+		return ideaBoardPair{},fmt.Errorf("error parsing idea-board :" + err.Error())
+	}
+	boardId, err:= strconv.ParseInt(slice[1],10,64)
+	if err!=nil{
+		return ideaBoardPair{},fmt.Errorf("error parsing idea-board :" + err.Error())
+	}
+	return ideaBoardPair{
+		ideaId: ideaId,
+		boardId: boardId,
+	},nil
+}
+func toGRPCFormat(slice []ideaBoardPair) ([]*profilesv1.IdeaBoardPair){
+	var result []*profilesv1.IdeaBoardPair
+	for _, pair := range slice{
+		result = append(result, &profilesv1.IdeaBoardPair{
+			IdeaId: pair.ideaId,
+			BoardId: pair.boardId,
+		})
+	}
+	return result
 }
