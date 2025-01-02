@@ -15,7 +15,7 @@ type Profiles interface {
 	CreateProfile(ctx context.Context, id int64, name, email string) (*emptypb.Empty, error)
 	GetProfile(ctx context.Context, id int64) (models.Profile, error)
 	ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error)
-	IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, error)
+	IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool,int64, error)
 	GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error)
 	GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, error)
 }
@@ -78,13 +78,14 @@ func (s *serverAPI) ToggleSaveIdea(ctx context.Context, req *profilesv1.ToggleSa
 func (s *serverAPI) IsIdeaSaved(ctx context.Context, req *profilesv1.IsIdeaSavedRequest) (*profilesv1.IsIdeaSavedResponse, error) {
 	slog.Info("grpc start IsIdeaSaved")
 
-	resp, err := s.profiles.IsIdeaSaved(ctx, req.UserId, req.IdeaId)
+	saved, boardId, err := s.profiles.IsIdeaSaved(ctx, req.UserId, req.IdeaId)
 	if err != nil {
 		slog.Error(err.Error())
 		return nil, fmt.Errorf("grpc error IsIdeaSaved: " + err.Error())
 	}
 	return &profilesv1.IsIdeaSavedResponse{
-		Saved: resp,
+		Saved: saved,
+		BoardId: boardId,
 	}, nil
 }
 

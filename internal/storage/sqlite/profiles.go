@@ -147,27 +147,32 @@ func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId in
 	}
 }
 
-func (s *Storage) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, error) {
+func (s *Storage) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, int64,error) {
 	slog.Info("storage start IsIdeaSaved")
 
 	stmt, err := s.db.Prepare("SELECT savedIdeas FROM profiles WHERE id = ?")
 	if err != nil {
 		slog.Error("storage IsIdeaSaved Prepare error: " + err.Error())
-		return false, err
+		return false, -1,err
 	}
 	row := stmt.QueryRowContext(ctx, userId)
 	var ideasStr string
 	err = row.Scan(&ideasStr)
 	if err != nil {
 		slog.Error("storage IsIdeaSaved error: " + err.Error())
-		return false, err
+		return false,-1, err
 	}
 	pairsSlice, err := ParseIdPairs(ideasStr)
 	if err != nil {
 		slog.Error("storage IsIdeaSaved error: " + err.Error())
-		return false, err
+		return false, -1, err
 	}
-	return getPairByIdea(pairsSlice,ideaId)!=nil, nil
+	pair:= getPairByIdea(pairsSlice,ideaId)
+	if pair==nil{
+		return false,-1,nil
+	}else{
+		return true, pair.boardId, nil
+	}
 }
 
 func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error) {

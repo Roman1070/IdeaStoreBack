@@ -67,16 +67,16 @@ func (p *Profiles) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId i
 	return resp, nil
 }
 
-func (p *Profiles) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, error) {
+func (p *Profiles) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, int64, error) {
 	slog.Info("service start IsIdeaSaved")
 
-	resp, err := p.Api.IsIdeaSaved(ctx, userId, ideaId)
+	saved,boardId, err := p.Api.IsIdeaSaved(ctx, userId, ideaId)
 
 	if err != nil {
 		slog.Error("service IsIdeaSaved error: " + err.Error())
-		return false, err
+		return false,-1, err
 	}
-	return resp, nil
+	return saved,boardId, nil
 }
 
 func (p *Profiles) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error) {

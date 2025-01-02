@@ -54,6 +54,7 @@ message IsIdeaSavedRequest{
 }
 message IsIdeaSavedResponse{
     bool saved=1;
+    int64 board_id = 2;
 }
 
 message GetSavedIdeasRequest{
