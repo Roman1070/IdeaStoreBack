@@ -20,6 +20,7 @@ import (
 type BoardsClient struct {
 	api boardsv1.BoardsClient
 }
+
 func NewBoardsClient(addr string, timeout time.Duration, retriesCount int) (*BoardsClient, error) {
 	const op = "client.boards.New"
 
@@ -41,114 +42,122 @@ func NewBoardsClient(addr string, timeout time.Duration, retriesCount int) (*Boa
 	}, nil
 }
 
-func (c *BoardsClient) CreateBoard(w http.ResponseWriter, r *http.Request){
-	type request struct{
+func (c *BoardsClient) CreateBoard(w http.ResponseWriter, r *http.Request) {
+	type request struct {
 		Name string `json:"name"`
 	}
 	const op = "client.boards.New"
+	userId, err := GetUserIdByRequestWithCookie(r)
 
-	log :=slog.With(slog.String("op",op))
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	log := slog.With(slog.String("op", op))
 
 	var req request
 	json.NewDecoder(r.Body).Decode(&req)
 	log.Info(fmt.Sprintf("started to create a board, id = %v", req.Name))
 
-	resp, err:= c.api.CreateBoard(r.Context(),&boardsv1.CreateBoardRequest{
-		Name: req.Name,
+	resp, err := c.api.CreateBoard(r.Context(), &boardsv1.CreateBoardRequest{
+		Name:   req.Name,
+		UserId: userId,
 	})
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	result, err:= json.Marshal(resp)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	result, err := json.Marshal(resp)
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
-func (c *BoardsClient) GetBoard(w http.ResponseWriter, r *http.Request){
+func (c *BoardsClient) GetBoard(w http.ResponseWriter, r *http.Request) {
 	const op = "client.boards.Get"
 
-	log :=slog.With(slog.String("op",op))
+	log := slog.With(slog.String("op", op))
 
-	id,err:= strconv.ParseInt(r.URL.Query().Get("id"),10,64)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 	log.Info(fmt.Sprintf("started to get a board, id = %v", id))
 
-	resp, err:= c.api.GetBoard(r.Context(),&boardsv1.GetBoardRequest{
-		Id:id,
+	resp, err := c.api.GetBoard(r.Context(), &boardsv1.GetBoardRequest{
+		Id: id,
 	})
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	
+
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
-   
-	result, err :=  m.Marshal(resp)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+
+	result, err := m.Marshal(resp)
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 
 }
-func (c *BoardsClient) GetAllBoards(w http.ResponseWriter, r *http.Request){
+func (c *BoardsClient) GetAllBoards(w http.ResponseWriter, r *http.Request) {
 	const op = "client.boards.GetAll"
 	userId, err := GetUserIdByRequestWithCookie(r)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	log :=slog.With(slog.String("op",op))
+	log := slog.With(slog.String("op", op))
 
 	log.Info("started to get aall boards")
 
-	resp, err:= c.api.GetAllBoards(r.Context(),&boardsv1.GetAllBoardsRequest{
+	resp, err := c.api.GetAllBoards(r.Context(), &boardsv1.GetAllBoardsRequest{
 		UserId: userId,
 	})
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	
-	result, err := json.Marshal(resp.Boards)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
+
+	result, err := m.Marshal(resp)
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
 
-func (c *BoardsClient) GetIdeasInBoard(w http.ResponseWriter, r * http.Request){
-	boardId,err := strconv.ParseInt(r.URL.Query().Get("id"),10,64)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+func (c *BoardsClient) GetIdeasInBoard(w http.ResponseWriter, r *http.Request) {
+	boardId, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	resp,err:=c.api.GetIdeasInBoard(r.Context(),&boardsv1.GetIdeasInBoardRequest{
+	resp, err := c.api.GetIdeasInBoard(r.Context(), &boardsv1.GetIdeasInBoardRequest{
 		BoardId: boardId,
 	})
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	
+
 	result, err := json.Marshal(resp.Ideas)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }

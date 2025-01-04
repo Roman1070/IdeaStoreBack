@@ -89,9 +89,9 @@ func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.Ide
 	ideas := []*ideasv1.IdeaData{}
 	for rows.Next() {
 		idea := new(ideasv1.IdeaData)
-		err = rows.Scan(&idea.IdeaId, &idea.Image, &idea.Name, &idea.Description, &idea.Link, &idea.Tags)
+		err = rows.Scan(&idea.Id, &idea.Image, &idea.Name, &idea.Description, &idea.Link, &idea.Tags)
 		if userId != -1 {
-			idea.Saved = slices.Contains(savedIdsReponse.IdeasIds, idea.IdeaId)
+			idea.Saved = slices.Contains(savedIdsReponse.IdeasIds, idea.Id)
 		}
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
@@ -105,21 +105,21 @@ func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.Ide
 	return ideas, nil
 }
 
-func (s *Storage) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaData, error){
+func (s *Storage) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaData, error) {
 	const op = "storage.sqlite.GetIdeas"
-	if len(ids) ==0{
+	if len(ids) == 0 {
 		return []*ideasv1.IdeaData{}, nil
 	}
-	anySlice:= make([]any, len(ids))
+	anySlice := make([]any, len(ids))
 	for i, v := range ids {
 		anySlice[i] = v
 	}
-	idsRequestString:="("
-	for i:=0;i<len(ids)-1;i++{
-		idsRequestString+= "?,"
+	idsRequestString := "("
+	for i := 0; i < len(ids)-1; i++ {
+		idsRequestString += "?,"
 	}
-	idsRequestString+="?)"
-	query:="SELECT id,image,name FROM ideas WHERE id in " + idsRequestString
+	idsRequestString += "?)"
+	query := "SELECT id,image,name FROM ideas WHERE id in " + idsRequestString
 	stmt, err := s.db.Prepare(query)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -131,7 +131,7 @@ func (s *Storage) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaDat
 	ideas := []*ideasv1.IdeaData{}
 	for rows.Next() {
 		idea := new(ideasv1.IdeaData)
-		err = rows.Scan(&idea.IdeaId, &idea.Image, &idea.Name)
+		err = rows.Scan(&idea.Id, &idea.Image, &idea.Name)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, fmt.Errorf("%s: %w", op, storage.ErrIdeaNotFound)

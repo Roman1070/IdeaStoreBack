@@ -47,7 +47,6 @@ message BoardData{
     int64 id = 1;
     string name = 2;
     repeated int64 ideas_ids=3;
-    int64 user_id = 4;
 }
 message GetAllBoardsResponse{
     repeated BoardData boards = 1;
