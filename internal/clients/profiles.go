@@ -182,7 +182,7 @@ func (c *ProfilesClient) GetSavedIdeas(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, err.Error())
 		return
 	}
-
+	
 	result, err := json.Marshal(resp)
 	if err != nil {
 		slog.Error(err.Error())

@@ -206,12 +206,9 @@ func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv
 			return nil, err
 		}
 		ideas = append(ideas, &profilesv1.IdeaData{
-			IdeaId:      pair.ideaId,
+			Id:      pair.ideaId,
 			Name:        resp.Name,
-			Description: resp.Description,
-			Link:        resp.Link,
 			Image:       resp.Image,
-			Tags:        resp.Tags,
 			BoardId: pair.boardId,
 		})
 	}

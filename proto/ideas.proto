@@ -57,7 +57,7 @@ message DeleteRequest{
 }
 
 message IdeaData {
-  int64 idea_id = 1;
+  int64 id = 1;
   string name = 2;
   string description = 3;
   string link = 4;
