@@ -14,13 +14,18 @@ service Ideas {
   rpc DeleteIdea (DeleteRequest) returns (google.protobuf.Empty) {}
   //GetAllIdeas retrurs all ideas deom database
   rpc GetAllIdeas(GetAllRequest) returns (GetAllResponse);
-
+  rpc GetIdeas(GetIdeasRequest) returns (GetIdeasResponse);
 }
 
 message GetAllRequest{
   int64 user_id=1;
 }
-
+message GetIdeasRequest{
+  repeated int64 ids = 1;
+}
+message GetIdeasResponse{
+  repeated IdeaData ideas=1;
+}
 message CreateRequest {
   string name = 1;
   string description = 2;
@@ -60,6 +65,7 @@ message IdeaData {
   string image = 6;
   bool saved = 7;
 }
+
 
 message GetAllResponse{
   repeated IdeaData ideas =1;

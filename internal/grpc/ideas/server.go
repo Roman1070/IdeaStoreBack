@@ -23,6 +23,7 @@ type Ideas interface {
 	) (idea models.Idea, err error)
 	DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error)
 	GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaData, error)
+	GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaData, error)
 }
 type serverAPI struct {
 	ideasv1.UnimplementedIdeasServer
@@ -71,4 +72,15 @@ func (s *serverAPI) GetAllIdeas(ctx context.Context, req *ideasv1.GetAllRequest)
 		return nil, status.Error(codes.Internal, "Internal error getting all ideas")
 	}
 	return &ideasv1.GetAllResponse{Ideas: ideas}, nil
+}
+
+func (s *serverAPI) GetIdeas(ctx context.Context,req *ideasv1.GetIdeasRequest) (*ideasv1.GetIdeasResponse, error){
+	
+	slog.Info("started to get ideas")
+	ideas, err := s.ideas.GetIdeas(ctx, req.Ids)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error getting ideas")
+	}
+	return &ideasv1.GetIdeasResponse{Ideas: ideas}, nil
 }

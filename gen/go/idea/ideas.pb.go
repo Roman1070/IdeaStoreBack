@@ -68,6 +68,100 @@ func (x *GetAllRequest) GetUserId() int64 {
 	return 0
 }
 
+type GetIdeasRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Ids []int64 `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
+}
+
+func (x *GetIdeasRequest) Reset() {
+	*x = GetIdeasRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ideas_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetIdeasRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetIdeasRequest) ProtoMessage() {}
+
+func (x *GetIdeasRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ideas_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetIdeasRequest.ProtoReflect.Descriptor instead.
+func (*GetIdeasRequest) Descriptor() ([]byte, []int) {
+	return file_ideas_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *GetIdeasRequest) GetIds() []int64 {
+	if x != nil {
+		return x.Ids
+	}
+	return nil
+}
+
+type GetIdeasResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Ideas []*IdeaData `protobuf:"bytes,1,rep,name=ideas,proto3" json:"ideas,omitempty"`
+}
+
+func (x *GetIdeasResponse) Reset() {
+	*x = GetIdeasResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ideas_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetIdeasResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetIdeasResponse) ProtoMessage() {}
+
+func (x *GetIdeasResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ideas_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetIdeasResponse.ProtoReflect.Descriptor instead.
+func (*GetIdeasResponse) Descriptor() ([]byte, []int) {
+	return file_ideas_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetIdeasResponse) GetIdeas() []*IdeaData {
+	if x != nil {
+		return x.Ideas
+	}
+	return nil
+}
+
 type CreateRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -84,7 +178,7 @@ type CreateRequest struct {
 func (x *CreateRequest) Reset() {
 	*x = CreateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_ideas_proto_msgTypes[1]
+		mi := &file_ideas_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -97,7 +191,7 @@ func (x *CreateRequest) String() string {
 func (*CreateRequest) ProtoMessage() {}
 
 func (x *CreateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ideas_proto_msgTypes[1]
+	mi := &file_ideas_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -110,7 +204,7 @@ func (x *CreateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRequest.ProtoReflect.Descriptor instead.
 func (*CreateRequest) Descriptor() ([]byte, []int) {
-	return file_ideas_proto_rawDescGZIP(), []int{1}
+	return file_ideas_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CreateRequest) GetName() string {
@@ -166,7 +260,7 @@ type CreateResponse struct {
 func (x *CreateResponse) Reset() {
 	*x = CreateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_ideas_proto_msgTypes[2]
+		mi := &file_ideas_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -179,7 +273,7 @@ func (x *CreateResponse) String() string {
 func (*CreateResponse) ProtoMessage() {}
 
 func (x *CreateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ideas_proto_msgTypes[2]
+	mi := &file_ideas_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -192,7 +286,7 @@ func (x *CreateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateResponse.ProtoReflect.Descriptor instead.
 func (*CreateResponse) Descriptor() ([]byte, []int) {
-	return file_ideas_proto_rawDescGZIP(), []int{2}
+	return file_ideas_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateResponse) GetIdeaId() int64 {
@@ -213,7 +307,7 @@ type GetRequest struct {
 func (x *GetRequest) Reset() {
 	*x = GetRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_ideas_proto_msgTypes[3]
+		mi := &file_ideas_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -226,7 +320,7 @@ func (x *GetRequest) String() string {
 func (*GetRequest) ProtoMessage() {}
 
 func (x *GetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ideas_proto_msgTypes[3]
+	mi := &file_ideas_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -239,7 +333,7 @@ func (x *GetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRequest.ProtoReflect.Descriptor instead.
 func (*GetRequest) Descriptor() ([]byte, []int) {
-	return file_ideas_proto_rawDescGZIP(), []int{3}
+	return file_ideas_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetRequest) GetIdeaId() int64 {
@@ -266,7 +360,7 @@ type GetResponse struct {
 func (x *GetResponse) Reset() {
 	*x = GetResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_ideas_proto_msgTypes[4]
+		mi := &file_ideas_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -279,7 +373,7 @@ func (x *GetResponse) String() string {
 func (*GetResponse) ProtoMessage() {}
 
 func (x *GetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ideas_proto_msgTypes[4]
+	mi := &file_ideas_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -292,7 +386,7 @@ func (x *GetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetResponse.ProtoReflect.Descriptor instead.
 func (*GetResponse) Descriptor() ([]byte, []int) {
-	return file_ideas_proto_rawDescGZIP(), []int{4}
+	return file_ideas_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetResponse) GetName() string {
@@ -355,7 +449,7 @@ type DeleteRequest struct {
 func (x *DeleteRequest) Reset() {
 	*x = DeleteRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_ideas_proto_msgTypes[5]
+		mi := &file_ideas_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -368,7 +462,7 @@ func (x *DeleteRequest) String() string {
 func (*DeleteRequest) ProtoMessage() {}
 
 func (x *DeleteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ideas_proto_msgTypes[5]
+	mi := &file_ideas_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -381,7 +475,7 @@ func (x *DeleteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteRequest.ProtoReflect.Descriptor instead.
 func (*DeleteRequest) Descriptor() ([]byte, []int) {
-	return file_ideas_proto_rawDescGZIP(), []int{5}
+	return file_ideas_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeleteRequest) GetIdeaId() int64 {
@@ -408,7 +502,7 @@ type IdeaData struct {
 func (x *IdeaData) Reset() {
 	*x = IdeaData{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_ideas_proto_msgTypes[6]
+		mi := &file_ideas_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -421,7 +515,7 @@ func (x *IdeaData) String() string {
 func (*IdeaData) ProtoMessage() {}
 
 func (x *IdeaData) ProtoReflect() protoreflect.Message {
-	mi := &file_ideas_proto_msgTypes[6]
+	mi := &file_ideas_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -434,7 +528,7 @@ func (x *IdeaData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IdeaData.ProtoReflect.Descriptor instead.
 func (*IdeaData) Descriptor() ([]byte, []int) {
-	return file_ideas_proto_rawDescGZIP(), []int{6}
+	return file_ideas_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *IdeaData) GetIdeaId() int64 {
@@ -497,7 +591,7 @@ type GetAllResponse struct {
 func (x *GetAllResponse) Reset() {
 	*x = GetAllResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_ideas_proto_msgTypes[7]
+		mi := &file_ideas_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -510,7 +604,7 @@ func (x *GetAllResponse) String() string {
 func (*GetAllResponse) ProtoMessage() {}
 
 func (x *GetAllResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ideas_proto_msgTypes[7]
+	mi := &file_ideas_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -523,7 +617,7 @@ func (x *GetAllResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAllResponse.ProtoReflect.Descriptor instead.
 func (*GetAllResponse) Descriptor() ([]byte, []int) {
-	return file_ideas_proto_rawDescGZIP(), []int{7}
+	return file_ideas_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetAllResponse) GetIdeas() []*IdeaData {
@@ -541,7 +635,13 @@ var file_ideas_proto_rawDesc = []byte{
 	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x22, 0x28, 0x0a, 0x0d, 0x47, 0x65, 0x74, 0x41, 0x6c, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x12, 0x17, 0x0a, 0x07, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x03, 0x52, 0x06, 0x75, 0x73, 0x65, 0x72, 0x49, 0x64, 0x22, 0x9c, 0x01, 0x0a, 0x0d,
+	0x01, 0x28, 0x03, 0x52, 0x06, 0x75, 0x73, 0x65, 0x72, 0x49, 0x64, 0x22, 0x23, 0x0a, 0x0f, 0x47,
+	0x65, 0x74, 0x49, 0x64, 0x65, 0x61, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10,
+	0x0a, 0x03, 0x69, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x03, 0x52, 0x03, 0x69, 0x64, 0x73,
+	0x22, 0x39, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x49, 0x64, 0x65, 0x61, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x25, 0x0a, 0x05, 0x69, 0x64, 0x65, 0x61, 0x73, 0x18, 0x01, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x69, 0x64, 0x65, 0x61, 0x73, 0x2e, 0x49, 0x64, 0x65, 0x61,
+	0x44, 0x61, 0x74, 0x61, 0x52, 0x05, 0x69, 0x64, 0x65, 0x61, 0x73, 0x22, 0x9c, 0x01, 0x0a, 0x0d,
 	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a,
 	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
 	0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e,
@@ -585,7 +685,7 @@ var file_ideas_proto_rawDesc = []byte{
 	0x41, 0x6c, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x25, 0x0a, 0x05, 0x69,
 	0x64, 0x65, 0x61, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x69, 0x64, 0x65,
 	0x61, 0x73, 0x2e, 0x49, 0x64, 0x65, 0x61, 0x44, 0x61, 0x74, 0x61, 0x52, 0x05, 0x69, 0x64, 0x65,
-	0x61, 0x73, 0x32, 0xee, 0x01, 0x0a, 0x05, 0x49, 0x64, 0x65, 0x61, 0x73, 0x12, 0x39, 0x0a, 0x0a,
+	0x61, 0x73, 0x32, 0xab, 0x02, 0x0a, 0x05, 0x49, 0x64, 0x65, 0x61, 0x73, 0x12, 0x39, 0x0a, 0x0a,
 	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x49, 0x64, 0x65, 0x61, 0x12, 0x14, 0x2e, 0x69, 0x64, 0x65,
 	0x61, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
 	0x1a, 0x15, 0x2e, 0x69, 0x64, 0x65, 0x61, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52,
@@ -600,9 +700,13 @@ var file_ideas_proto_rawDesc = []byte{
 	0x6c, 0x49, 0x64, 0x65, 0x61, 0x73, 0x12, 0x14, 0x2e, 0x69, 0x64, 0x65, 0x61, 0x73, 0x2e, 0x47,
 	0x65, 0x74, 0x41, 0x6c, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x15, 0x2e, 0x69,
 	0x64, 0x65, 0x61, 0x73, 0x2e, 0x47, 0x65, 0x74, 0x41, 0x6c, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x42, 0x1d, 0x5a, 0x1b, 0x69, 0x64, 0x65, 0x61, 0x2d, 0x73, 0x74, 0x6f, 0x72,
-	0x65, 0x2e, 0x69, 0x64, 0x65, 0x61, 0x73, 0x2e, 0x76, 0x31, 0x3b, 0x69, 0x64, 0x65, 0x61, 0x73,
-	0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x73, 0x65, 0x12, 0x3b, 0x0a, 0x08, 0x47, 0x65, 0x74, 0x49, 0x64, 0x65, 0x61, 0x73, 0x12,
+	0x16, 0x2e, 0x69, 0x64, 0x65, 0x61, 0x73, 0x2e, 0x47, 0x65, 0x74, 0x49, 0x64, 0x65, 0x61, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x17, 0x2e, 0x69, 0x64, 0x65, 0x61, 0x73, 0x2e,
+	0x47, 0x65, 0x74, 0x49, 0x64, 0x65, 0x61, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x42, 0x1d, 0x5a, 0x1b, 0x69, 0x64, 0x65, 0x61, 0x2d, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x69,
+	0x64, 0x65, 0x61, 0x73, 0x2e, 0x76, 0x31, 0x3b, 0x69, 0x64, 0x65, 0x61, 0x73, 0x76, 0x31, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -617,33 +721,38 @@ func file_ideas_proto_rawDescGZIP() []byte {
 	return file_ideas_proto_rawDescData
 }
 
-var file_ideas_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_ideas_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_ideas_proto_goTypes = []interface{}{
-	(*GetAllRequest)(nil),  // 0: ideas.GetAllRequest
-	(*CreateRequest)(nil),  // 1: ideas.CreateRequest
-	(*CreateResponse)(nil), // 2: ideas.CreateResponse
-	(*GetRequest)(nil),     // 3: ideas.GetRequest
-	(*GetResponse)(nil),    // 4: ideas.GetResponse
-	(*DeleteRequest)(nil),  // 5: ideas.DeleteRequest
-	(*IdeaData)(nil),       // 6: ideas.IdeaData
-	(*GetAllResponse)(nil), // 7: ideas.GetAllResponse
-	(*emptypb.Empty)(nil),  // 8: google.protobuf.Empty
+	(*GetAllRequest)(nil),    // 0: ideas.GetAllRequest
+	(*GetIdeasRequest)(nil),  // 1: ideas.GetIdeasRequest
+	(*GetIdeasResponse)(nil), // 2: ideas.GetIdeasResponse
+	(*CreateRequest)(nil),    // 3: ideas.CreateRequest
+	(*CreateResponse)(nil),   // 4: ideas.CreateResponse
+	(*GetRequest)(nil),       // 5: ideas.GetRequest
+	(*GetResponse)(nil),      // 6: ideas.GetResponse
+	(*DeleteRequest)(nil),    // 7: ideas.DeleteRequest
+	(*IdeaData)(nil),         // 8: ideas.IdeaData
+	(*GetAllResponse)(nil),   // 9: ideas.GetAllResponse
+	(*emptypb.Empty)(nil),    // 10: google.protobuf.Empty
 }
 var file_ideas_proto_depIdxs = []int32{
-	6, // 0: ideas.GetAllResponse.ideas:type_name -> ideas.IdeaData
-	1, // 1: ideas.Ideas.CreateIdea:input_type -> ideas.CreateRequest
-	3, // 2: ideas.Ideas.GetIdea:input_type -> ideas.GetRequest
-	5, // 3: ideas.Ideas.DeleteIdea:input_type -> ideas.DeleteRequest
-	0, // 4: ideas.Ideas.GetAllIdeas:input_type -> ideas.GetAllRequest
-	2, // 5: ideas.Ideas.CreateIdea:output_type -> ideas.CreateResponse
-	4, // 6: ideas.Ideas.GetIdea:output_type -> ideas.GetResponse
-	8, // 7: ideas.Ideas.DeleteIdea:output_type -> google.protobuf.Empty
-	7, // 8: ideas.Ideas.GetAllIdeas:output_type -> ideas.GetAllResponse
-	5, // [5:9] is the sub-list for method output_type
-	1, // [1:5] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	8,  // 0: ideas.GetIdeasResponse.ideas:type_name -> ideas.IdeaData
+	8,  // 1: ideas.GetAllResponse.ideas:type_name -> ideas.IdeaData
+	3,  // 2: ideas.Ideas.CreateIdea:input_type -> ideas.CreateRequest
+	5,  // 3: ideas.Ideas.GetIdea:input_type -> ideas.GetRequest
+	7,  // 4: ideas.Ideas.DeleteIdea:input_type -> ideas.DeleteRequest
+	0,  // 5: ideas.Ideas.GetAllIdeas:input_type -> ideas.GetAllRequest
+	1,  // 6: ideas.Ideas.GetIdeas:input_type -> ideas.GetIdeasRequest
+	4,  // 7: ideas.Ideas.CreateIdea:output_type -> ideas.CreateResponse
+	6,  // 8: ideas.Ideas.GetIdea:output_type -> ideas.GetResponse
+	10, // 9: ideas.Ideas.DeleteIdea:output_type -> google.protobuf.Empty
+	9,  // 10: ideas.Ideas.GetAllIdeas:output_type -> ideas.GetAllResponse
+	2,  // 11: ideas.Ideas.GetIdeas:output_type -> ideas.GetIdeasResponse
+	7,  // [7:12] is the sub-list for method output_type
+	2,  // [2:7] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_ideas_proto_init() }
@@ -665,7 +774,7 @@ func file_ideas_proto_init() {
 			}
 		}
 		file_ideas_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateRequest); i {
+			switch v := v.(*GetIdeasRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -677,7 +786,7 @@ func file_ideas_proto_init() {
 			}
 		}
 		file_ideas_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateResponse); i {
+			switch v := v.(*GetIdeasResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -689,7 +798,7 @@ func file_ideas_proto_init() {
 			}
 		}
 		file_ideas_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetRequest); i {
+			switch v := v.(*CreateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -701,7 +810,7 @@ func file_ideas_proto_init() {
 			}
 		}
 		file_ideas_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetResponse); i {
+			switch v := v.(*CreateResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -713,7 +822,7 @@ func file_ideas_proto_init() {
 			}
 		}
 		file_ideas_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeleteRequest); i {
+			switch v := v.(*GetRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -725,7 +834,7 @@ func file_ideas_proto_init() {
 			}
 		}
 		file_ideas_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*IdeaData); i {
+			switch v := v.(*GetResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -737,6 +846,30 @@ func file_ideas_proto_init() {
 			}
 		}
 		file_ideas_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ideas_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*IdeaData); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ideas_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetAllResponse); i {
 			case 0:
 				return &v.state
@@ -755,7 +888,7 @@ func file_ideas_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_ideas_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -31,6 +31,7 @@ type IdeasClient interface {
 	DeleteIdea(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetAllIdeas retrurs all ideas deom database
 	GetAllIdeas(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error)
+	GetIdeas(ctx context.Context, in *GetIdeasRequest, opts ...grpc.CallOption) (*GetIdeasResponse, error)
 }
 
 type ideasClient struct {
@@ -77,6 +78,15 @@ func (c *ideasClient) GetAllIdeas(ctx context.Context, in *GetAllRequest, opts .
 	return out, nil
 }
 
+func (c *ideasClient) GetIdeas(ctx context.Context, in *GetIdeasRequest, opts ...grpc.CallOption) (*GetIdeasResponse, error) {
+	out := new(GetIdeasResponse)
+	err := c.cc.Invoke(ctx, "/ideas.Ideas/GetIdeas", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IdeasServer is the server API for Ideas service.
 // All implementations must embed UnimplementedIdeasServer
 // for forward compatibility
@@ -89,6 +99,7 @@ type IdeasServer interface {
 	DeleteIdea(context.Context, *DeleteRequest) (*emptypb.Empty, error)
 	// GetAllIdeas retrurs all ideas deom database
 	GetAllIdeas(context.Context, *GetAllRequest) (*GetAllResponse, error)
+	GetIdeas(context.Context, *GetIdeasRequest) (*GetIdeasResponse, error)
 	mustEmbedUnimplementedIdeasServer()
 }
 
@@ -107,6 +118,9 @@ func (UnimplementedIdeasServer) DeleteIdea(context.Context, *DeleteRequest) (*em
 }
 func (UnimplementedIdeasServer) GetAllIdeas(context.Context, *GetAllRequest) (*GetAllResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllIdeas not implemented")
+}
+func (UnimplementedIdeasServer) GetIdeas(context.Context, *GetIdeasRequest) (*GetIdeasResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetIdeas not implemented")
 }
 func (UnimplementedIdeasServer) mustEmbedUnimplementedIdeasServer() {}
 
@@ -193,6 +207,24 @@ func _Ideas_GetAllIdeas_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Ideas_GetIdeas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetIdeasRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdeasServer).GetIdeas(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ideas.Ideas/GetIdeas",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdeasServer).GetIdeas(ctx, req.(*GetIdeasRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Ideas_ServiceDesc is the grpc.ServiceDesc for Ideas service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -215,6 +247,10 @@ var Ideas_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllIdeas",
 			Handler:    _Ideas_GetAllIdeas_Handler,
+		},
+		{
+			MethodName: "GetIdeas",
+			Handler:    _Ideas_GetIdeas_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

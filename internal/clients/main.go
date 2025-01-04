@@ -30,6 +30,7 @@ func main() {
 	router.HandleFunc("/idea", ideasClient.Create).Methods("POST", "OPTIONS")
 	router.HandleFunc("/idea", ideasClient.GetIdea).Methods("GET", "OPTIONS")
 	router.HandleFunc("/ideas", ideasClient.GetAllIdeas).Methods("GET", "OPTIONS")
+	router.HandleFunc("/ideas", ideasClient.GetIdeas).Methods("POST", "OPTIONS")
 
 	router.HandleFunc("/board", boardsClient.CreateBoard).Methods("POST", "OPTIONS")
 	router.HandleFunc("/board", boardsClient.GetBoard).Methods("GET", "OPTIONS")

@@ -66,7 +66,7 @@ func (s *Storage) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, erro
 	return emptypb.Empty{}, nil
 }
 func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaData, error) {
-	const op = "storage.sqlite.GetIdea"
+	const op = "storage.sqlite.GetAllIdeas"
 	var savedIdsReponse *profilesv1.GetSavedIdeasIdsResponse
 	var err error
 	if userId != -1 {
@@ -95,12 +95,50 @@ func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.Ide
 		}
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, fmt.Errorf("%s: %w", op, storage.ErrAppNotFound)
+				return nil, fmt.Errorf("%s: %w", op, storage.ErrIdeaNotFound)
 			}
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		ideas = append(ideas, idea)
 	}
 
+	return ideas, nil
+}
+
+func (s *Storage) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaData, error){
+	const op = "storage.sqlite.GetIdeas"
+	if len(ids) ==0{
+		return []*ideasv1.IdeaData{}, nil
+	}
+	anySlice:= make([]any, len(ids))
+	for i, v := range ids {
+		anySlice[i] = v
+	}
+	idsRequestString:="("
+	for i:=0;i<len(ids)-1;i++{
+		idsRequestString+= "?,"
+	}
+	idsRequestString+="?)"
+	query:="SELECT id,image,name FROM ideas WHERE id in " + idsRequestString
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	rows, err := stmt.QueryContext(ctx, anySlice...)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	ideas := []*ideasv1.IdeaData{}
+	for rows.Next() {
+		idea := new(ideasv1.IdeaData)
+		err = rows.Scan(&idea.IdeaId, &idea.Image, &idea.Name)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, fmt.Errorf("%s: %w", op, storage.ErrIdeaNotFound)
+			}
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		ideas = append(ideas, idea)
+	}
 	return ideas, nil
 }

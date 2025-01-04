@@ -156,6 +156,39 @@ func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
+func(c *IdeasClient) GetIdeas(w http.ResponseWriter, r *http.Request){
+	slog.Info("Client started to get ideas")
+	type ideasIds struct{
+		Ids []string `json:"ids"`
+	}
+	idsStringSlice:= ideasIds{}
+	json.NewDecoder(r.Body).Decode(&idsStringSlice)
+	
+	ids:= []int64{}
+	for _,s := range idsStringSlice.Ids{
+		id, err := strconv.ParseInt(s,10,64)
+		
+		if err != nil {
+			utils.WriteError(w, err.Error())
+			return
+		}
+		ids =append(ids, id)
+	}
+	resp, err := c.api.GetIdeas(r.Context(), &ideasv1.GetIdeasRequest{
+		Ids: ids,
+	})
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	result, err := json.Marshal(resp.Ideas)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
 func NewIdeasClient(addr string, timeout time.Duration, retriesCount int) (*IdeasClient, error) {
 	const op = "client.ideas.New"
 

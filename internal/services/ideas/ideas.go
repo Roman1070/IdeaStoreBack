@@ -89,3 +89,22 @@ func (i *Ideas) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaD
 
 	return ideas, nil
 }
+
+func (i *Ideas) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaData, error){
+	
+	const op = "service.ideas.GetIdeas"
+
+	log := i.log.With(
+		slog.String("op", op),
+	)
+	log.Info("Getting ideas...")
+
+	ideas, err := i.Api.GetIdeas(ctx, ids)
+
+	if err != nil {
+		log.Error(err.Error())
+		return nil, fmt.Errorf("%s: %v", op, "Internal error")
+	}
+
+	return ideas, nil
+}
