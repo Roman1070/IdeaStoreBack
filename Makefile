@@ -4,13 +4,13 @@ gen_boards:
 	protoc -I proto proto/boards.proto --go_out=./gen/go/boards/ --go_opt=paths=source_relative --go-grpc_out=./gen/go/boards/ --go-grpc_opt=paths=source_relative
 gen_profiles:
 	protoc -I proto proto/profiles.proto --go_out=./gen/go/profiles/ --go_opt=paths=source_relative --go-grpc_out=./gen/go/profiles/ --go-grpc_opt=paths=source_relative
-auth_server:
+auth:
 	go run cmd/auth/main.go
-ideas_server:
+ideas:
 	go run cmd/ideas/main.go
-boards_server:
+boards:
 	go run cmd/boards/main.go
-profiles_server:
+profiles:
 	go run cmd/profiles/main.go
 client:
 	go run internal/clients/main.go internal/clients/auth.go internal/clients/ideas.go internal/clients/boards.go internal/clients/profiles.go
