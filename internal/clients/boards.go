@@ -112,7 +112,7 @@ func (c *BoardsClient) GetBoard(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 
 }
-func (c *BoardsClient) GetAllBoards(w http.ResponseWriter, r *http.Request) {
+func (c *BoardsClient) GetCurrentUsersBoards(w http.ResponseWriter, r *http.Request) {
 	const op = "client.boards.GetAll"
 	userId, err := GetUserIdByRequestWithCookie(r)
 	if err != nil {
@@ -122,6 +122,38 @@ func (c *BoardsClient) GetAllBoards(w http.ResponseWriter, r *http.Request) {
 	log := slog.With(slog.String("op", op))
 
 	log.Info("started to get aall boards")
+
+	resp, err := c.api.GetAllBoards(r.Context(), &boardsv1.GetAllBoardsRequest{
+		UserId: userId,
+	})
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
+
+	result, err := m.Marshal(resp)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+func(c *BoardsClient) GetBoards(w http.ResponseWriter, r *http.Request){
+	const op = "client.boards.GetAll"
+	userIdStr := r.URL.Query().Get("id")
+	userId, err := strconv.ParseInt(userIdStr,10,64)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	log := slog.With(slog.String("op", op))
+
+	log.Info("started to get boards")
 
 	resp, err := c.api.GetAllBoards(r.Context(), &boardsv1.GetAllBoardsRequest{
 		UserId: userId,
