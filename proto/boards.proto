@@ -10,8 +10,12 @@ service Boards{
     rpc GetAllBoards(GetAllBoardsRequest) returns (GetAllBoardsResponse);
     rpc SetIdeaSaved(SetIdeaSavedRequest) returns (google.protobuf.Empty) {}
     rpc GetIdeasInBoard(GetIdeasInBoardRequest) returns (GetIdeasInBoardResponse);
+    rpc DeleteBoard(DeleteBoardRequest) returns (google.protobuf.Empty) {}
 }
-
+message DeleteBoardRequest{
+    int64 user_id = 1;
+    int64 board_id = 2;
+}
 message GetIdeasInBoardRequest{
     int64 board_id = 1;
 }

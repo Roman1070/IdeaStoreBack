@@ -56,7 +56,12 @@ func (c *BoardsClient) CreateBoard(w http.ResponseWriter, r *http.Request) {
 	log := slog.With(slog.String("op", op))
 
 	var req request
-	json.NewDecoder(r.Body).Decode(&req)
+	err = json.NewDecoder(r.Body).Decode(&req)
+	
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
 	log.Info(fmt.Sprintf("started to create a board, id = %v", req.Name))
 
 	resp, err := c.api.CreateBoard(r.Context(), &boardsv1.CreateBoardRequest{
@@ -160,4 +165,38 @@ func (c *BoardsClient) GetIdeasInBoard(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
+}
+
+func(c *BoardsClient) DeleteBoard(w http.ResponseWriter, r *http.Request){
+	
+	type request struct{
+		Id string `json:"id"`
+	}
+	userId,err := GetUserIdByRequestWithCookie(r)
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
+	var req request
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		slog.Error(err.Error())
+		return
+	}
+	id, err := strconv.ParseInt(req.Id,10,64)
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		slog.Error(err.Error())
+		return
+	}
+	_, err = c.api.DeleteBoard(r.Context(),&boardsv1.DeleteBoardRequest{
+		BoardId: id,
+		UserId: userId,
+	})
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }

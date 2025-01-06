@@ -18,6 +18,7 @@ type Boards interface {
 	GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.BoardData, error)
 	SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved bool) (*emptypb.Empty, error)
 	GetIdeasInBoard(ctx context.Context, boardId int64) ([]*boardsv1.IdeaData, error)
+	DeleteBoard(ctx context.Context,userId, boardId int64) (*emptypb.Empty, error)
 }
 
 type serverAPI struct {
@@ -84,4 +85,13 @@ func (s *serverAPI) GetIdeasInBoard(ctx context.Context, req *boardsv1.GetIdeasI
 	return &boardsv1.GetIdeasInBoardResponse{
 		Ideas: ideas,
 	}, nil
+}
+func (s *serverAPI) DeleteBoard(ctx context.Context, req *boardsv1.DeleteBoardRequest) (*emptypb.Empty, error){
+	slog.Info("started to DeleteBoard grpc")
+	_, err := s.boards.DeleteBoard(ctx,req.UserId, req.BoardId)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error DeleteBoard")
+	}
+	return &emptypb.Empty{}, nil
 }

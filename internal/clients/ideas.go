@@ -61,7 +61,7 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request) {
 }
 func GetImages(w http.ResponseWriter, r *http.Request) {
 
-	file, err := os.ReadFile("E:/web/IdeaStoreBack" + r.RequestURI)
+	file, err := os.ReadFile("F:/Roman/WEB/IdeaStoreBack" + r.RequestURI)
 	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, err.Error())
@@ -162,8 +162,12 @@ func (c *IdeasClient) GetIdeas(w http.ResponseWriter, r *http.Request) {
 		Ids []string `json:"ids"`
 	}
 	idsStringSlice := ideasIds{}
-	json.NewDecoder(r.Body).Decode(&idsStringSlice)
+	err:=json.NewDecoder(r.Body).Decode(&idsStringSlice)
 
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
 	ids := []int64{}
 	for _, s := range idsStringSlice.Ids {
 		id, err := strconv.ParseInt(s, 10, 64)

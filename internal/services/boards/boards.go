@@ -93,3 +93,14 @@ func(b * Boards) GetIdeasInBoard(ctx context.Context, boardId int64) ([]*boardsv
 	}
 	return ideas, nil
 }
+func(b *Boards) DeleteBoard(ctx context.Context,userId, boardId int64)  (*emptypb.Empty, error) {
+	const op = "service.boards.DeleteBoard"
+
+	slog.Info("started DeleteBoard...")
+
+	_, err := b.Api.DeleteBoard(ctx, userId, boardId)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %v", op, "Internal error DeleteBoard")
+	}
+	return nil, nil
+}

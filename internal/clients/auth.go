@@ -55,7 +55,12 @@ type registerRequest struct {
 func(c *AuthClient)  Regsiter(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 
-	json.NewDecoder(r.Body).Decode(&req)
+	err:=json.NewDecoder(r.Body).Decode(&req)
+	
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
 	request := &authv1.RegisterRequest{
 		Email:    req.Email,
 		Password: req.Password,

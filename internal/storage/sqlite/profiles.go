@@ -238,7 +238,49 @@ func (s *Storage) GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, 
 	}
 	return getIdeasIds(pairs), nil
 }
+func (s *Storage) MoveIdeasToBoard(ctx context.Context, userId, oldBoardId, newBoardId int64)(*emptypb.Empty, error){
+	
+	slog.Info("storage started MoveIdeasToBoard")
 
+	stmt, err := s.db.Prepare("SELECT savedIdeas FROM profiles WHERE id = ?")
+	if err != nil {
+		slog.Error("storage MoveIdeasToBoard error: " + err.Error())
+		return nil, fmt.Errorf("sotrage MoveIdeasToBoard error: " + err.Error())
+	}
+	
+	row := stmt.QueryRow(userId)
+	var idsStr string
+	err = row.Scan(&idsStr)
+	if err != nil {
+		slog.Error("storage MoveIdeasToBoard error: " + err.Error())
+		return nil, fmt.Errorf("sotrage MoveIdeasToBoard error: " + err.Error())
+	}
+	pairs, err := ParseIdPairs(idsStr)
+	if err != nil {
+		slog.Error("storage MoveIdeasToBoard error: " + err.Error())
+		return nil, fmt.Errorf("sotrage MoveIdeasToBoard error: " + err.Error())
+	}
+	var resultStr string
+	for _,pair := range pairs{
+		if pair.boardId == oldBoardId{
+			pair.boardId = newBoardId
+		}
+		resultStr+=pair.toString()+" "
+	}
+	resultStr = strings.TrimSpace(resultStr)
+	stmt, err = s.db.Prepare("UPDATE profiles SET savedIdeas = ?  WHERE id = ?")
+	if err != nil {
+		slog.Error("storage MoveIdeasToBoard error: " + err.Error())
+		return nil, fmt.Errorf("sotrage MoveIdeasToBoard error: " + err.Error())
+	}
+	_, err = stmt.ExecContext(ctx,resultStr, userId)
+	
+	if err != nil {
+		slog.Error("storage MoveIdeasToBoard error: " + err.Error())
+		return nil, fmt.Errorf("sotrage MoveIdeasToBoard error: " + err.Error())
+	}
+	return nil, nil
+}
 
 
 type ideaBoardPair struct{

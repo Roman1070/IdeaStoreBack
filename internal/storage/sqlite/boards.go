@@ -7,6 +7,7 @@ import (
 	"fmt"
 	boardsv1 "idea-store-auth/gen/go/boards"
 	ideasv1 "idea-store-auth/gen/go/idea"
+	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
 	"idea-store-auth/internal/storage"
 	"log/slog"
@@ -184,4 +185,29 @@ func (s *Storage) GetIdeasInBoard(ctx context.Context, boardId int64)([]*boardsv
 	}
 
 	return result,nil
+}
+
+func(s *Storage) DeleteBoard(ctx context.Context, userId, boardId int64)(*emptypb.Empty, error){
+	const op = "storage.sqlite.DeleteBoard"
+
+	stmt, err := s.db.Prepare("DELETE FROM boards WHERE id = ?")
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	_, err=stmt.ExecContext(ctx,boardId)
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	_, err = s.profilesClient.MoveIdeasToBoard(ctx,&profilesv1.MoveIdeaToBoardRequest{
+		UserId: userId,
+		OldBoardId: boardId,
+		NewBoardId: -1,
+	})
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return nil,nil
 }

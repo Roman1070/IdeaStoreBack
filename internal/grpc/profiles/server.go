@@ -8,6 +8,8 @@ import (
 	"log/slog"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -18,6 +20,7 @@ type Profiles interface {
 	IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool,int64, error)
 	GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error)
 	GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, error)
+	MoveIdeasToBoard(ctx context.Context,userId, oldBoardId, newBoardId int64) (*emptypb.Empty, error)
 }
 
 type serverAPI struct {
@@ -113,4 +116,15 @@ func (s *serverAPI) GetSavedIdeasIds(ctx context.Context, req *profilesv1.GetSav
 	return &profilesv1.GetSavedIdeasIdsResponse{
 		IdeasIds: resp,
 	}, nil
+}
+
+func(s *serverAPI) MoveIdeasToBoard(ctx context.Context, req *profilesv1.MoveIdeaToBoardRequest) (*emptypb.Empty, error){
+	
+	slog.Info("started to MoveIdeasToBoard grpc")
+	_, err := s.profiles.MoveIdeasToBoard(ctx,req.UserId,req.OldBoardId,req.NewBoardId)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error MoveIdeasToBoard")
+	}
+	return nil, nil
 }

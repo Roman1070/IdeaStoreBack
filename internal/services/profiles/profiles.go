@@ -102,3 +102,15 @@ func (p *Profiles) GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64,
 	}
 	return resp, nil
 }
+
+func (p *Profiles) MoveIdeasToBoard(ctx context.Context,userId, oldBoardId, newBoardId int64) (*emptypb.Empty, error){
+	slog.Info("service start MoveIdeasToBoard")
+
+	resp, err := p.Api.MoveIdeasToBoard(ctx,userId, oldBoardId, newBoardId )
+
+	if err != nil {
+		slog.Error("service MoveIdeasToBoard error: " + err.Error())
+		return nil, err
+	}
+	return resp, nil
+}

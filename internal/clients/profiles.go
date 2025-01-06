@@ -50,8 +50,13 @@ func (c *ProfilesClient) CreateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	var req request
 
-	json.NewDecoder(r.Body).Decode(&req)
-	_, err := c.api.CreateProfile(r.Context(), &profilesv1.CreateProfileRequest{
+	err:=json.NewDecoder(r.Body).Decode(&req)
+	
+	if err!=nil{
+		utils.WriteError(w,err.Error())
+		return
+	}
+	_, err = c.api.CreateProfile(r.Context(), &profilesv1.CreateProfileRequest{
 		Id:    req.Id,
 		Email: req.Email,
 		Name:  req.Name,

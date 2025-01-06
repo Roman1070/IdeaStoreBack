@@ -34,6 +34,7 @@ func main() {
 
 	router.HandleFunc("/board", boardsClient.CreateBoard).Methods("POST", "OPTIONS")
 	router.HandleFunc("/board", boardsClient.GetBoard).Methods("GET", "OPTIONS")
+	router.HandleFunc("/board", boardsClient.DeleteBoard).Methods("DELETE", "OPTIONS")
 	router.HandleFunc("/boards", boardsClient.GetAllBoards).Methods("GET", "OPTIONS")
 	router.HandleFunc("/ideas-in-board", boardsClient.GetIdeasInBoard).Methods("GET", "OPTIONS")
 

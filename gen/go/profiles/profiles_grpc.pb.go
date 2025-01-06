@@ -30,6 +30,7 @@ type ProfilesClient interface {
 	IsIdeaSaved(ctx context.Context, in *IsIdeaSavedRequest, opts ...grpc.CallOption) (*IsIdeaSavedResponse, error)
 	GetSavedIdeas(ctx context.Context, in *GetSavedIdeasRequest, opts ...grpc.CallOption) (*GetSavedIdeasResponse, error)
 	GetSavedIdeasIds(ctx context.Context, in *GetSavedIdeasIdsRequest, opts ...grpc.CallOption) (*GetSavedIdeasIdsResponse, error)
+	MoveIdeasToBoard(ctx context.Context, in *MoveIdeaToBoardRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type profilesClient struct {
@@ -94,6 +95,15 @@ func (c *profilesClient) GetSavedIdeasIds(ctx context.Context, in *GetSavedIdeas
 	return out, nil
 }
 
+func (c *profilesClient) MoveIdeasToBoard(ctx context.Context, in *MoveIdeaToBoardRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/profiles.Profiles/MoveIdeasToBoard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProfilesServer is the server API for Profiles service.
 // All implementations must embed UnimplementedProfilesServer
 // for forward compatibility
@@ -105,6 +115,7 @@ type ProfilesServer interface {
 	IsIdeaSaved(context.Context, *IsIdeaSavedRequest) (*IsIdeaSavedResponse, error)
 	GetSavedIdeas(context.Context, *GetSavedIdeasRequest) (*GetSavedIdeasResponse, error)
 	GetSavedIdeasIds(context.Context, *GetSavedIdeasIdsRequest) (*GetSavedIdeasIdsResponse, error)
+	MoveIdeasToBoard(context.Context, *MoveIdeaToBoardRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedProfilesServer()
 }
 
@@ -129,6 +140,9 @@ func (UnimplementedProfilesServer) GetSavedIdeas(context.Context, *GetSavedIdeas
 }
 func (UnimplementedProfilesServer) GetSavedIdeasIds(context.Context, *GetSavedIdeasIdsRequest) (*GetSavedIdeasIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSavedIdeasIds not implemented")
+}
+func (UnimplementedProfilesServer) MoveIdeasToBoard(context.Context, *MoveIdeaToBoardRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MoveIdeasToBoard not implemented")
 }
 func (UnimplementedProfilesServer) mustEmbedUnimplementedProfilesServer() {}
 
@@ -251,6 +265,24 @@ func _Profiles_GetSavedIdeasIds_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Profiles_MoveIdeasToBoard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MoveIdeaToBoardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfilesServer).MoveIdeasToBoard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/profiles.Profiles/MoveIdeasToBoard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfilesServer).MoveIdeasToBoard(ctx, req.(*MoveIdeaToBoardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Profiles_ServiceDesc is the grpc.ServiceDesc for Profiles service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -281,6 +313,10 @@ var Profiles_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSavedIdeasIds",
 			Handler:    _Profiles_GetSavedIdeasIds_Handler,
+		},
+		{
+			MethodName: "MoveIdeasToBoard",
+			Handler:    _Profiles_MoveIdeasToBoard_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
