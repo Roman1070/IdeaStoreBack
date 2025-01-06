@@ -47,6 +47,7 @@ func (s *Storage) GetIdea(ctx context.Context, id int64) (models.Idea, error) {
 	row := stmt.QueryRowContext(ctx, id)
 	var idea models.Idea
 	err = row.Scan(&idea.ID, &idea.Image, &idea.Name, &idea.Description, &idea.Link, &idea.Tags, &idea.UserID, &idea.Likes)
+	fmt.Println(idea)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Idea{}, fmt.Errorf("%s: %w", op, storage.ErrAppNotFound)

@@ -69,7 +69,7 @@ func (c *ProfilesClient) CreateProfile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request) {
+func (c *ProfilesClient) GetCurrentProfile(w http.ResponseWriter, r *http.Request) {
 	userId, err := GetUserIdByRequestWithCookie(r)
 
 	if err != nil {
@@ -98,7 +98,36 @@ func (c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
+func(c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request){
+	idStr := r.URL.Query().Get("id")
+	id, err := strconv.ParseInt(idStr,10,64)
+	
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, "Error getting profile: "+err.Error())
+		return
+	}
+	resp, err := c.api.GetProfile(r.Context(), &profilesv1.GetProfileRequest{
+		Id: id,
+	})
 
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, "Error getting profile: "+err.Error())
+		return
+	}
+
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
+
+	result, err := m.Marshal(resp)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
 func (c *ProfilesClient) ToggleSaveIdea(w http.ResponseWriter, r *http.Request) {
 	userId, err := GetUserIdByRequestWithCookie(r)
 

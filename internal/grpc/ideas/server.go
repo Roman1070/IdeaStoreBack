@@ -51,7 +51,7 @@ func (s *serverAPI) GetIdea(ctx context.Context, req *ideasv1.GetRequest) (*idea
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error getting idea")
 	}
-	resp := &ideasv1.GetResponse{Name: idea.Name, Image: idea.Image, Description: idea.Description, Link: idea.Link, Tags: idea.Tags, Likes: int32(idea.Likes)}
+	resp := &ideasv1.GetResponse{Name: idea.Name, Image: idea.Image, Description: idea.Description, Link: idea.Link, Tags: idea.Tags, Likes: int32(idea.Likes), UserId: idea.UserID}
 	return resp, nil
 }
 func (s *serverAPI) DeleteIdea(ctx context.Context, req *ideasv1.DeleteRequest) (*emptypb.Empty, error) {

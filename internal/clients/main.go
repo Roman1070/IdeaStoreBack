@@ -43,6 +43,7 @@ func main() {
 
 	router.HandleFunc("/profile", profilesClient.CreateProfile).Methods("POST", "OPTIONS")
 	router.HandleFunc("/profile", profilesClient.GetProfile).Methods("GET", "OPTIONS")
+	router.HandleFunc("/my-profile", profilesClient.GetCurrentProfile).Methods("GET", "OPTIONS")
 	router.HandleFunc("/toggle-save-idea", profilesClient.ToggleSaveIdea).Methods("GET", "OPTIONS")
 	router.HandleFunc("/is-idea-saved", profilesClient.IsIdeaSaved).Methods("GET", "OPTIONS")
 	router.HandleFunc("/get-saved-ideas", profilesClient.GetSavedIdeas).Methods("GET", "OPTIONS")

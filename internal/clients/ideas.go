@@ -42,6 +42,7 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := c.api.GetIdea(r.Context(), &ideasv1.GetRequest{IdeaId: req.Id})
+	
 	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, err.Error())
@@ -55,7 +56,7 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, err.Error())
 		return
 	}
-	slog.Info(string(result))
+	
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
