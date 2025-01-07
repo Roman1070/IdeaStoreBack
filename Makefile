@@ -4,6 +4,8 @@ gen_boards:
 	protoc -I proto proto/boards.proto --go_out=./gen/go/boards/ --go_opt=paths=source_relative --go-grpc_out=./gen/go/boards/ --go-grpc_opt=paths=source_relative
 gen_profiles:
 	protoc -I proto proto/profiles.proto --go_out=./gen/go/profiles/ --go_opt=paths=source_relative --go-grpc_out=./gen/go/profiles/ --go-grpc_opt=paths=source_relative
+gen_comments:
+	protoc -I proto proto/comments.proto --go_out=./gen/go/comments/ --go_opt=paths=source_relative --go-grpc_out=./gen/go/comments/ --go-grpc_opt=paths=source_relative
 auth:
 	go run cmd/auth/main.go
 ideas:
@@ -24,6 +26,10 @@ migrate_profiles:
 migrate_boards:
 	go build ./cmd/migrator/main.go
 	go run ./cmd/migrator/main.go --storage_path=./storage/boards.db --migrations_path=./migrations/boards
+
+migrate_comments:
+	go build ./cmd/migrator/main.go
+	go run ./cmd/migrator/main.go --storage_path=./storage/comments.db --migrations_path=./migrations/comments
 
 	
 migrate_test:
