@@ -13,6 +13,16 @@ service Profiles{
     rpc GetSavedIdeas(GetSavedIdeasRequest) returns (GetSavedIdeasResponse);
     rpc GetSavedIdeasIds(GetSavedIdeasIdsRequest) returns (GetSavedIdeasIdsResponse);
     rpc MoveIdeasToBoard(MoveIdeaToBoardRequest) returns (google.protobuf.Empty) {}
+    rpc AddBoardToProfile(AddBoardToProfileRequest) returns (google.protobuf.Empty) {}
+    rpc RemoveBoardFromProfile(RemoveBoardFromProfileRequest) returns (google.protobuf.Empty) {}
+}
+message AddBoardToProfileRequest{
+    int64 user_id = 1;
+    int64 board_id=2;
+}
+message RemoveBoardFromProfileRequest{
+    int64 user_id = 1;
+    int64 board_id=2;
 }
 message MoveIdeaToBoardRequest{
     int64 user_id = 1;

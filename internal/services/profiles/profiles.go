@@ -70,13 +70,13 @@ func (p *Profiles) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId i
 func (p *Profiles) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, int64, error) {
 	slog.Info("service start IsIdeaSaved")
 
-	saved,boardId, err := p.Api.IsIdeaSaved(ctx, userId, ideaId)
+	saved, boardId, err := p.Api.IsIdeaSaved(ctx, userId, ideaId)
 
 	if err != nil {
 		slog.Error("service IsIdeaSaved error: " + err.Error())
-		return false,-1, err
+		return false, -1, err
 	}
-	return saved,boardId, nil
+	return saved, boardId, nil
 }
 
 func (p *Profiles) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error) {
@@ -103,13 +103,37 @@ func (p *Profiles) GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64,
 	return resp, nil
 }
 
-func (p *Profiles) MoveIdeasToBoard(ctx context.Context,userId, oldBoardId, newBoardId int64) (*emptypb.Empty, error){
+func (p *Profiles) MoveIdeasToBoard(ctx context.Context, userId, oldBoardId, newBoardId int64) (*emptypb.Empty, error) {
 	slog.Info("service start MoveIdeasToBoard")
 
-	resp, err := p.Api.MoveIdeasToBoard(ctx,userId, oldBoardId, newBoardId )
+	resp, err := p.Api.MoveIdeasToBoard(ctx, userId, oldBoardId, newBoardId)
 
 	if err != nil {
 		slog.Error("service MoveIdeasToBoard error: " + err.Error())
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (p *Profiles) AddBoardToProfile(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error) {
+	slog.Info("service start AddBoardToProfile")
+
+	resp, err := p.Api.AddBoardToProfile(ctx, userId, boardId)
+
+	if err != nil {
+		slog.Error("service AddBoardToProfile error: " + err.Error())
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (p *Profiles) RemoveBoardFromProfile(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error) {
+	slog.Info("service start RemoveBoardFromProfile")
+
+	resp, err := p.Api.RemoveBoardFromProfile(ctx, userId, boardId)
+
+	if err != nil {
+		slog.Error("service RemoveBoardFromProfile error: " + err.Error())
 		return nil, err
 	}
 	return resp, nil

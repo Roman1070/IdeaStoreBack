@@ -17,10 +17,12 @@ type Profiles interface {
 	CreateProfile(ctx context.Context, id int64, name, email string) (*emptypb.Empty, error)
 	GetProfile(ctx context.Context, id int64) (models.Profile, error)
 	ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error)
-	IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool,int64, error)
+	IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, int64, error)
 	GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error)
 	GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, error)
-	MoveIdeasToBoard(ctx context.Context,userId, oldBoardId, newBoardId int64) (*emptypb.Empty, error)
+	MoveIdeasToBoard(ctx context.Context, userId, oldBoardId, newBoardId int64) (*emptypb.Empty, error)
+	AddBoardToProfile(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error)
+	RemoveBoardFromProfile(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error)
 }
 
 type serverAPI struct {
@@ -87,7 +89,7 @@ func (s *serverAPI) IsIdeaSaved(ctx context.Context, req *profilesv1.IsIdeaSaved
 		return nil, fmt.Errorf("grpc error IsIdeaSaved: " + err.Error())
 	}
 	return &profilesv1.IsIdeaSavedResponse{
-		Saved: saved,
+		Saved:   saved,
 		BoardId: boardId,
 	}, nil
 }
@@ -118,13 +120,34 @@ func (s *serverAPI) GetSavedIdeasIds(ctx context.Context, req *profilesv1.GetSav
 	}, nil
 }
 
-func(s *serverAPI) MoveIdeasToBoard(ctx context.Context, req *profilesv1.MoveIdeaToBoardRequest) (*emptypb.Empty, error){
-	
+func (s *serverAPI) MoveIdeasToBoard(ctx context.Context, req *profilesv1.MoveIdeaToBoardRequest) (*emptypb.Empty, error) {
+
 	slog.Info("started to MoveIdeasToBoard grpc")
-	_, err := s.profiles.MoveIdeasToBoard(ctx,req.UserId,req.OldBoardId,req.NewBoardId)
+	_, err := s.profiles.MoveIdeasToBoard(ctx, req.UserId, req.OldBoardId, req.NewBoardId)
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error MoveIdeasToBoard")
+	}
+	return nil, nil
+}
+func (s *serverAPI) AddBoardToProfile(ctx context.Context, req *profilesv1.AddBoardToProfileRequest) (*emptypb.Empty, error) {
+
+	slog.Info("started to AddBoardToProfile grpc")
+	_, err := s.profiles.AddBoardToProfile(ctx, req.UserId, req.BoardId)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error AddBoardToProfile")
+	}
+	return nil, nil
+}
+
+func (s *serverAPI) RemoveBoardFromProfile(ctx context.Context, req *profilesv1.RemoveBoardFromProfileRequest) (*emptypb.Empty, error) {
+
+	slog.Info("started to RemoveBoardFromProfile grpc")
+	_, err := s.profiles.RemoveBoardFromProfile(ctx, req.UserId, req.BoardId)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Internal error RemoveBoardFromProfile")
 	}
 	return nil, nil
 }

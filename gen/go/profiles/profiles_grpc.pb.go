@@ -31,6 +31,8 @@ type ProfilesClient interface {
 	GetSavedIdeas(ctx context.Context, in *GetSavedIdeasRequest, opts ...grpc.CallOption) (*GetSavedIdeasResponse, error)
 	GetSavedIdeasIds(ctx context.Context, in *GetSavedIdeasIdsRequest, opts ...grpc.CallOption) (*GetSavedIdeasIdsResponse, error)
 	MoveIdeasToBoard(ctx context.Context, in *MoveIdeaToBoardRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	AddBoardToProfile(ctx context.Context, in *AddBoardToProfileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	RemoveBoardFromProfile(ctx context.Context, in *RemoveBoardFromProfileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type profilesClient struct {
@@ -104,6 +106,24 @@ func (c *profilesClient) MoveIdeasToBoard(ctx context.Context, in *MoveIdeaToBoa
 	return out, nil
 }
 
+func (c *profilesClient) AddBoardToProfile(ctx context.Context, in *AddBoardToProfileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/profiles.Profiles/AddBoardToProfile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *profilesClient) RemoveBoardFromProfile(ctx context.Context, in *RemoveBoardFromProfileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/profiles.Profiles/RemoveBoardFromProfile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProfilesServer is the server API for Profiles service.
 // All implementations must embed UnimplementedProfilesServer
 // for forward compatibility
@@ -116,6 +136,8 @@ type ProfilesServer interface {
 	GetSavedIdeas(context.Context, *GetSavedIdeasRequest) (*GetSavedIdeasResponse, error)
 	GetSavedIdeasIds(context.Context, *GetSavedIdeasIdsRequest) (*GetSavedIdeasIdsResponse, error)
 	MoveIdeasToBoard(context.Context, *MoveIdeaToBoardRequest) (*emptypb.Empty, error)
+	AddBoardToProfile(context.Context, *AddBoardToProfileRequest) (*emptypb.Empty, error)
+	RemoveBoardFromProfile(context.Context, *RemoveBoardFromProfileRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedProfilesServer()
 }
 
@@ -143,6 +165,12 @@ func (UnimplementedProfilesServer) GetSavedIdeasIds(context.Context, *GetSavedId
 }
 func (UnimplementedProfilesServer) MoveIdeasToBoard(context.Context, *MoveIdeaToBoardRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MoveIdeasToBoard not implemented")
+}
+func (UnimplementedProfilesServer) AddBoardToProfile(context.Context, *AddBoardToProfileRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddBoardToProfile not implemented")
+}
+func (UnimplementedProfilesServer) RemoveBoardFromProfile(context.Context, *RemoveBoardFromProfileRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveBoardFromProfile not implemented")
 }
 func (UnimplementedProfilesServer) mustEmbedUnimplementedProfilesServer() {}
 
@@ -283,6 +311,42 @@ func _Profiles_MoveIdeasToBoard_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Profiles_AddBoardToProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddBoardToProfileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfilesServer).AddBoardToProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/profiles.Profiles/AddBoardToProfile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfilesServer).AddBoardToProfile(ctx, req.(*AddBoardToProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Profiles_RemoveBoardFromProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveBoardFromProfileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfilesServer).RemoveBoardFromProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/profiles.Profiles/RemoveBoardFromProfile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfilesServer).RemoveBoardFromProfile(ctx, req.(*RemoveBoardFromProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Profiles_ServiceDesc is the grpc.ServiceDesc for Profiles service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -317,6 +381,14 @@ var Profiles_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MoveIdeasToBoard",
 			Handler:    _Profiles_MoveIdeasToBoard_Handler,
+		},
+		{
+			MethodName: "AddBoardToProfile",
+			Handler:    _Profiles_AddBoardToProfile_Handler,
+		},
+		{
+			MethodName: "RemoveBoardFromProfile",
+			Handler:    _Profiles_RemoveBoardFromProfile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

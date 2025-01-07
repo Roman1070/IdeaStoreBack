@@ -60,7 +60,10 @@ func (s *Storage) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, erro
 	const op = "storage.sqlite.GetIdea"
 
 	stmt, err := s.db.Prepare("DELETE FROM ideas WHERE id = ?")
-	stmt.ExecContext(ctx, id)
+	if err != nil {
+		return emptypb.Empty{}, fmt.Errorf("%s: %w", op, err)
+	}
+	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
 		return emptypb.Empty{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -68,10 +71,10 @@ func (s *Storage) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, erro
 }
 func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaData, error) {
 	const op = "storage.sqlite.GetAllIdeas"
-	var savedIdsReponse *profilesv1.GetSavedIdeasIdsResponse
+	var savedIdsResponse *profilesv1.GetSavedIdeasIdsResponse
 	var err error
 	if userId != -1 {
-		savedIdsReponse, err = s.profilesClient.GetSavedIdeasIds(ctx, &profilesv1.GetSavedIdeasIdsRequest{
+		savedIdsResponse, err = s.profilesClient.GetSavedIdeasIds(ctx, &profilesv1.GetSavedIdeasIdsRequest{
 			UserId: userId,
 		})
 	}
@@ -86,13 +89,18 @@ func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.Ide
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	ideas := []*ideasv1.IdeaData{}
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			slog.Error("GetAllIdeas storage rows.Close error: " + err.Error())
+		}
+	}(rows)
+	var ideas []*ideasv1.IdeaData
 	for rows.Next() {
 		idea := new(ideasv1.IdeaData)
 		err = rows.Scan(&idea.Id, &idea.Image, &idea.Name, &idea.Description, &idea.Link, &idea.Tags)
 		if userId != -1 {
-			idea.Saved = slices.Contains(savedIdsReponse.IdeasIds, idea.Id)
+			idea.Saved = slices.Contains(savedIdsResponse.IdeasIds, idea.Id)
 		}
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
@@ -129,7 +137,7 @@ func (s *Storage) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaDat
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	ideas := []*ideasv1.IdeaData{}
+	var ideas []*ideasv1.IdeaData
 	for rows.Next() {
 		idea := new(ideasv1.IdeaData)
 		err = rows.Scan(&idea.Id, &idea.Image, &idea.Name)

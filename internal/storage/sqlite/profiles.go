@@ -52,12 +52,12 @@ func (s *Storage) GetProfile(ctx context.Context, id int64) (models.Profile, err
 		slog.Error("storage GetProfile error scaninng row: " + err.Error())
 		return models.Profile{}, err
 	}
-	pairsSlice,err :=ParseIdPairs(ideasStr)
+	pairsSlice, err := ParseIdPairs(ideasStr)
 	if err != nil {
 		slog.Error("storage GetProfile error parsing ideas-board: " + err.Error())
 		return models.Profile{}, err
 	}
-	profile.SavedIdeas= toGRPCFormat(pairsSlice)
+	profile.SavedIdeas = toGRPCFormat(pairsSlice)
 	profile.Boards, err = ParseIdsSqlite(boardsStr)
 
 	if err != nil {
@@ -67,9 +67,9 @@ func (s *Storage) GetProfile(ctx context.Context, id int64) (models.Profile, err
 
 	return profile, nil
 }
-//TODO: если убрать на доске сохраненную идею, из доски она не уберется
+
 func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error) {
-	slog.Info("storage start ToggleSaveIdea, boardId = "+fmt.Sprint(boardId))
+	slog.Info("storage start ToggleSaveIdea, boardId = " + fmt.Sprint(boardId))
 
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -95,9 +95,9 @@ func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId in
 		slog.Error("storage ToggleSaveIdea ideas parse error: " + err.Error())
 		return false, err
 	}
-	fmt.Println("ids pairs: "+fmt.Sprint(idsPairs))
-	pair:=getPairByIdea(idsPairs, ideaId)
-	if  pair!=nil {
+	fmt.Println("ids pairs: " + fmt.Sprint(idsPairs))
+	pair := getPairByIdea(idsPairs, ideaId)
+	if pair != nil {
 		var newIdeasStr string
 		if len(idsPairs) == 1 {
 			newIdeasStr = ""
@@ -112,21 +112,24 @@ func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId in
 		}
 		stmt.ExecContext(ctx, newIdeasStr, userId)
 		tx.Commit()
-		if boardId!=-1{
-			s.boardsClient.SetIdeaSaved(ctx, &boardsv1.SetIdeaSavedRequest{
+		if boardId != -1 {
+			_, err := s.boardsClient.SetIdeaSaved(ctx, &boardsv1.SetIdeaSavedRequest{
 				IdeaId:  ideaId,
 				BoardId: boardId,
 				Saved:   false,
 			})
+			if err != nil {
+				return false, err
+			}
 		}
 		return false, nil
 	} else {
 		var newIdeasStr string
-			pair:= ideaBoardPair{ideaId: ideaId, boardId: boardId}
+		pair := ideaBoardPair{ideaId: ideaId, boardId: boardId}
 		if len(ideasIdsStr) == 0 {
 			newIdeasStr = pair.toString()
 		} else {
-			newIdeasStr = ideasIdsStr + " " +  pair.toString()
+			newIdeasStr = ideasIdsStr + " " + pair.toString()
 		}
 
 		stmt, err = tx.Prepare("UPDATE profiles SET savedIdeas = ? WHERE id=?")
@@ -136,41 +139,44 @@ func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId in
 		}
 		stmt.ExecContext(ctx, newIdeasStr, userId)
 		tx.Commit()
-		if boardId!=-1{
-			s.boardsClient.SetIdeaSaved(ctx, &boardsv1.SetIdeaSavedRequest{
+		if boardId != -1 {
+			_, err := s.boardsClient.SetIdeaSaved(ctx, &boardsv1.SetIdeaSavedRequest{
 				IdeaId:  ideaId,
 				BoardId: boardId,
 				Saved:   true,
 			})
+			if err != nil {
+				return false, err
+			}
 		}
 		return true, nil
 	}
 }
 
-func (s *Storage) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, int64,error) {
+func (s *Storage) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, int64, error) {
 	slog.Info("storage start IsIdeaSaved")
 
 	stmt, err := s.db.Prepare("SELECT savedIdeas FROM profiles WHERE id = ?")
 	if err != nil {
 		slog.Error("storage IsIdeaSaved Prepare error: " + err.Error())
-		return false, -1,err
+		return false, -1, err
 	}
 	row := stmt.QueryRowContext(ctx, userId)
 	var ideasStr string
 	err = row.Scan(&ideasStr)
 	if err != nil {
 		slog.Error("storage IsIdeaSaved error: " + err.Error())
-		return false,-1, err
+		return false, -1, err
 	}
 	pairsSlice, err := ParseIdPairs(ideasStr)
 	if err != nil {
 		slog.Error("storage IsIdeaSaved error: " + err.Error())
 		return false, -1, err
 	}
-	pair:= getPairByIdea(pairsSlice,ideaId)
-	if pair==nil{
-		return false,-1,nil
-	}else{
+	pair := getPairByIdea(pairsSlice, ideaId)
+	if pair == nil {
+		return false, -1, nil
+	} else {
 		return true, pair.boardId, nil
 	}
 }
@@ -207,8 +213,8 @@ func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv
 		}
 		ideas = append(ideas, &profilesv1.IdeaData{
 			Id:      pair.ideaId,
-			Name:        resp.Name,
-			Image:       resp.Image,
+			Name:    resp.Name,
+			Image:   resp.Image,
 			BoardId: pair.boardId,
 		})
 	}
@@ -221,7 +227,7 @@ func (s *Storage) GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, 
 	stmt, err := s.db.Prepare("SELECT savedIdeas FROM profiles WHERE id = ?")
 	if err != nil {
 		slog.Error("storage GetSavedIdeasIds error: " + err.Error())
-		return nil, fmt.Errorf("sotrage GetSavedIdeasIds error: " + err.Error())
+		return nil, fmt.Errorf("storage GetSavedIdeasIds error: " + err.Error())
 	}
 
 	row := stmt.QueryRow(userId)
@@ -229,103 +235,184 @@ func (s *Storage) GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, 
 	err = row.Scan(&idsStr)
 	if err != nil {
 		slog.Error("storage GetSavedIdeasIds error: " + err.Error())
-		return nil, fmt.Errorf("sotrage GetSavedIdeasIds error: " + err.Error())
+		return nil, fmt.Errorf("storage GetSavedIdeasIds error: " + err.Error())
 	}
 	pairs, err := ParseIdPairs(idsStr)
 	if err != nil {
 		slog.Error("storage GetSavedIdeasIds error: " + err.Error())
-		return nil, fmt.Errorf("sotrage GetSavedIdeasIds error: " + err.Error())
+		return nil, fmt.Errorf("storage GetSavedIdeasIds error: " + err.Error())
 	}
 	return getIdeasIds(pairs), nil
 }
-func (s *Storage) MoveIdeasToBoard(ctx context.Context, userId, oldBoardId, newBoardId int64)(*emptypb.Empty, error){
-	
+func (s *Storage) MoveIdeasToBoard(ctx context.Context, userId, oldBoardId, newBoardId int64) (*emptypb.Empty, error) {
+
 	slog.Info("storage started MoveIdeasToBoard")
 
 	stmt, err := s.db.Prepare("SELECT savedIdeas FROM profiles WHERE id = ?")
 	if err != nil {
 		slog.Error("storage MoveIdeasToBoard error: " + err.Error())
-		return nil, fmt.Errorf("sotrage MoveIdeasToBoard error: " + err.Error())
+		return nil, fmt.Errorf("storage MoveIdeasToBoard error: " + err.Error())
 	}
-	
+
 	row := stmt.QueryRow(userId)
 	var idsStr string
 	err = row.Scan(&idsStr)
 	if err != nil {
 		slog.Error("storage MoveIdeasToBoard error: " + err.Error())
-		return nil, fmt.Errorf("sotrage MoveIdeasToBoard error: " + err.Error())
+		return nil, fmt.Errorf("storage MoveIdeasToBoard error: " + err.Error())
 	}
 	pairs, err := ParseIdPairs(idsStr)
 	if err != nil {
 		slog.Error("storage MoveIdeasToBoard error: " + err.Error())
-		return nil, fmt.Errorf("sotrage MoveIdeasToBoard error: " + err.Error())
+		return nil, fmt.Errorf("storage MoveIdeasToBoard error: " + err.Error())
 	}
 	var resultStr string
-	for _,pair := range pairs{
-		if pair.boardId == oldBoardId{
+	for _, pair := range pairs {
+		if pair.boardId == oldBoardId {
 			pair.boardId = newBoardId
 		}
-		resultStr+=pair.toString()+" "
+		resultStr += pair.toString() + " "
 	}
 	resultStr = strings.TrimSpace(resultStr)
 	stmt, err = s.db.Prepare("UPDATE profiles SET savedIdeas = ?  WHERE id = ?")
 	if err != nil {
 		slog.Error("storage MoveIdeasToBoard error: " + err.Error())
-		return nil, fmt.Errorf("sotrage MoveIdeasToBoard error: " + err.Error())
+		return nil, fmt.Errorf("storage MoveIdeasToBoard error: " + err.Error())
 	}
-	_, err = stmt.ExecContext(ctx,resultStr, userId)
-	
+	_, err = stmt.ExecContext(ctx, resultStr, userId)
+
 	if err != nil {
 		slog.Error("storage MoveIdeasToBoard error: " + err.Error())
-		return nil, fmt.Errorf("sotrage MoveIdeasToBoard error: " + err.Error())
+		return nil, fmt.Errorf("storage MoveIdeasToBoard error: " + err.Error())
 	}
 	return nil, nil
 }
 
+func (s *Storage) AddBoardToProfile(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error) {
 
-type ideaBoardPair struct{
-	ideaId int64
+	slog.Info("storage started AddBoardToProfile")
+	tx, err := s.db.Begin()
+	if err != nil {
+		slog.Error("storage AddBoardToProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage AddBoardToProfile error: " + err.Error())
+	}
+	stmt, err := tx.Prepare("SELECT boards FROM profiles WHERE id = ?")
+	if err != nil {
+		slog.Error("storage AddBoardToProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage AddBoardToProfile error: " + err.Error())
+	}
+	row := stmt.QueryRowContext(ctx, userId)
+	var boardsStr string
+	err = row.Scan(&boardsStr)
+	if err != nil {
+		slog.Error("storage AddBoardToProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage AddBoardToProfile error: " + err.Error())
+	}
+	boardsStr += " " + fmt.Sprint(boardId)
+	boardsStr = strings.TrimSpace(boardsStr)
+	stmt, err = tx.Prepare("UPDATE profiles SET boards = ? WHERE id = ?")
+	if err != nil {
+		slog.Error("storage AddBoardToProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage AddBoardToProfile error: " + err.Error())
+	}
+	_, err = stmt.ExecContext(ctx, boardsStr, userId)
+	if err != nil {
+		slog.Error("storage AddBoardToProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage AddBoardToProfile error: " + err.Error())
+	}
+	err = tx.Commit()
+
+	if err != nil {
+		slog.Error("storage AddBoardToProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage AddBoardToProfile error: " + err.Error())
+	}
+	return nil, nil
+}
+func (s *Storage) RemoveBoardFromProfile(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error) {
+
+	slog.Info("storage started RemoveBoardFromProfile")
+	tx, err := s.db.Begin()
+	if err != nil {
+		slog.Error("storage RemoveBoardFromProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage RemoveBoardFromProfile error: " + err.Error())
+	}
+	stmt, err := tx.Prepare("SELECT boards FROM profiles WHERE id = ?")
+	if err != nil {
+		slog.Error("storage RemoveBoardFromProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage RemoveBoardFromProfile error: " + err.Error())
+	}
+	row := stmt.QueryRowContext(ctx, userId)
+	var boardsStr string
+	err = row.Scan(&boardsStr)
+	if err != nil {
+		slog.Error("storage RemoveBoardFromProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage RemoveBoardFromProfile error: " + err.Error())
+	}
+	boardsStr = strings.Replace(boardsStr, fmt.Sprint(boardId), "", 1)
+	boardsStr = strings.ReplaceAll(boardsStr, "  ", " ")
+	boardsStr = strings.TrimSpace(boardsStr)
+	stmt, err = tx.Prepare("UPDATE profiles SET boards = ? WHERE id = ?")
+	if err != nil {
+		slog.Error("storage RemoveBoardFromProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage RemoveBoardFromProfile error: " + err.Error())
+	}
+	_, err = stmt.ExecContext(ctx, boardsStr, userId)
+	if err != nil {
+		slog.Error("storage RemoveBoardFromProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage RemoveBoardFromProfile error: " + err.Error())
+	}
+	err = tx.Commit()
+
+	if err != nil {
+		slog.Error("storage RemoveBoardFromProfile error: " + err.Error())
+		return nil, fmt.Errorf("storage RemoveBoardFromProfile error: " + err.Error())
+	}
+	return nil, nil
+}
+
+type ideaBoardPair struct {
+	ideaId  int64
 	boardId int64
 }
 
-func (p *ideaBoardPair) toString() string{
-	return fmt.Sprint(p.ideaId)+":"+fmt.Sprint(p.boardId)
+func (p *ideaBoardPair) toString() string {
+	return fmt.Sprint(p.ideaId) + ":" + fmt.Sprint(p.boardId)
 }
-func getIdeasIds(slice []ideaBoardPair) []int64{
+func getIdeasIds(slice []ideaBoardPair) []int64 {
 	var ids []int64
-	for _, pair := range slice{
+	for _, pair := range slice {
 		ids = append(ids, pair.ideaId)
 	}
 	return ids
 }
-func getPairByIdea(slice []ideaBoardPair, id int64) (*ideaBoardPair){
-	for _,pair := range slice{
-		if pair.ideaId == id{
+func getPairByIdea(slice []ideaBoardPair, id int64) *ideaBoardPair {
+	for _, pair := range slice {
+		if pair.ideaId == id {
 			return &pair
 		}
 	}
 	return nil
 }
-func parseIdeaBoardPair(s string) (ideaBoardPair, error){
-	slice:= strings.Split(s,":")
-	ideaId, err :=strconv.ParseInt(slice[0],10,64)
-	if err!=nil{
-		return ideaBoardPair{},fmt.Errorf("error parsing idea-board :" + err.Error())
+func parseIdeaBoardPair(s string) (ideaBoardPair, error) {
+	slice := strings.Split(s, ":")
+	ideaId, err := strconv.ParseInt(slice[0], 10, 64)
+	if err != nil {
+		return ideaBoardPair{}, fmt.Errorf("error parsing idea-board :" + err.Error())
 	}
-	boardId, err:= strconv.ParseInt(slice[1],10,64)
-	if err!=nil{
-		return ideaBoardPair{},fmt.Errorf("error parsing idea-board :" + err.Error())
+	boardId, err := strconv.ParseInt(slice[1], 10, 64)
+	if err != nil {
+		return ideaBoardPair{}, fmt.Errorf("error parsing idea-board :" + err.Error())
 	}
 	return ideaBoardPair{
-		ideaId: ideaId,
+		ideaId:  ideaId,
 		boardId: boardId,
-	},nil
+	}, nil
 }
-func toGRPCFormat(slice []ideaBoardPair) ([]*profilesv1.IdeaBoardPair){
+func toGRPCFormat(slice []ideaBoardPair) []*profilesv1.IdeaBoardPair {
 	var result []*profilesv1.IdeaBoardPair
-	for _, pair := range slice{
+	for _, pair := range slice {
 		result = append(result, &profilesv1.IdeaBoardPair{
-			IdeaId: pair.ideaId,
+			IdeaId:  pair.ideaId,
 			BoardId: pair.boardId,
 		})
 	}
