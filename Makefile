@@ -17,7 +17,7 @@ profiles:
 comments:
 	go run cmd/comments/main.go
 client:
-	go run internal/clients/main.go internal/clients/auth.go internal/clients/ideas.go internal/clients/boards.go internal/clients/profiles.go
+	go run internal/clients/main.go internal/clients/auth.go internal/clients/ideas.go internal/clients/boards.go internal/clients/profiles.go internal/clients/comments.go
 migrate_ideas:
 	go build ./cmd/migrator/main.go
 	go run ./cmd/migrator/main.go --storage_path=./storage/ideas.db --migrations_path=./migrations/ideas

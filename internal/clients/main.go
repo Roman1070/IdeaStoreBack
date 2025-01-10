@@ -23,6 +23,7 @@ func main() {
 	authClient, _ := NewAuthClient(common.GrpcAuthAddress(cfg), cfg.Clients.Auth.Timeout, cfg.Clients.Auth.RetriesCount)
 	boardsClient, _ := NewBoardsClient(common.GrpcBoardsAddress(cfg), cfg.Clients.Boards.Timeout, cfg.Clients.Boards.RetriesCount)
 	profilesClient, _ := NewProfilesClient(common.GrpcProfilesAddress(cfg), cfg.Clients.Profiles.Timeout, cfg.Clients.Profiles.RetriesCount)
+	commentsClient, _ := NewCommentsClient(common.GrpcCommentsAddress(cfg), cfg.Clients.Comments.Timeout, cfg.Clients.Comments.RetriesCount)
 
 	router := mux.NewRouter()
 	router.HandleFunc("/images/{name}", GetImages).Methods("GET", "OPTIONS")
@@ -48,6 +49,9 @@ func main() {
 	router.HandleFunc("/toggle-save-idea", profilesClient.ToggleSaveIdea).Methods("GET", "OPTIONS")
 	router.HandleFunc("/is-idea-saved", profilesClient.IsIdeaSaved).Methods("GET", "OPTIONS")
 	router.HandleFunc("/get-saved-ideas", profilesClient.GetSavedIdeas).Methods("GET", "OPTIONS")
+
+	router.HandleFunc("/comments", commentsClient.GetComments).Methods("GET", "OPTIONS")
+	router.HandleFunc("/comment", commentsClient.CreateComment).Methods("POST", "OPTIONS")
 
 	handler := middlewares.CorsMiddleware(router)
 	fmt.Println("Server is listening...")
