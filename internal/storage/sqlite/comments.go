@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"fmt"
+	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
 	"log/slog"
 
@@ -41,6 +42,14 @@ func (s *Storage) GetComments(ctx context.Context, ideaId int64) ([]*models.Comm
 		if err != nil {
 			return nil, fmt.Errorf("storage GetComments error: %v", err.Error())
 		}
+		profile, err := s.profilesClient.GetProfile(ctx, &profilesv1.GetProfileRequest{
+			Id: comment.UserId,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("storage GetComments error: %v", err.Error())
+		}
+		comment.Avatar = profile.Data.AvatarImage
+		comment.Username = profile.Data.Name
 		result = append(result, comment)
 	}
 

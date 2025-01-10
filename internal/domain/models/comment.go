@@ -5,4 +5,6 @@ type Comment struct {
 	UserId       int64
 	Text         string
 	CreationDate string
+	Avatar       string
+	Username     string
 }

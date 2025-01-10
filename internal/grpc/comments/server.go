@@ -41,6 +41,7 @@ func (s *serverAPI) GetComments(ctx context.Context, req *commentsv1.GetComments
 	if err != nil {
 		return nil, fmt.Errorf("error grpc GetComments: %v", err.Error())
 	}
+
 	var result []*commentsv1.CommentData
 	for _, c := range resp {
 		result = append(result, &commentsv1.CommentData{
@@ -48,6 +49,8 @@ func (s *serverAPI) GetComments(ctx context.Context, req *commentsv1.GetComments
 			UserId:       c.UserId,
 			Text:         c.Text,
 			CreationDate: c.CreationDate,
+			Username:     c.Username,
+			Avatar:       c.Avatar,
 		})
 	}
 	return &commentsv1.GetCommentsResponse{
