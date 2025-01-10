@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	commentsv1 "idea-store-auth/gen/go/comments"
 	"idea-store-auth/internal/utils"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -41,6 +43,35 @@ func NewCommentsClient(addr string, timeout time.Duration, retriesCount int) (*C
 }
 
 func (c *CommentsClient) CreateComment(w http.ResponseWriter, r *http.Request) {
+	slog.Info("Client started CreateComment")
+	var req commentsv1.CreateCommentRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	id, err := GetUserIdByRequestWithCookie(r)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	req.UserId = id
+	resp, err := c.api.CreateComment(r.Context(), &req)
+
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
+	result, err := m.Marshal(resp)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
 
 }
 
