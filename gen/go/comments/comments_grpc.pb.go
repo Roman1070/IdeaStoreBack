@@ -4,7 +4,7 @@
 // - protoc             v5.29.1
 // source: comments.proto
 
-package boardsv1
+package commentsv1
 
 import (
 	context "context"
@@ -37,7 +37,7 @@ func NewCommentsClient(cc grpc.ClientConnInterface) CommentsClient {
 
 func (c *commentsClient) CreateComment(ctx context.Context, in *CreateCommentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/boards.Comments/CreateComment", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/comments.Comments/CreateComment", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c *commentsClient) CreateComment(ctx context.Context, in *CreateCommentReq
 
 func (c *commentsClient) GetComments(ctx context.Context, in *GetCommentsRequest, opts ...grpc.CallOption) (*GetCommentsResponse, error) {
 	out := new(GetCommentsResponse)
-	err := c.cc.Invoke(ctx, "/boards.Comments/GetComments", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/comments.Comments/GetComments", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func _Comments_CreateComment_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/boards.Comments/CreateComment",
+		FullMethod: "/comments.Comments/CreateComment",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CommentsServer).CreateComment(ctx, req.(*CreateCommentRequest))
@@ -113,7 +113,7 @@ func _Comments_GetComments_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/boards.Comments/GetComments",
+		FullMethod: "/comments.Comments/GetComments",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CommentsServer).GetComments(ctx, req.(*GetCommentsRequest))
@@ -125,7 +125,7 @@ func _Comments_GetComments_Handler(srv interface{}, ctx context.Context, dec fun
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Comments_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "boards.Comments",
+	ServiceName: "comments.Comments",
 	HandlerType: (*CommentsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

@@ -3,6 +3,7 @@ auth_storage_path: "./storage/auth.db"
 ideas_storage_path: "./storage/ideas.db"
 boards_storage_path: "./storage/boards.db"
 profiles_storage_path: "./storage/profiles.db"
+comments_storage_path: "./storage/comments.db"
 token_ttl: 72h
 grpc:
   auth:
@@ -16,6 +17,9 @@ grpc:
     timeout: 10s
   profiles:
     port: 44003
+    timeout: 10s
+  comments:
+    port: 44004
     timeout: 10s
 clients:
   auth:
@@ -31,6 +35,10 @@ clients:
     retriesCount: 5
     insecure: true
   profiles:
+    timeout: "4s"
+    retriesCount: 5
+    insecure: true
+  comments:
     timeout: "4s"
     retriesCount: 5
     insecure: true

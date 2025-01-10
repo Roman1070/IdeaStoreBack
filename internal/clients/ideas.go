@@ -42,7 +42,7 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := c.api.GetIdea(r.Context(), &ideasv1.GetRequest{IdeaId: req.Id})
-	
+
 	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, err.Error())
@@ -56,13 +56,13 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, err.Error())
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
 func GetImages(w http.ResponseWriter, r *http.Request) {
 
-	file, err := os.ReadFile("F:/Roman/WEB/IdeaStoreBack" + r.RequestURI)
+	file, err := os.ReadFile("E:/web/IdeaStoreBack" + r.RequestURI)
 	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, err.Error())
@@ -163,10 +163,10 @@ func (c *IdeasClient) GetIdeas(w http.ResponseWriter, r *http.Request) {
 		Ids []string `json:"ids"`
 	}
 	idsStringSlice := ideasIds{}
-	err:=json.NewDecoder(r.Body).Decode(&idsStringSlice)
+	err := json.NewDecoder(r.Body).Decode(&idsStringSlice)
 
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 	ids := []int64{}

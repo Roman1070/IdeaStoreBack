@@ -10,12 +10,13 @@ import (
 )
 
 type Config struct {
-	Env            string     `yaml:"env" env-default:"local"`
-	AuthStoragePath    string     `yaml:"auth_storage_path" env-required:"true"`
-	IdeasStoragePath    string     `yaml:"ideas_storage_path" env-required:"true"`
-	BoardsStoragePath    string     `yaml:"boards_storage_path" env-required:"true"`
-	ProfilesStoragePath    string     `yaml:"profiles_storage_path" env-required:"true"`
-	
+	Env                 string `yaml:"env" env-default:"local"`
+	AuthStoragePath     string `yaml:"auth_storage_path" env-required:"true"`
+	IdeasStoragePath    string `yaml:"ideas_storage_path" env-required:"true"`
+	BoardsStoragePath   string `yaml:"boards_storage_path" env-required:"true"`
+	ProfilesStoragePath string `yaml:"profiles_storage_path" env-required:"true"`
+	CommentsStoragePath string `yaml:"comments_storage_path" env-required:"true"`
+
 	GRPC           GRPCConfig `yaml:"grpc"`
 	MigrationsPath string
 	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
@@ -29,18 +30,20 @@ type Client struct {
 	Insecure     string        `yaml:"incesure"`
 }
 type ClientsConfig struct {
-	Auth Client `yaml:"auth"`
-	Ideas Client `yaml:"ideas"`
-	Boards Client `yaml:"boards"`
+	Auth     Client `yaml:"auth"`
+	Ideas    Client `yaml:"ideas"`
+	Boards   Client `yaml:"boards"`
 	Profiles Client `yaml:"profiles"`
+	Comments Client `yaml:"comments"`
 }
 type GRPCConfig struct {
-	AuthMS MicroserviceGRPCConfig `yaml:"auth"`
-	IdeasMS MicroserviceGRPCConfig `yaml:"ideas"` 
-	BoardsMS MicroserviceGRPCConfig `yaml:"boards"`
-	ProfilesMS MicroserviceGRPCConfig `yaml:"profiles"` 
+	AuthMS     MicroserviceGRPCConfig `yaml:"auth"`
+	IdeasMS    MicroserviceGRPCConfig `yaml:"ideas"`
+	BoardsMS   MicroserviceGRPCConfig `yaml:"boards"`
+	ProfilesMS MicroserviceGRPCConfig `yaml:"profiles"`
+	CommentsMS MicroserviceGRPCConfig `yaml:"comments"`
 }
-type MicroserviceGRPCConfig struct{
+type MicroserviceGRPCConfig struct {
 	Port    int           `yaml:"port"`
 	Timeout time.Duration `yaml:"timeout"`
 }
