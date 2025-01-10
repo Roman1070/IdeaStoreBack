@@ -22,6 +22,27 @@ func (s *Storage) CreateComment(ctx context.Context, ideaId, userId int64, text,
 	}
 	return nil, nil
 }
-func (s *Storage) GetComments(ctx context.Context, ideId int64) ([]*models.Comment, error) {
-	return nil, nil
+func (s *Storage) GetComments(ctx context.Context, ideaId int64) ([]*models.Comment, error) {
+	slog.Info("storage started GetComments")
+
+	stmt, err := s.db.Prepare("SELECT id,user_id,content,creation_date from comments WHERE idea_id = ?")
+	if err != nil {
+		return nil, fmt.Errorf("storage GetComments error: %v", err.Error())
+	}
+	rows, err := stmt.QueryContext(ctx, ideaId)
+
+	if err != nil {
+		return nil, fmt.Errorf("storage GetComments error: %v", err.Error())
+	}
+	var result []*models.Comment
+	for rows.Next() {
+		comment := new(models.Comment)
+		err = rows.Scan(&comment.ID, &comment.UserId, &comment.Text, &comment.CreationDate)
+		if err != nil {
+			return nil, fmt.Errorf("storage GetComments error: %v", err.Error())
+		}
+		result = append(result, comment)
+	}
+
+	return result, nil
 }
