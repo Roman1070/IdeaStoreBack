@@ -44,22 +44,45 @@ func NewCommentsClient(addr string, timeout time.Duration, retriesCount int) (*C
 
 func (c *CommentsClient) CreateComment(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started CreateComment")
-	var req commentsv1.CreateCommentRequest
+	type request struct {
+		UserId       int64
+		IdeaId       string `json:"idea_id"`
+		Text         string `json:"text"`
+		CreationDate string
+	}
+	var req request
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		utils.WriteError(w, err.Error())
+		slog.Error("Client CreateComment error : " + err.Error())
+		return
+	}
+	ideaId, err := strconv.ParseInt(req.IdeaId, 10, 64)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		slog.Error("Client CreateComment error : " + err.Error())
 		return
 	}
 	id, err := GetUserIdByRequestWithCookie(r)
 	if err != nil {
 		utils.WriteError(w, err.Error())
+		slog.Error("Client CreateComment error : " + err.Error())
 		return
 	}
-	req.UserId = id
-	resp, err := c.api.CreateComment(r.Context(), &req)
+	time := time.Now()
+
+	req.CreationDate = fmt.Sprintf("%02d.%02d.%04d", time.Day(), time.Month(), time.Year())
+	fmt.Println(req)
+	resp, err := c.api.CreateComment(r.Context(), &commentsv1.CreateCommentRequest{
+		IdeaId:       ideaId,
+		UserId:       id,
+		Text:         req.Text,
+		CreationDate: req.CreationDate,
+	})
 
 	if err != nil {
 		utils.WriteError(w, err.Error())
+		slog.Error("Client CreateComment error : " + err.Error())
 		return
 	}
 
