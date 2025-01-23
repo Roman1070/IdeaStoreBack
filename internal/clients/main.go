@@ -44,6 +44,7 @@ func main() {
 	router.HandleFunc("/login", authClient.Login).Methods("POST", "OPTIONS")
 
 	router.HandleFunc("/profile", profilesClient.CreateProfile).Methods("POST", "OPTIONS")
+	router.HandleFunc("/profile", profilesClient.UpdateProfile).Methods("PUT", "OPTIONS")
 	router.HandleFunc("/profile", profilesClient.GetProfile).Methods("GET", "OPTIONS")
 	router.HandleFunc("/my-profile", profilesClient.GetCurrentProfile).Methods("GET", "OPTIONS")
 	router.HandleFunc("/toggle-save-idea", profilesClient.ToggleSaveIdea).Methods("GET", "OPTIONS")

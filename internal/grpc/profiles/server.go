@@ -16,6 +16,7 @@ import (
 type Profiles interface {
 	CreateProfile(ctx context.Context, id int64, name, email string) (*emptypb.Empty, error)
 	GetProfile(ctx context.Context, id int64) (models.Profile, error)
+	UpdateProfile(ctx context.Context, userId int64, name, avatarImage, description, link string) (*emptypb.Empty, error)
 	ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error)
 	IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, int64, error)
 	GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error)
@@ -67,6 +68,16 @@ func (s *serverAPI) GetProfile(ctx context.Context, req *profilesv1.GetProfileRe
 	}, nil
 }
 
+func (s *serverAPI) UpdateProfile(ctx context.Context, req *profilesv1.UpdateProfileRequest) (*emptypb.Empty, error) {
+	slog.Info("grpc start UpdateProfile")
+
+	_, err := s.profiles.UpdateProfile(ctx, req.UserId, req.Name, req.Avatar, req.Description, req.Link)
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("grpc update profile error: " + err.Error())
+	}
+	return nil, nil
+}
 func (s *serverAPI) ToggleSaveIdea(ctx context.Context, req *profilesv1.ToggleSaveRequest) (*profilesv1.ToggleSaveResponse, error) {
 	slog.Info("grpc start ToggleSaveIdea")
 

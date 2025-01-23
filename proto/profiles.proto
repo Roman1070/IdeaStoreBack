@@ -7,6 +7,7 @@ option go_package = "idea-store.profiles.v1;profilesv1";
 service Profiles{
     rpc CreateProfile(CreateProfileRequest) returns (google.protobuf.Empty) {}
     rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+    rpc UpdateProfile(UpdateProfileRequest) returns (google.protobuf.Empty) {}
     //ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
     rpc ToggleSaveIdea(ToggleSaveRequest) returns (ToggleSaveResponse);
     rpc IsIdeaSaved(IsIdeaSavedRequest) returns (IsIdeaSavedResponse);
@@ -15,6 +16,13 @@ service Profiles{
     rpc MoveIdeasToBoard(MoveIdeaToBoardRequest) returns (google.protobuf.Empty) {}
     rpc AddBoardToProfile(AddBoardToProfileRequest) returns (google.protobuf.Empty) {}
     rpc RemoveBoardFromProfile(RemoveBoardFromProfileRequest) returns (google.protobuf.Empty) {}
+}
+message UpdateProfileRequest{
+    int64 user_id = 1;
+    string name = 2;
+    string avatar = 3;
+    string description = 4;
+    string link = 5;
 }
 message AddBoardToProfileRequest{
     int64 user_id = 1;
@@ -36,7 +44,7 @@ message GetSavedIdeasIdsResponse{
     repeated int64 ideas_ids = 1;
 }
 message ToggleSaveRequest{
-    int64 user_id = 1;
+  int64 user_id = 1;
   int64 idea_id = 2;
   int64 board_id = 3;
 }

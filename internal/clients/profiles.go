@@ -1,12 +1,17 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/utils"
+	"io"
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -50,10 +55,10 @@ func (c *ProfilesClient) CreateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	var req request
 
-	err:=json.NewDecoder(r.Body).Decode(&req)
-	
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	err := json.NewDecoder(r.Body).Decode(&req)
+
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 	_, err = c.api.CreateProfile(r.Context(), &profilesv1.CreateProfileRequest{
@@ -94,14 +99,14 @@ func (c *ProfilesClient) GetCurrentProfile(w http.ResponseWriter, r *http.Reques
 		utils.WriteError(w, err.Error())
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
-func(c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request){
+func (c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Query().Get("id")
-	id, err := strconv.ParseInt(idStr,10,64)
-	
+	id, err := strconv.ParseInt(idStr, 10, 64)
+
 	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, "Error getting profile: "+err.Error())
@@ -124,9 +129,70 @@ func(c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request){
 		utils.WriteError(w, err.Error())
 		return
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
+}
+func (c *ProfilesClient) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	userId, err := GetUserIdByRequestWithCookie(r)
+
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	avatar := ""
+	r.ParseMultipartForm(12 << 20)
+	defer r.Body.Close()
+	file, h, err := r.FormFile("image")
+	if err == nil {
+		defer file.Close()
+		ext := filepath.Ext(h.Filename)
+		hash := md5.Sum([]byte(h.Filename))
+		path := "./images/" + hex.EncodeToString(hash[:]) + ext
+		tmpfile, err := os.Create(path)
+		if err != nil {
+			slog.Error(err.Error())
+			utils.WriteError(w, err.Error())
+			return
+		}
+		defer tmpfile.Close()
+		_, err = io.Copy(tmpfile, file)
+		if err != nil {
+			slog.Error(err.Error())
+			utils.WriteError(w, err.Error())
+			return
+		}
+		avatar = hex.EncodeToString(hash[:]) + ext
+		fmt.Printf("starting to save avatar: %v\n", avatar)
+	} else {
+		fmt.Printf("error parsing avatar: %v\n", err.Error())
+	}
+	request := &profilesv1.UpdateProfileRequest{
+		Avatar:      avatar,
+		Name:        r.Form.Get("name"),
+		Description: r.Form.Get("description"),
+		Link:        r.Form.Get("link"),
+		UserId:      userId,
+	}
+
+	resp, err := c.api.UpdateProfile(r.Context(), request)
+
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
+	result, err := m.Marshal(resp)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+
 }
 func (c *ProfilesClient) ToggleSaveIdea(w http.ResponseWriter, r *http.Request) {
 	userId, err := GetUserIdByRequestWithCookie(r)
@@ -216,7 +282,7 @@ func (c *ProfilesClient) GetSavedIdeas(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, err.Error())
 		return
 	}
-	
+
 	result, err := json.Marshal(resp)
 	if err != nil {
 		slog.Error(err.Error())

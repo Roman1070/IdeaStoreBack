@@ -62,7 +62,7 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request) {
 }
 func GetImages(w http.ResponseWriter, r *http.Request) {
 
-	file, err := os.ReadFile("E:/web/IdeaStoreBack" + r.RequestURI)
+	file, err := os.ReadFile("F:/Roman/WEB/IdeaStoreBack" + r.RequestURI)
 	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, err.Error())
@@ -89,7 +89,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	file, h, err := r.FormFile("image")
 	if err != nil {
 		slog.Error(err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		utils.WriteError(w, err.Error())
 		return
 	}
 	defer file.Close()
@@ -100,7 +100,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		slog.Error(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
+		utils.WriteError(w, err.Error())
 		return
 	}
 	defer tmpfile.Close()
@@ -108,7 +108,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	_, err = io.Copy(tmpfile, file)
 	if err != nil {
 		slog.Error(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
+		utils.WriteError(w, err.Error())
 		return
 	}
 

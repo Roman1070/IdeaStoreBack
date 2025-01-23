@@ -54,6 +54,15 @@ func (p *Profiles) GetProfile(ctx context.Context, id int64) (models.Profile, er
 		SavedIdeas:  resp.SavedIdeas,
 	}, nil
 }
+func (p *Profiles) UpdateProfile(ctx context.Context, userId int64, name, avatarImage, description, link string) (*emptypb.Empty, error) {
+	slog.Info("service start UpdateProfile")
+	_, err := p.Api.UpdateProfile(ctx, userId, name, avatarImage, description, link)
+	if err != nil {
+		slog.Error("service UpdateProfile error: " + err.Error())
+		return nil, err
+	}
+	return nil, nil
+}
 
 func (p *Profiles) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error) {
 	slog.Info("service start ToggleSaveIdea")
