@@ -6,6 +6,8 @@ gen_profiles:
 	protoc -I proto proto/profiles.proto --go_out=./gen/go/profiles/ --go_opt=paths=source_relative --go-grpc_out=./gen/go/profiles/ --go-grpc_opt=paths=source_relative
 gen_comments:
 	protoc -I proto proto/comments.proto --go_out=./gen/go/comments/ --go_opt=paths=source_relative --go-grpc_out=./gen/go/comments/ --go-grpc_opt=paths=source_relative
+gen_chats:
+	protoc -I proto proto/chats.proto --go_out=./gen/go/chats/ --go_opt=paths=source_relative --go-grpc_out=./gen/go/chats/ --go-grpc_opt=paths=source_relative
 auth:
 	go run cmd/auth/main.go
 ideas:

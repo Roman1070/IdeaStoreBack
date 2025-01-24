@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+package chats;
+option go_package = "idea-store.chats.v1;chatsv1";
+
+service Chats{
+    rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty) {}
+    rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
+    rpc CreateChat(CreateChatRequest) returns (google.protobuf.Empty) {}
+    rpc GetUsersChats(GetUsersChatsRequest) returns (GetUsersChatsResponse);
+    rpc DeleteChat(DeleteChatRequest) returns (google.protobuf.Empty) {}
+}
+
+message SendMessageRequest{
+    MessageData data = 1;
+}
+
+message GetMessagesRequest{
+    int64 sender_id = 1;
+    int64 reciever_id = 2;
+}
+
+message MessageData{
+    int64 sender_id=1;
+    int64 reciever_id=2;
+    string file_name = 3;
+    string text = 4;
+    string sending_date = 5;
+}
+
+message GetMessagesResponse{
+    repeated MessageData messages = 1;
+}
+
+message CreateChatRequest{
+    ChatData first_data = 1;
+    ChatData second_data = 2;
+}
+
+message GetUsersChatsRequest{
+    int64 user_id = 1;
+}
+
+message GetUsersChatsResponse{
+    repeated ChatData chats = 1;
+}
+
+message ChatData{
+    int64 id = 1;
+    string name = 2;
+    string avatar = 3;
+}
+
+message DeleteChatRequest{
+    int64 first_id = 1;
+    int64 second_id = 2;
+}
