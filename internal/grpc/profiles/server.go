@@ -16,6 +16,7 @@ import (
 type Profiles interface {
 	CreateProfile(ctx context.Context, id int64, name, email string) (*emptypb.Empty, error)
 	GetProfile(ctx context.Context, id int64) (models.Profile, error)
+	GetProfileLight(ctx context.Context, id int64) (models.ProfileLight, error)
 	UpdateProfile(ctx context.Context, userId int64, name, avatarImage, description, link string) (*emptypb.Empty, error)
 	ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error)
 	IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, int64, error)
@@ -67,7 +68,19 @@ func (s *serverAPI) GetProfile(ctx context.Context, req *profilesv1.GetProfileRe
 		},
 	}, nil
 }
+func (s *serverAPI) GetProfileLight(ctx context.Context, req *profilesv1.GetProfileLightRequest) (*profilesv1.GetProfileLightResponse, error) {
+	slog.Info("grpc start GetProfileLight")
 
+	resp, err := s.profiles.GetProfileLight(ctx, req.UserId)
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("grpc GetProfileLight error: " + err.Error())
+	}
+	return &profilesv1.GetProfileLightResponse{
+		Name:   resp.Name,
+		Avatar: resp.AvatarImage,
+	}, nil
+}
 func (s *serverAPI) UpdateProfile(ctx context.Context, req *profilesv1.UpdateProfileRequest) (*emptypb.Empty, error) {
 	slog.Info("grpc start UpdateProfile")
 

@@ -54,6 +54,21 @@ func (p *Profiles) GetProfile(ctx context.Context, id int64) (models.Profile, er
 		SavedIdeas:  resp.SavedIdeas,
 	}, nil
 }
+func (p *Profiles) GetProfileLight(ctx context.Context, id int64) (models.ProfileLight, error) {
+	slog.Info("service started GetProfileLight")
+
+	resp, err := p.Api.GetProfileLight(ctx, id)
+
+	if err != nil {
+		slog.Error("service GetProfile error: " + err.Error())
+		return models.ProfileLight{}, err
+	}
+	return models.ProfileLight{
+		ID:          resp.ID,
+		Name:        resp.Name,
+		AvatarImage: resp.AvatarImage,
+	}, nil
+}
 func (p *Profiles) UpdateProfile(ctx context.Context, userId int64, name, avatarImage, description, link string) (*emptypb.Empty, error) {
 	slog.Info("service start UpdateProfile")
 	_, err := p.Api.UpdateProfile(ctx, userId, name, avatarImage, description, link)

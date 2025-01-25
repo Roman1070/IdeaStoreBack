@@ -26,6 +26,7 @@ type ProfilesClient interface {
 	CreateProfile(ctx context.Context, in *CreateProfileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileResponse, error)
 	UpdateProfile(ctx context.Context, in *UpdateProfileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetProfileLight(ctx context.Context, in *GetProfileLightRequest, opts ...grpc.CallOption) (*GetProfileLightResponse, error)
 	// ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
 	ToggleSaveIdea(ctx context.Context, in *ToggleSaveRequest, opts ...grpc.CallOption) (*ToggleSaveResponse, error)
 	IsIdeaSaved(ctx context.Context, in *IsIdeaSavedRequest, opts ...grpc.CallOption) (*IsIdeaSavedResponse, error)
@@ -65,6 +66,15 @@ func (c *profilesClient) GetProfile(ctx context.Context, in *GetProfileRequest, 
 func (c *profilesClient) UpdateProfile(ctx context.Context, in *UpdateProfileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/profiles.Profiles/UpdateProfile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *profilesClient) GetProfileLight(ctx context.Context, in *GetProfileLightRequest, opts ...grpc.CallOption) (*GetProfileLightResponse, error) {
+	out := new(GetProfileLightResponse)
+	err := c.cc.Invoke(ctx, "/profiles.Profiles/GetProfileLight", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -141,6 +151,7 @@ type ProfilesServer interface {
 	CreateProfile(context.Context, *CreateProfileRequest) (*emptypb.Empty, error)
 	GetProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
 	UpdateProfile(context.Context, *UpdateProfileRequest) (*emptypb.Empty, error)
+	GetProfileLight(context.Context, *GetProfileLightRequest) (*GetProfileLightResponse, error)
 	// ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
 	ToggleSaveIdea(context.Context, *ToggleSaveRequest) (*ToggleSaveResponse, error)
 	IsIdeaSaved(context.Context, *IsIdeaSavedRequest) (*IsIdeaSavedResponse, error)
@@ -164,6 +175,9 @@ func (UnimplementedProfilesServer) GetProfile(context.Context, *GetProfileReques
 }
 func (UnimplementedProfilesServer) UpdateProfile(context.Context, *UpdateProfileRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProfile not implemented")
+}
+func (UnimplementedProfilesServer) GetProfileLight(context.Context, *GetProfileLightRequest) (*GetProfileLightResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProfileLight not implemented")
 }
 func (UnimplementedProfilesServer) ToggleSaveIdea(context.Context, *ToggleSaveRequest) (*ToggleSaveResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToggleSaveIdea not implemented")
@@ -249,6 +263,24 @@ func _Profiles_UpdateProfile_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProfilesServer).UpdateProfile(ctx, req.(*UpdateProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Profiles_GetProfileLight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProfileLightRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfilesServer).GetProfileLight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/profiles.Profiles/GetProfileLight",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfilesServer).GetProfileLight(ctx, req.(*GetProfileLightRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -397,6 +429,10 @@ var Profiles_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateProfile",
 			Handler:    _Profiles_UpdateProfile_Handler,
+		},
+		{
+			MethodName: "GetProfileLight",
+			Handler:    _Profiles_GetProfileLight_Handler,
 		},
 		{
 			MethodName: "ToggleSaveIdea",

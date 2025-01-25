@@ -67,6 +67,26 @@ func (s *Storage) GetProfile(ctx context.Context, id int64) (models.Profile, err
 
 	return profile, nil
 }
+func (s *Storage) GetProfileLight(ctx context.Context, id int64) (models.ProfileLight, error) {
+	slog.Info("storage start GetProfileLight")
+
+	stmt, err := s.db.Prepare("SELECT id,name,avatarImage FROM profiles WHERE id=?")
+
+	if err != nil {
+		slog.Error("storage GetProfileLight db Prepare error: " + err.Error())
+		return models.ProfileLight{}, err
+	}
+
+	row := stmt.QueryRowContext(ctx, id)
+	var profile models.ProfileLight
+
+	err = row.Scan(&profile.ID, &profile.Name, &profile.AvatarImage)
+	if err != nil {
+		slog.Error("storage GetProfile db Prepare error: " + err.Error())
+		return models.ProfileLight{}, err
+	}
+	return profile, nil
+}
 func (s *Storage) UpdateProfile(ctx context.Context, userId int64, name, avatarImage, description, link string) (*emptypb.Empty, error) {
 	slog.Info("storage started UpdateProfile")
 

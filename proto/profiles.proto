@@ -8,6 +8,7 @@ service Profiles{
     rpc CreateProfile(CreateProfileRequest) returns (google.protobuf.Empty) {}
     rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
     rpc UpdateProfile(UpdateProfileRequest) returns (google.protobuf.Empty) {}
+    rpc GetProfileLight(GetProfileLightRequest) returns (GetProfileLightResponse);
     //ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
     rpc ToggleSaveIdea(ToggleSaveRequest) returns (ToggleSaveResponse);
     rpc IsIdeaSaved(IsIdeaSavedRequest) returns (IsIdeaSavedResponse);
@@ -98,4 +99,13 @@ message IdeaData {
 message IdeaBoardPair{
     int64 idea_id = 1;
     int64 board_id = 2;
+}
+
+message GetProfileLightRequest{
+    int64 user_id = 1;
+}
+
+message GetProfileLightResponse{
+    string name = 1;
+    string avatar = 2;
 }

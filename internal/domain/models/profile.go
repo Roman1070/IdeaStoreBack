@@ -12,3 +12,8 @@ type Profile struct {
 	Boards      []int64
 	SavedIdeas  []*profilesv1.IdeaBoardPair
 }
+type ProfileLight struct {
+	ID          int64
+	Name        string
+	AvatarImage string
+}
