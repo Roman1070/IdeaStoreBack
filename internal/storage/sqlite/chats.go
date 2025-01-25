@@ -129,25 +129,25 @@ func (s *Storage) GetUsersChats(ctx context.Context, userId int64) ([]*models.Ch
 			return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
 		}
 		if userId == chat.SecondData.UserId {
-			profile, err := s.profilesClient.GetProfile(ctx, &profilesv1.GetProfileRequest{
-				Id: chat.FirstData.UserId,
+			profile, err := s.profilesClient.GetProfileLight(ctx, &profilesv1.GetProfileLightRequest{
+				UserId: chat.FirstData.UserId,
 			})
 			if err != nil {
 				slog.Error("storage error GetUsersChats: " + err.Error())
 				return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
 			}
-			chat.FirstData.Avatar = profile.Data.AvatarImage
-			chat.FirstData.Username = profile.Data.Name
+			chat.FirstData.Avatar = profile.Avatar
+			chat.FirstData.Username = profile.Name
 		} else {
-			profile, err := s.profilesClient.GetProfile(ctx, &profilesv1.GetProfileRequest{
-				Id: chat.SecondData.UserId,
+			profile, err := s.profilesClient.GetProfileLight(ctx, &profilesv1.GetProfileLightRequest{
+				UserId: chat.SecondData.UserId,
 			})
 			if err != nil {
 				slog.Error("storage error GetUsersChats: " + err.Error())
 				return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
 			}
-			chat.SecondData.Avatar = profile.Data.AvatarImage
-			chat.SecondData.Username = profile.Data.Name
+			chat.SecondData.Avatar = profile.Avatar
+			chat.SecondData.Username = profile.Name
 		}
 
 		result = append(result, &chat)
