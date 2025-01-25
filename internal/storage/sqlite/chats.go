@@ -12,13 +12,14 @@ import (
 
 func (s *Storage) SendMessage(ctx context.Context, message models.Message) (*emptypb.Empty, error) {
 	slog.Info("storage started SendMessage")
+
 	if message.CheckChatExistance {
-		stmt, err := s.db.Prepare("SELECT COUNT(*) FROM chats WHERE first_id = ? OR second_id = ?")
+		stmt, err := s.db.Prepare("SELECT COUNT(*) FROM chats WHERE (first_id = ? AND second_id = ?) OR (first_id = ? AND second_id = ?)")
 		if err != nil {
 			slog.Error("storage error SendMessage: " + err.Error())
 			return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
 		}
-		row := stmt.QueryRowContext(ctx, message.RecieverId, message.SenderId)
+		row := stmt.QueryRowContext(ctx, message.RecieverId, message.SenderId, message.SenderId, message.RecieverId)
 		rowsCount := 0
 		err = row.Scan(&rowsCount)
 
