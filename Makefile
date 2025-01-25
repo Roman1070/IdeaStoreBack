@@ -35,6 +35,10 @@ migrate_comments:
 	go build ./cmd/migrator/main.go
 	go run ./cmd/migrator/main.go --storage_path=./storage/comments.db --migrations_path=./migrations/comments
 
+migrate_chats:
+	go build ./cmd/migrator/main.go
+	go run ./cmd/migrator/main.go --storage_path=./storage/chats.db --migrations_path=./migrations/chats
+
 	
 migrate_test:
 	go build ./cmd/migrator/main.go
