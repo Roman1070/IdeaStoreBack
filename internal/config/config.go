@@ -16,6 +16,7 @@ type Config struct {
 	BoardsStoragePath   string `yaml:"boards_storage_path" env-required:"true"`
 	ProfilesStoragePath string `yaml:"profiles_storage_path" env-required:"true"`
 	CommentsStoragePath string `yaml:"comments_storage_path" env-required:"true"`
+	ChatsStoragePath    string `yaml:"chats_storage_path" env-required:"true"`
 
 	GRPC           GRPCConfig `yaml:"grpc"`
 	MigrationsPath string
@@ -35,6 +36,7 @@ type ClientsConfig struct {
 	Boards   Client `yaml:"boards"`
 	Profiles Client `yaml:"profiles"`
 	Comments Client `yaml:"comments"`
+	Chats    Client `yaml:"chats"`
 }
 type GRPCConfig struct {
 	AuthMS     MicroserviceGRPCConfig `yaml:"auth"`
@@ -42,6 +44,7 @@ type GRPCConfig struct {
 	BoardsMS   MicroserviceGRPCConfig `yaml:"boards"`
 	ProfilesMS MicroserviceGRPCConfig `yaml:"profiles"`
 	CommentsMS MicroserviceGRPCConfig `yaml:"comments"`
+	ChatsMS    MicroserviceGRPCConfig `yaml:"chats"`
 }
 type MicroserviceGRPCConfig struct {
 	Port    int           `yaml:"port"`

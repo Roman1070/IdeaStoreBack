@@ -18,6 +18,8 @@ profiles:
 	go run cmd/profiles/main.go
 comments:
 	go run cmd/comments/main.go
+chats:
+	go run cmd/chats/main.go
 client:
 	go run internal/clients/main.go internal/clients/auth.go internal/clients/ideas.go internal/clients/boards.go internal/clients/profiles.go internal/clients/comments.go
 migrate_ideas:

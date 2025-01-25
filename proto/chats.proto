@@ -34,8 +34,8 @@ message GetMessagesResponse{
 }
 
 message CreateChatRequest{
-    ChatData first_data = 1;
-    ChatData second_data = 2;
+    int64 first_id = 1;
+    int64 second_id = 2;
 }
 
 message GetUsersChatsRequest{

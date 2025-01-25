@@ -12,9 +12,9 @@ import (
 )
 
 type Chats interface {
-	SendMessage(ctx context.Context, senderId, recieverId int64, fileName, text, creationDate string) (*emptypb.Empty, error)
+	SendMessage(ctx context.Context, message models.Message) (*emptypb.Empty, error)
 	GetMessages(ctx context.Context, senderId, recieverId int64) ([]*models.Message, error)
-	CreateChat(ctx context.Context, user1, user2 models.ChatUserData) (*emptypb.Empty, error)
+	CreateChat(ctx context.Context, user1, user2 int64) (*emptypb.Empty, error)
 	GetUsersChats(ctx context.Context, userId int64) ([]*models.ChatData, error)
 	DeleteChat(ctx context.Context, chatId int64) (*emptypb.Empty, error)
 }
@@ -31,7 +31,13 @@ func Register(gRPC *grpc.Server, chats Chats) {
 func (s *serverAPI) SendMessage(ctx context.Context, req *chatsv1.SendMessageRequest) (*emptypb.Empty, error) {
 	slog.Info("grpc started SendMessage")
 
-	_, err := s.chats.SendMessage(ctx, req.Data.SenderId, req.Data.RecieverId, req.Data.FileName, req.Data.Text, req.Data.SendingDate)
+	_, err := s.chats.SendMessage(ctx, models.Message{
+		SenderId:     req.Data.SenderId,
+		RecieverId:   req.Data.RecieverId,
+		Filename:     req.Data.FileName,
+		Text:         req.Data.Text,
+		CreationDate: req.Data.SendingDate,
+	})
 	if err != nil {
 		slog.Error("grpc error SendMessage")
 		return nil, fmt.Errorf("grpc SendMessage error :%v", err.Error())
@@ -54,7 +60,7 @@ func (s *serverAPI) GetMessages(ctx context.Context, req *chatsv1.GetMessagesReq
 			RecieverId:  m.RecieverId,
 			FileName:    m.Filename,
 			Text:        m.Text,
-			SendingDate: m.Text,
+			SendingDate: m.CreationDate,
 		})
 	}
 	return &chatsv1.GetMessagesResponse{
@@ -64,17 +70,7 @@ func (s *serverAPI) GetMessages(ctx context.Context, req *chatsv1.GetMessagesReq
 
 func (s *serverAPI) CreateChat(ctx context.Context, req *chatsv1.CreateChatRequest) (*emptypb.Empty, error) {
 	slog.Info("grpc satarted CreateChat")
-	firstData := models.ChatUserData{
-		UserId:   req.FirstData.Id,
-		Username: req.FirstData.Name,
-		Avatar:   req.FirstData.Avatar,
-	}
-	secondData := models.ChatUserData{
-		UserId:   req.SecondData.Id,
-		Username: req.SecondData.Name,
-		Avatar:   req.SecondData.Avatar,
-	}
-	_, err := s.chats.CreateChat(ctx, firstData, secondData)
+	_, err := s.chats.CreateChat(ctx, req.FirstId, req.SecondId)
 
 	if err != nil {
 		slog.Error("grpc error CreateChat")

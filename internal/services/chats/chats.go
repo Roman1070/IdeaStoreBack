@@ -24,8 +24,13 @@ func New(log *slog.Logger, api chats.Chats) *Chats {
 func (c *Chats) SendMessage(ctx context.Context, message models.Message) (*emptypb.Empty, error) {
 	c.log.Info("service started SendMessage")
 
-	_, err := c.Api.SendMessage(ctx, message.SenderId, message.RecieverId, message.Filename, message.Text, message.CreationDate)
-
+	_, err := c.Api.SendMessage(ctx, models.Message{
+		SenderId:     message.SenderId,
+		RecieverId:   message.RecieverId,
+		Filename:     message.Filename,
+		Text:         message.Text,
+		CreationDate: message.CreationDate,
+	})
 	if err != nil {
 		c.log.Error("service error SendMessage: " + err.Error())
 		return nil, fmt.Errorf("serivce error SendMessage: %v", err.Error())
@@ -47,7 +52,7 @@ func (c *Chats) GetMessages(ctx context.Context, senderId, recieverId int64) ([]
 	return resp, nil
 }
 
-func (c *Chats) CreateChat(ctx context.Context, user1, user2 models.ChatUserData) (*emptypb.Empty, error) {
+func (c *Chats) CreateChat(ctx context.Context, user1, user2 int64) (*emptypb.Empty, error) {
 	c.log.Info("service started CreateChat")
 	_, err := c.Api.CreateChat(ctx, user1, user2)
 
