@@ -32,11 +32,12 @@ func (s *serverAPI) SendMessage(ctx context.Context, req *chatsv1.SendMessageReq
 	slog.Info("grpc started SendMessage")
 
 	_, err := s.chats.SendMessage(ctx, models.Message{
-		SenderId:     req.Data.SenderId,
-		RecieverId:   req.Data.RecieverId,
-		Filename:     req.Data.FileName,
-		Text:         req.Data.Text,
-		CreationDate: req.Data.SendingDate,
+		SenderId:           req.Data.SenderId,
+		RecieverId:         req.Data.RecieverId,
+		Filename:           req.Data.FileName,
+		Text:               req.Data.Text,
+		CreationDate:       req.Data.SendingDate,
+		CheckChatExistance: req.Data.CheckChatExistance,
 	})
 	if err != nil {
 		slog.Error("grpc error SendMessage")
@@ -56,11 +57,12 @@ func (s *serverAPI) GetMessages(ctx context.Context, req *chatsv1.GetMessagesReq
 	var messages []*chatsv1.MessageData
 	for _, m := range resp {
 		messages = append(messages, &chatsv1.MessageData{
-			SenderId:    m.SenderId,
-			RecieverId:  m.RecieverId,
-			FileName:    m.Filename,
-			Text:        m.Text,
-			SendingDate: m.CreationDate,
+			SenderId:           m.SenderId,
+			RecieverId:         m.RecieverId,
+			FileName:           m.Filename,
+			Text:               m.Text,
+			SendingDate:        m.CreationDate,
+			CheckChatExistance: m.CheckChatExistance,
 		})
 	}
 	return &chatsv1.GetMessagesResponse{

@@ -11,6 +11,29 @@ import (
 
 func (s *Storage) SendMessage(ctx context.Context, message models.Message) (*emptypb.Empty, error) {
 	slog.Info("storage started SendMessage")
+	if message.CheckChatExistance {
+		stmt, err := s.db.Prepare("SELECT COUNT(*) FROM chats WHERE first_id = ? OR second_id = ?")
+		if err != nil {
+			slog.Error("storage error SendMessage: " + err.Error())
+			return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
+		}
+		row := stmt.QueryRowContext(ctx, message.RecieverId, message.SenderId)
+		rowsCount := 0
+		err = row.Scan(&rowsCount)
+
+		if err != nil {
+			slog.Error("storage error SendMessage: " + err.Error())
+			return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
+		}
+
+		if rowsCount == 0 {
+			_, err = s.CreateChat(ctx, message.SenderId, message.RecieverId)
+			if err != nil {
+				slog.Error("storage error SendMessage: " + err.Error())
+				return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
+			}
+		}
+	}
 
 	stmt, err := s.db.Prepare("INSERT INTO messages(sender_id, reciever_id, file_name, content, send_date) VALUES(?,?,?,?,?)")
 

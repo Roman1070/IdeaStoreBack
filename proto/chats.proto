@@ -27,6 +27,7 @@ message MessageData{
     string file_name = 3;
     string text = 4;
     string sending_date = 5;
+    bool check_chat_existance=6;
 }
 
 message GetMessagesResponse{

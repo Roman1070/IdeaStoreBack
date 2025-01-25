@@ -25,11 +25,12 @@ func (c *Chats) SendMessage(ctx context.Context, message models.Message) (*empty
 	c.log.Info("service started SendMessage")
 
 	_, err := c.Api.SendMessage(ctx, models.Message{
-		SenderId:     message.SenderId,
-		RecieverId:   message.RecieverId,
-		Filename:     message.Filename,
-		Text:         message.Text,
-		CreationDate: message.CreationDate,
+		SenderId:           message.SenderId,
+		RecieverId:         message.RecieverId,
+		Filename:           message.Filename,
+		Text:               message.Text,
+		CreationDate:       message.CreationDate,
+		CheckChatExistance: message.CheckChatExistance,
 	})
 	if err != nil {
 		c.log.Error("service error SendMessage: " + err.Error())
