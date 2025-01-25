@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"fmt"
+	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
 	"log/slog"
 
@@ -102,9 +103,9 @@ func (s *Storage) CreateChat(ctx context.Context, firstId, secondId int64) (*emp
 }
 
 func (s *Storage) GetUsersChats(ctx context.Context, userId int64) ([]*models.ChatData, error) {
-	slog.Info("storage started GetUsersChats")
+	slog.Info("storage started GetUsersChats, id = " + fmt.Sprint(userId))
 
-	stmt, err := s.db.Prepare("SELECT id,first_id, second_id FROM chats WHERE first_id = ? OR second_id = ?")
+	stmt, err := s.db.Prepare("SELECT id, first_id, second_id FROM chats WHERE first_id = ? OR second_id = ?")
 
 	if err != nil {
 		slog.Error("storage error GetUsersChats: " + err.Error())
@@ -120,13 +121,38 @@ func (s *Storage) GetUsersChats(ctx context.Context, userId int64) ([]*models.Ch
 	var result []*models.ChatData
 	for rows.Next() {
 		var chat models.ChatData
-		err = rows.Scan(&chat.ID, &chat.FirstId, &chat.SecondId)
+
+		err = rows.Scan(&chat.ID, &chat.FirstData.UserId, &chat.SecondData.UserId)
+
 		if err != nil {
 			slog.Error("storage error GetUsersChats: " + err.Error())
 			return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
 		}
+		if userId == chat.SecondData.UserId {
+			profile, err := s.profilesClient.GetProfile(ctx, &profilesv1.GetProfileRequest{
+				Id: chat.FirstData.UserId,
+			})
+			if err != nil {
+				slog.Error("storage error GetUsersChats: " + err.Error())
+				return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
+			}
+			chat.FirstData.Avatar = profile.Data.AvatarImage
+			chat.FirstData.Username = profile.Data.Name
+		} else {
+			profile, err := s.profilesClient.GetProfile(ctx, &profilesv1.GetProfileRequest{
+				Id: chat.SecondData.UserId,
+			})
+			if err != nil {
+				slog.Error("storage error GetUsersChats: " + err.Error())
+				return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
+			}
+			chat.SecondData.Avatar = profile.Data.AvatarImage
+			chat.SecondData.Username = profile.Data.Name
+		}
+
 		result = append(result, &chat)
 	}
+
 	return result, nil
 }
 

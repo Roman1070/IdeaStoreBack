@@ -24,6 +24,7 @@ func main() {
 	boardsClient, _ := NewBoardsClient(common.GrpcBoardsAddress(cfg), cfg.Clients.Boards.Timeout, cfg.Clients.Boards.RetriesCount)
 	profilesClient, _ := NewProfilesClient(common.GrpcProfilesAddress(cfg), cfg.Clients.Profiles.Timeout, cfg.Clients.Profiles.RetriesCount)
 	commentsClient, _ := NewCommentsClient(common.GrpcCommentsAddress(cfg), cfg.Clients.Comments.Timeout, cfg.Clients.Comments.RetriesCount)
+	chatsClient, _ := NewChatsClient(common.GrpcChatsAddress(cfg), cfg.Clients.Chats.Timeout, cfg.Clients.Chats.RetriesCount)
 
 	router := mux.NewRouter()
 	router.HandleFunc("/images/{name}", GetImages).Methods("GET", "OPTIONS")
@@ -54,6 +55,7 @@ func main() {
 	router.HandleFunc("/comments", commentsClient.GetComments).Methods("GET", "OPTIONS")
 	router.HandleFunc("/comment", commentsClient.CreateComment).Methods("POST", "OPTIONS")
 
+	router.HandleFunc("/chats", chatsClient.GetChats).Methods("GET", "OPTIONS")
 	handler := middlewares.CorsMiddleware(router)
 	fmt.Println("Server is listening...")
 

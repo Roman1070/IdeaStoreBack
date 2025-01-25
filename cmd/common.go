@@ -62,3 +62,6 @@ func GrpcProfilesAddress(cfg *config.Config) string {
 func GrpcCommentsAddress(cfg *config.Config) string {
 	return net.JoinHostPort(grpcHost, strconv.Itoa(cfg.GRPC.CommentsMS.Port))
 }
+func GrpcChatsAddress(cfg *config.Config) string {
+	return net.JoinHostPort(grpcHost, strconv.Itoa(cfg.GRPC.ChatsMS.Port))
+}

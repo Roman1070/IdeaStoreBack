@@ -35,8 +35,8 @@ message GetMessagesResponse{
 }
 
 message CreateChatRequest{
-    int64 first_id = 1;
-    int64 second_id = 2;
+    ChatUserData first_id = 1;
+    ChatUserData second_id = 2;
 }
 
 message GetUsersChatsRequest{
@@ -44,10 +44,10 @@ message GetUsersChatsRequest{
 }
 
 message GetUsersChatsResponse{
-    repeated ChatData chats = 1;
+    repeated ChatUserData chats = 1;
 }
 
-message ChatData{
+message ChatUserData{
     int64 id = 1;
     string name = 2;
     string avatar = 3;
