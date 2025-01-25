@@ -63,11 +63,48 @@ func (s *Storage) GetMessages(ctx context.Context, senderId, recieverId int64) (
 }
 
 func (s *Storage) CreateChat(ctx context.Context, firstId, secondId int64) (*emptypb.Empty, error) {
+	slog.Info("storage started CreateChat")
+
+	stmt, err := s.db.Prepare("INSERT INTO chats(first_id,second_id) VALUES(?,?)")
+	if err != nil {
+		slog.Error("storage error CreateChat: " + err.Error())
+		return nil, fmt.Errorf("storage error CreateChat: %v", err.Error())
+	}
+	_, err = stmt.ExecContext(ctx, firstId, secondId)
+	if err != nil {
+		slog.Error("storage error CreateChat: " + err.Error())
+		return nil, fmt.Errorf("storage error CreateChat: %v", err.Error())
+	}
 	return nil, nil
 }
 
 func (s *Storage) GetUsersChats(ctx context.Context, userId int64) ([]*models.ChatData, error) {
-	return nil, nil
+	slog.Info("storage started GetUsersChats")
+
+	stmt, err := s.db.Prepare("SELECT id,first_id, second_id FROM chats WHERE first_id = ? OR second_id = ?")
+
+	if err != nil {
+		slog.Error("storage error GetUsersChats: " + err.Error())
+		return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
+	}
+
+	rows, err := stmt.QueryContext(ctx, userId, userId)
+
+	if err != nil {
+		slog.Error("storage error GetUsersChats: " + err.Error())
+		return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
+	}
+	var result []*models.ChatData
+	for rows.Next() {
+		var chat models.ChatData
+		err = rows.Scan(&chat.ID, &chat.FirstId, &chat.SecondId)
+		if err != nil {
+			slog.Error("storage error GetUsersChats: " + err.Error())
+			return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
+		}
+		result = append(result, &chat)
+	}
+	return result, nil
 }
 
 func (s *Storage) DeleteChat(ctx context.Context, chatId int64) (*emptypb.Empty, error) {

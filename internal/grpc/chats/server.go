@@ -89,17 +89,13 @@ func (s *serverAPI) GetUsersChats(ctx context.Context, req *chatsv1.GetUsersChat
 	}
 	var chats []*chatsv1.ChatData
 	for _, chat := range resp {
-		if chat.User1.UserId == req.UserId {
+		if chat.FirstId == req.UserId {
 			chats = append(chats, &chatsv1.ChatData{
-				Id:     chat.User2.UserId,
-				Name:   chat.User2.Username,
-				Avatar: chat.User2.Avatar,
+				Id: chat.SecondId,
 			})
 		} else {
 			chats = append(chats, &chatsv1.ChatData{
-				Id:     chat.User1.UserId,
-				Name:   chat.User1.Username,
-				Avatar: chat.User1.Avatar,
+				Id: chat.FirstId,
 			})
 		}
 	}
