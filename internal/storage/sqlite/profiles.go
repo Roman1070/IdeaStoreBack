@@ -89,19 +89,34 @@ func (s *Storage) GetProfileLight(ctx context.Context, id int64) (models.Profile
 }
 func (s *Storage) UpdateProfile(ctx context.Context, userId int64, name, avatarImage, description, link string) (*emptypb.Empty, error) {
 	slog.Info("storage started UpdateProfile")
+	if avatarImage != "" {
+		stmt, err := s.db.Prepare("UPDATE profiles SET name = ?, avatarImage = ?, description = ?, link=? WHERE id = ?")
+		if err != nil {
+			slog.Error("storage UpdateProfile error: " + err.Error())
+			return nil, err
+		}
 
-	stmt, err := s.db.Prepare("UPDATE profiles SET name = ?, avatarImage = ?, description = ?, link=? WHERE id = ?")
-	if err != nil {
-		slog.Error("storage UpdateProfile error: " + err.Error())
-		return nil, err
+		_, err = stmt.ExecContext(ctx, name, avatarImage, description, link, userId)
+
+		if err != nil {
+			slog.Error("storage UpdateProfile error: " + err.Error())
+			return nil, err
+		}
+	} else {
+		stmt, err := s.db.Prepare("UPDATE profiles SET name = ?, description = ?, link=? WHERE id = ?")
+		if err != nil {
+			slog.Error("storage UpdateProfile error: " + err.Error())
+			return nil, err
+		}
+
+		_, err = stmt.ExecContext(ctx, name, description, link, userId)
+
+		if err != nil {
+			slog.Error("storage UpdateProfile error: " + err.Error())
+			return nil, err
+		}
 	}
 
-	_, err = stmt.ExecContext(ctx, name, avatarImage, description, link, userId)
-
-	if err != nil {
-		slog.Error("storage UpdateProfile error: " + err.Error())
-		return nil, err
-	}
 	return nil, nil
 }
 func (s *Storage) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error) {
