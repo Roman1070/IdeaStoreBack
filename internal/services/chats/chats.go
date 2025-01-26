@@ -21,10 +21,10 @@ func New(log *slog.Logger, api chats.Chats) *Chats {
 		Api: api,
 	}
 }
-func (c *Chats) SendMessage(ctx context.Context, message models.Message) (*emptypb.Empty, error) {
+func (c *Chats) SendMessage(ctx context.Context, message models.Message) (int64, error) {
 	c.log.Info("service started SendMessage")
 
-	_, err := c.Api.SendMessage(ctx, models.Message{
+	resp, err := c.Api.SendMessage(ctx, models.Message{
 		SenderId:           message.SenderId,
 		RecieverId:         message.RecieverId,
 		Filename:           message.Filename,
@@ -34,10 +34,10 @@ func (c *Chats) SendMessage(ctx context.Context, message models.Message) (*empty
 	})
 	if err != nil {
 		c.log.Error("service error SendMessage: " + err.Error())
-		return nil, fmt.Errorf("serivce error SendMessage: %v", err.Error())
+		return -1, fmt.Errorf("serivce error SendMessage: %v", err.Error())
 	}
 
-	return nil, nil
+	return resp, nil
 }
 
 func (c *Chats) GetMessages(ctx context.Context, senderId, recieverId int64) ([]*models.Message, error) {

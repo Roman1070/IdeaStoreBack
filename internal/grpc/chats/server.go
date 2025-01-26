@@ -12,7 +12,7 @@ import (
 )
 
 type Chats interface {
-	SendMessage(ctx context.Context, message models.Message) (*emptypb.Empty, error)
+	SendMessage(ctx context.Context, message models.Message) (int64, error)
 	GetMessages(ctx context.Context, senderId, recieverId int64) ([]*models.Message, error)
 	CreateChat(ctx context.Context, user1, user2 int64) (*emptypb.Empty, error)
 	GetUsersChats(ctx context.Context, userId int64) ([]*models.ChatData, error)
@@ -28,10 +28,10 @@ func Register(gRPC *grpc.Server, chats Chats) {
 	chatsv1.RegisterChatsServer(gRPC, &serverAPI{chats: chats})
 }
 
-func (s *serverAPI) SendMessage(ctx context.Context, req *chatsv1.SendMessageRequest) (*emptypb.Empty, error) {
+func (s *serverAPI) SendMessage(ctx context.Context, req *chatsv1.SendMessageRequest) (*chatsv1.SendMessageResponse, error) {
 	slog.Info("grpc started SendMessage")
 
-	_, err := s.chats.SendMessage(ctx, models.Message{
+	resp, err := s.chats.SendMessage(ctx, models.Message{
 		SenderId:           req.Data.SenderId,
 		RecieverId:         req.Data.RecieverId,
 		Filename:           req.Data.FileName,
@@ -43,7 +43,9 @@ func (s *serverAPI) SendMessage(ctx context.Context, req *chatsv1.SendMessageReq
 		slog.Error("grpc error SendMessage")
 		return nil, fmt.Errorf("grpc SendMessage error :%v", err.Error())
 	}
-	return nil, nil
+	return &chatsv1.SendMessageResponse{
+		Id: resp,
+	}, nil
 }
 func (s *serverAPI) GetMessages(ctx context.Context, req *chatsv1.GetMessagesRequest) (*chatsv1.GetMessagesResponse, error) {
 	slog.Info("grpc started GetMessages")

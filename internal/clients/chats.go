@@ -64,7 +64,7 @@ func (c *ChatsClient) SendMessage(w http.ResponseWriter, r *http.Request) {
 	creationDate := time.Now()
 	creationDateStr := fmt.Sprintf("%02d.%02d.%04d %02d:%02d:%02d", creationDate.Day(), creationDate.Month(), creationDate.Year(), creationDate.Hour(), creationDate.Minute(), creationDate.Second())
 
-	_, err = c.api.SendMessage(r.Context(), &chatsv1.SendMessageRequest{
+	resp, err := c.api.SendMessage(r.Context(), &chatsv1.SendMessageRequest{
 		Data: &chatsv1.MessageData{
 			SenderId:           userId,
 			RecieverId:         req.RecieverId,
@@ -75,11 +75,19 @@ func (c *ChatsClient) SendMessage(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	if err != nil {
-		fmt.Printf("client SendMessage error: %v\n", err.Error())
 		utils.WriteError(w, err.Error())
 		return
 	}
+
+	result, err := json.Marshal(resp)
+
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
+	w.Write(result)
 }
 
 func (c *ChatsClient) GetMessages(w http.ResponseWriter, r *http.Request) {

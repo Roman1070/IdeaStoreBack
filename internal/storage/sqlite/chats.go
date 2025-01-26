@@ -11,19 +11,19 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *Storage) SendMessage(ctx context.Context, message models.Message) (*emptypb.Empty, error) {
+func (s *Storage) SendMessage(ctx context.Context, message models.Message) (int64, error) {
 	slog.Info("storage started SendMessage")
 	dateInSeconds, err := utils.DateTimeToSecondsForDb(message.CreationDate)
 	if err != nil {
 		slog.Error("storage error SendMessage: " + err.Error())
-		return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
+		return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
 	}
 
 	if message.CheckChatExistance {
 		stmt, err := s.db.Prepare("SELECT COUNT(*) FROM chats WHERE (first_id = ? AND second_id = ?) OR (first_id = ? AND second_id = ?)")
 		if err != nil {
 			slog.Error("storage error SendMessage: " + err.Error())
-			return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
+			return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
 		}
 		row := stmt.QueryRowContext(ctx, message.RecieverId, message.SenderId, message.SenderId, message.RecieverId)
 		rowsCount := 0
@@ -31,14 +31,14 @@ func (s *Storage) SendMessage(ctx context.Context, message models.Message) (*emp
 
 		if err != nil {
 			slog.Error("storage error SendMessage: " + err.Error())
-			return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
+			return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
 		}
 
 		if rowsCount == 0 {
 			_, err = s.CreateChat(ctx, message.SenderId, message.RecieverId)
 			if err != nil {
 				slog.Error("storage error SendMessage: " + err.Error())
-				return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
+				return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
 			}
 		}
 	}
@@ -47,16 +47,21 @@ func (s *Storage) SendMessage(ctx context.Context, message models.Message) (*emp
 
 	if err != nil {
 		slog.Error("storage error SendMessage: " + err.Error())
-		return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
+		return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
 	}
 
-	_, err = stmt.ExecContext(ctx, message.SenderId, message.RecieverId, message.Filename, message.Text, message.CreationDate, dateInSeconds)
+	res, err := stmt.ExecContext(ctx, message.SenderId, message.RecieverId, message.Filename, message.Text, message.CreationDate, dateInSeconds)
 
 	if err != nil {
 		slog.Error("storage error SendMessage: " + err.Error())
-		return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
+		return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
 	}
-	return nil, nil
+	id, err := res.LastInsertId()
+	if err != nil {
+		slog.Error("storage error SendMessage: " + err.Error())
+		return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
+	}
+	return id, nil
 }
 
 func (s *Storage) GetMessages(ctx context.Context, firstId, secondId int64) ([]*models.Message, error) {

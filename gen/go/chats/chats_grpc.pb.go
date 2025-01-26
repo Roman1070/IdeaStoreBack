@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ChatsClient interface {
-	SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*SendMessageResponse, error)
 	GetMessages(ctx context.Context, in *GetMessagesRequest, opts ...grpc.CallOption) (*GetMessagesResponse, error)
 	CreateChat(ctx context.Context, in *CreateChatRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetUsersChats(ctx context.Context, in *GetUsersChatsRequest, opts ...grpc.CallOption) (*GetUsersChatsResponse, error)
@@ -38,8 +38,8 @@ func NewChatsClient(cc grpc.ClientConnInterface) ChatsClient {
 	return &chatsClient{cc}
 }
 
-func (c *chatsClient) SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *chatsClient) SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*SendMessageResponse, error) {
+	out := new(SendMessageResponse)
 	err := c.cc.Invoke(ctx, "/chats.Chats/SendMessage", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (c *chatsClient) DeleteChat(ctx context.Context, in *DeleteChatRequest, opt
 // All implementations must embed UnimplementedChatsServer
 // for forward compatibility
 type ChatsServer interface {
-	SendMessage(context.Context, *SendMessageRequest) (*emptypb.Empty, error)
+	SendMessage(context.Context, *SendMessageRequest) (*SendMessageResponse, error)
 	GetMessages(context.Context, *GetMessagesRequest) (*GetMessagesResponse, error)
 	CreateChat(context.Context, *CreateChatRequest) (*emptypb.Empty, error)
 	GetUsersChats(context.Context, *GetUsersChatsRequest) (*GetUsersChatsResponse, error)
@@ -99,7 +99,7 @@ type ChatsServer interface {
 type UnimplementedChatsServer struct {
 }
 
-func (UnimplementedChatsServer) SendMessage(context.Context, *SendMessageRequest) (*emptypb.Empty, error) {
+func (UnimplementedChatsServer) SendMessage(context.Context, *SendMessageRequest) (*SendMessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendMessage not implemented")
 }
 func (UnimplementedChatsServer) GetMessages(context.Context, *GetMessagesRequest) (*GetMessagesResponse, error) {
