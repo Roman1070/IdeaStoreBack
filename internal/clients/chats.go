@@ -42,6 +42,44 @@ func NewChatsClient(addr string, timeout time.Duration, retriesCount int) (*Chat
 
 func (c *ChatsClient) SendMessage(w http.ResponseWriter, r *http.Request) {
 
+	userId, err := GetUserIdByRequestWithCookie(r)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	checkChatExistance := r.URL.Query().Get("checkChatExistance") == "true"
+	type request struct {
+		RecieverId int64  `json:"recieverId"`
+		Text       string `json:"text"`
+		FileName   string `json:"fileName"`
+	}
+	var req request
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		fmt.Printf("client SendMessage error: %v\n", err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+	creationDate := time.Now()
+	creationDateStr := fmt.Sprintf("%02d.%02d.%04d %02d:%02d:%02d", creationDate.Day(), creationDate.Month(), creationDate.Year(), creationDate.Hour(), creationDate.Minute(), creationDate.Second())
+
+	_, err = c.api.SendMessage(r.Context(), &chatsv1.SendMessageRequest{
+		Data: &chatsv1.MessageData{
+			SenderId:           userId,
+			RecieverId:         req.RecieverId,
+			Text:               req.Text,
+			FileName:           req.FileName,
+			SendingDate:        creationDateStr,
+			CheckChatExistance: checkChatExistance,
+		},
+	})
+	if err != nil {
+		fmt.Printf("client SendMessage error: %v\n", err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func (c *ChatsClient) GetMessages(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +109,7 @@ func (c *ChatsClient) GetMessages(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, err.Error())
 		return
 	}
-	fmt.Println(resp)
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }

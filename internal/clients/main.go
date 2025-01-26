@@ -57,6 +57,7 @@ func main() {
 
 	router.HandleFunc("/chats", chatsClient.GetChats).Methods("GET", "OPTIONS")
 	router.HandleFunc("/messages", chatsClient.GetMessages).Methods("GET", "OPTIONS")
+	router.HandleFunc("/message", chatsClient.SendMessage).Methods("POST", "OPTIONS")
 	handler := middlewares.CorsMiddleware(router)
 	fmt.Println("Server is listening...")
 
