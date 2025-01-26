@@ -5,6 +5,7 @@ import (
 	"fmt"
 	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
+	"idea-store-auth/internal/utils"
 	"log/slog"
 
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -12,6 +13,11 @@ import (
 
 func (s *Storage) SendMessage(ctx context.Context, message models.Message) (*emptypb.Empty, error) {
 	slog.Info("storage started SendMessage")
+	dateInSeconds, err := utils.DateTimeToSecondsForDb(message.CreationDate)
+	if err != nil {
+		slog.Error("storage error SendMessage: " + err.Error())
+		return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
+	}
 
 	if message.CheckChatExistance {
 		stmt, err := s.db.Prepare("SELECT COUNT(*) FROM chats WHERE (first_id = ? AND second_id = ?) OR (first_id = ? AND second_id = ?)")
@@ -37,14 +43,14 @@ func (s *Storage) SendMessage(ctx context.Context, message models.Message) (*emp
 		}
 	}
 
-	stmt, err := s.db.Prepare("INSERT INTO messages(sender_id, reciever_id, file_name, content, send_date) VALUES(?,?,?,?,?)")
+	stmt, err := s.db.Prepare("INSERT INTO messages(sender_id, reciever_id, file_name, content, send_date, sending_date_seconds) VALUES(?,?,?,?,?,?)")
 
 	if err != nil {
 		slog.Error("storage error SendMessage: " + err.Error())
 		return nil, fmt.Errorf("storage error SendMessage: %v", err.Error())
 	}
 
-	_, err = stmt.ExecContext(ctx, message.SenderId, message.RecieverId, message.Filename, message.Text, message.CreationDate)
+	_, err = stmt.ExecContext(ctx, message.SenderId, message.RecieverId, message.Filename, message.Text, message.CreationDate, dateInSeconds)
 
 	if err != nil {
 		slog.Error("storage error SendMessage: " + err.Error())
@@ -53,18 +59,18 @@ func (s *Storage) SendMessage(ctx context.Context, message models.Message) (*emp
 	return nil, nil
 }
 
-func (s *Storage) GetMessages(ctx context.Context, senderId, recieverId int64) ([]*models.Message, error) {
+func (s *Storage) GetMessages(ctx context.Context, firstId, secondId int64) ([]*models.Message, error) {
 
 	slog.Info("storage started GetMessages")
 
-	stmt, err := s.db.Prepare("SELECT id, file_name, content, send_date FROM messages WHERE sender_id=? AND reciever_id = ?")
+	stmt, err := s.db.Prepare("SELECT id,sender_id, reciever_id, file_name, content, send_date FROM messages WHERE (sender_id=? AND reciever_id = ?) OR (sender_id=? AND reciever_id = ?) ORDER BY sending_date_seconds")
 
 	if err != nil {
 		slog.Error("storage error GetMessages: " + err.Error())
 		return nil, fmt.Errorf("storage error GetMessages: %v", err.Error())
 	}
 
-	rows, err := stmt.QueryContext(ctx, senderId, recieverId)
+	rows, err := stmt.QueryContext(ctx, firstId, secondId, secondId, firstId)
 
 	if err != nil {
 		slog.Error("storage error GetMessages: " + err.Error())
@@ -73,14 +79,13 @@ func (s *Storage) GetMessages(ctx context.Context, senderId, recieverId int64) (
 	var result []*models.Message
 	for rows.Next() {
 		message := models.Message{}
-		err = rows.Scan(&message.ID, &message.Filename, &message.Text, &message.CreationDate)
+		err = rows.Scan(&message.ID, &message.SenderId, &message.RecieverId, &message.Filename, &message.Text, &message.CreationDate)
 
 		if err != nil {
 			slog.Error("storage error GetMessages: " + err.Error())
 			return nil, fmt.Errorf("storage error GetMessages: %v", err.Error())
 		}
-		message.RecieverId = recieverId
-		message.SenderId = senderId
+
 		result = append(result, &message)
 	}
 

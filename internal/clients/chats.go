@@ -6,6 +6,7 @@ import (
 	chatsv1 "idea-store-auth/gen/go/chats"
 	"idea-store-auth/internal/utils"
 	"net/http"
+	"strconv"
 	"time"
 
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
@@ -44,7 +45,35 @@ func (c *ChatsClient) SendMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *ChatsClient) GetMessages(w http.ResponseWriter, r *http.Request) {
+	userId, err := GetUserIdByRequestWithCookie(r)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	secondIdStr := r.URL.Query().Get("id")
+	secondId, err := strconv.ParseInt(secondIdStr, 10, 64)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	resp, err := c.api.GetMessages(r.Context(), &chatsv1.GetMessagesRequest{
+		FirstId:  userId,
+		SecondId: secondId,
+	})
 
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	result, err := json.Marshal(resp)
+
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	fmt.Println(resp)
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
 }
 func (c *ChatsClient) CreateChat(w http.ResponseWriter, r *http.Request) {
 

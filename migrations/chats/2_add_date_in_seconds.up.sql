@@ -1,0 +1,2 @@
+ALTER TABLE messages
+ADD COLUMN sending_date_seconds INTEGER NOT NULL DEFAULT 0;

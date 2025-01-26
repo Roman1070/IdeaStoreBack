@@ -17,17 +17,18 @@ message SendMessageRequest{
 }
 
 message GetMessagesRequest{
-    int64 sender_id = 1;
-    int64 reciever_id = 2;
+    int64 first_id = 1;
+    int64 second_id = 2;
 }
 
 message MessageData{
-    int64 sender_id=1;
-    int64 reciever_id=2;
-    string file_name = 3;
-    string text = 4;
-    string sending_date = 5;
-    bool check_chat_existance=6;
+    int64 id = 1;
+    int64 sender_id=2;
+    int64 reciever_id=3;
+    string file_name = 4;
+    string text = 5;
+    string sending_date = 6;
+    bool check_chat_existance=7;
 }
 
 message GetMessagesResponse{
@@ -35,8 +36,8 @@ message GetMessagesResponse{
 }
 
 message CreateChatRequest{
-    ChatUserData first_id = 1;
-    ChatUserData second_id = 2;
+    int64 first_id = 1;
+    int64 second_id = 2;
 }
 
 message GetUsersChatsRequest{

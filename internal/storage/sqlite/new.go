@@ -89,7 +89,7 @@ func ParseIdsSqlite(str string) ([]int64, error) {
 	return ids, nil
 }
 
-func ParseIdPairs(str string)([]ideaBoardPair, error){
+func ParseIdPairs(str string) ([]ideaBoardPair, error) {
 	if len(str) == 0 {
 		return []ideaBoardPair{}, nil
 	}

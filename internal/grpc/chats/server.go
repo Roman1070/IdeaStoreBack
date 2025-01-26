@@ -48,7 +48,7 @@ func (s *serverAPI) SendMessage(ctx context.Context, req *chatsv1.SendMessageReq
 func (s *serverAPI) GetMessages(ctx context.Context, req *chatsv1.GetMessagesRequest) (*chatsv1.GetMessagesResponse, error) {
 	slog.Info("grpc started GetMessages")
 
-	resp, err := s.chats.GetMessages(ctx, req.SenderId, req.RecieverId)
+	resp, err := s.chats.GetMessages(ctx, req.FirstId, req.SecondId)
 
 	if err != nil {
 		slog.Error("grpc error GetMessages")
@@ -57,6 +57,7 @@ func (s *serverAPI) GetMessages(ctx context.Context, req *chatsv1.GetMessagesReq
 	var messages []*chatsv1.MessageData
 	for _, m := range resp {
 		messages = append(messages, &chatsv1.MessageData{
+			Id:                 m.ID,
 			SenderId:           m.SenderId,
 			RecieverId:         m.RecieverId,
 			FileName:           m.Filename,
@@ -89,17 +90,17 @@ func (s *serverAPI) GetUsersChats(ctx context.Context, req *chatsv1.GetUsersChat
 		slog.Error("grpc error GetUsersChats")
 		return nil, fmt.Errorf("grpc GetUsersChats error :%v", err.Error())
 	}
-	var chats []*chatsv1.ChatData
+	var chats []*chatsv1.ChatUserData
 	for _, chat := range resp {
 
 		if chat.FirstData.UserId == req.UserId {
-			chats = append(chats, &chatsv1.ChatData{
+			chats = append(chats, &chatsv1.ChatUserData{
 				Id:     chat.SecondData.UserId,
 				Name:   chat.SecondData.Username,
 				Avatar: chat.SecondData.Avatar,
 			})
 		} else {
-			chats = append(chats, &chatsv1.ChatData{
+			chats = append(chats, &chatsv1.ChatUserData{
 				Id:     chat.FirstData.UserId,
 				Name:   chat.FirstData.Username,
 				Avatar: chat.FirstData.Avatar,
