@@ -56,6 +56,7 @@ func main() {
 	router.HandleFunc("/comment", commentsClient.CreateComment).Methods("POST", "OPTIONS")
 
 	router.HandleFunc("/chats", chatsClient.GetChats).Methods("GET", "OPTIONS")
+	router.HandleFunc("/chat_ws", chatsClient.HandleChatWebSocket).Methods("GET", "POST", "OPTIONS")
 	router.HandleFunc("/messages", chatsClient.GetMessages).Methods("GET", "OPTIONS")
 	router.HandleFunc("/message", chatsClient.SendMessage).Methods("POST", "OPTIONS")
 	handler := middlewares.CorsMiddleware(router)
