@@ -17,6 +17,7 @@ service Profiles{
     rpc MoveIdeasToBoard(MoveIdeaToBoardRequest) returns (google.protobuf.Empty) {}
     rpc AddBoardToProfile(AddBoardToProfileRequest) returns (google.protobuf.Empty) {}
     rpc RemoveBoardFromProfile(RemoveBoardFromProfileRequest) returns (google.protobuf.Empty) {}
+    rpc GetProfilesFromSearch(GetProfilesFromSearchRequest) returns (GetProfilesFromSearchResponse);
 }
 message UpdateProfileRequest{
     int64 user_id = 1;
@@ -108,4 +109,16 @@ message GetProfileLightRequest{
 message GetProfileLightResponse{
     string name = 1;
     string avatar = 2;
+}
+
+message GetProfilesFromSearchRequest{
+    string input = 1;
+}
+message GetProfilesFromSearchResponse{
+    repeated ProfileDataLight profiles = 1;
+}
+message ProfileDataLight{
+    int64 id = 1;
+    string name = 2;
+    string avatar = 3;
 }

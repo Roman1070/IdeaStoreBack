@@ -87,6 +87,31 @@ func (s *Storage) GetProfileLight(ctx context.Context, id int64) (models.Profile
 	}
 	return profile, nil
 }
+func (s *Storage) GetProfilesFromSearch(ctx context.Context, input string) ([]*models.ProfileLight, error) {
+	slog.Info("storage start GetProfilesFromSearch")
+
+	stmt, err := s.db.Prepare("SELECT id,name,avatarImage FROM profiles WHERE name LIKE ?  OR email LIKE ?")
+	if err != nil {
+		slog.Error("storage GetProfilesFromSearch db Prepare error: " + err.Error())
+		return nil, err
+	}
+	rows, err := stmt.QueryContext(ctx, input+"%", input+"%")
+	if err != nil {
+		slog.Error("storage GetProfilesFromSearch error: " + err.Error())
+		return nil, err
+	}
+	var result []*models.ProfileLight
+	for rows.Next() {
+		var profile models.ProfileLight
+		err = rows.Scan(&profile.ID, &profile.Name, &profile.AvatarImage)
+		if err != nil {
+			slog.Error("storage GetProfilesFromSearch error: " + err.Error())
+			return nil, err
+		}
+		result = append(result, &profile)
+	}
+	return result, nil
+}
 func (s *Storage) UpdateProfile(ctx context.Context, userId int64, name, avatarImage, description, link string) (*emptypb.Empty, error) {
 	slog.Info("storage started UpdateProfile")
 	if avatarImage != "" {

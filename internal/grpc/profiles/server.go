@@ -25,6 +25,7 @@ type Profiles interface {
 	MoveIdeasToBoard(ctx context.Context, userId, oldBoardId, newBoardId int64) (*emptypb.Empty, error)
 	AddBoardToProfile(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error)
 	RemoveBoardFromProfile(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error)
+	GetProfilesFromSearch(ctx context.Context, input string) ([]*models.ProfileLight, error)
 }
 
 type serverAPI struct {
@@ -66,6 +67,26 @@ func (s *serverAPI) GetProfile(ctx context.Context, req *profilesv1.GetProfileRe
 			Boards:      resp.Boards,
 			SavedIdeas:  resp.SavedIdeas,
 		},
+	}, nil
+}
+func (s *serverAPI) GetProfilesFromSearch(ctx context.Context, req *profilesv1.GetProfilesFromSearchRequest) (*profilesv1.GetProfilesFromSearchResponse, error) {
+	slog.Info("grpc start GetProfilesFromSearch")
+
+	resp, err := s.profiles.GetProfilesFromSearch(ctx, req.Input)
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("grpc get profile error: " + err.Error())
+	}
+	var result []*profilesv1.ProfileDataLight
+	for _, prof := range resp {
+		result = append(result, &profilesv1.ProfileDataLight{
+			Id:     prof.ID,
+			Name:   prof.Name,
+			Avatar: prof.AvatarImage,
+		})
+	}
+	return &profilesv1.GetProfilesFromSearchResponse{
+		Profiles: result,
 	}, nil
 }
 func (s *serverAPI) GetProfileLight(ctx context.Context, req *profilesv1.GetProfileLightRequest) (*profilesv1.GetProfileLightResponse, error) {

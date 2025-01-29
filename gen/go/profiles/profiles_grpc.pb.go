@@ -35,6 +35,7 @@ type ProfilesClient interface {
 	MoveIdeasToBoard(ctx context.Context, in *MoveIdeaToBoardRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AddBoardToProfile(ctx context.Context, in *AddBoardToProfileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	RemoveBoardFromProfile(ctx context.Context, in *RemoveBoardFromProfileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetProfilesFromSearch(ctx context.Context, in *GetProfilesFromSearchRequest, opts ...grpc.CallOption) (*GetProfilesFromSearchResponse, error)
 }
 
 type profilesClient struct {
@@ -144,6 +145,15 @@ func (c *profilesClient) RemoveBoardFromProfile(ctx context.Context, in *RemoveB
 	return out, nil
 }
 
+func (c *profilesClient) GetProfilesFromSearch(ctx context.Context, in *GetProfilesFromSearchRequest, opts ...grpc.CallOption) (*GetProfilesFromSearchResponse, error) {
+	out := new(GetProfilesFromSearchResponse)
+	err := c.cc.Invoke(ctx, "/profiles.Profiles/GetProfilesFromSearch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProfilesServer is the server API for Profiles service.
 // All implementations must embed UnimplementedProfilesServer
 // for forward compatibility
@@ -160,6 +170,7 @@ type ProfilesServer interface {
 	MoveIdeasToBoard(context.Context, *MoveIdeaToBoardRequest) (*emptypb.Empty, error)
 	AddBoardToProfile(context.Context, *AddBoardToProfileRequest) (*emptypb.Empty, error)
 	RemoveBoardFromProfile(context.Context, *RemoveBoardFromProfileRequest) (*emptypb.Empty, error)
+	GetProfilesFromSearch(context.Context, *GetProfilesFromSearchRequest) (*GetProfilesFromSearchResponse, error)
 	mustEmbedUnimplementedProfilesServer()
 }
 
@@ -199,6 +210,9 @@ func (UnimplementedProfilesServer) AddBoardToProfile(context.Context, *AddBoardT
 }
 func (UnimplementedProfilesServer) RemoveBoardFromProfile(context.Context, *RemoveBoardFromProfileRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveBoardFromProfile not implemented")
+}
+func (UnimplementedProfilesServer) GetProfilesFromSearch(context.Context, *GetProfilesFromSearchRequest) (*GetProfilesFromSearchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProfilesFromSearch not implemented")
 }
 func (UnimplementedProfilesServer) mustEmbedUnimplementedProfilesServer() {}
 
@@ -411,6 +425,24 @@ func _Profiles_RemoveBoardFromProfile_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Profiles_GetProfilesFromSearch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProfilesFromSearchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfilesServer).GetProfilesFromSearch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/profiles.Profiles/GetProfilesFromSearch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfilesServer).GetProfilesFromSearch(ctx, req.(*GetProfilesFromSearchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Profiles_ServiceDesc is the grpc.ServiceDesc for Profiles service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -461,6 +493,10 @@ var Profiles_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveBoardFromProfile",
 			Handler:    _Profiles_RemoveBoardFromProfile_Handler,
+		},
+		{
+			MethodName: "GetProfilesFromSearch",
+			Handler:    _Profiles_GetProfilesFromSearch_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

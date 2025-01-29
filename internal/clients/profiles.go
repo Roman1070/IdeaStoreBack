@@ -133,6 +133,25 @@ func (c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
+func (c *ProfilesClient) GetProfilesFromSearch(w http.ResponseWriter, r *http.Request) {
+	input := r.URL.Query().Get("input")
+	resp, err := c.api.GetProfilesFromSearch(r.Context(), &profilesv1.GetProfilesFromSearchRequest{
+		Input: input,
+	})
+
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	result, err := json.Marshal(&resp.Profiles)
+
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
 func (c *ProfilesClient) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	userId, err := GetUserIdByRequestWithCookie(r)
 

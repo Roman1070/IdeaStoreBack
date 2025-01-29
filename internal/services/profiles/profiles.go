@@ -69,6 +69,18 @@ func (p *Profiles) GetProfileLight(ctx context.Context, id int64) (models.Profil
 		AvatarImage: resp.AvatarImage,
 	}, nil
 }
+func (p *Profiles) GetProfilesFromSearch(ctx context.Context, input string) ([]*models.ProfileLight, error) {
+	slog.Info("service started GetProfilesFromSearch")
+
+	resp, err := p.Api.GetProfilesFromSearch(ctx, input)
+
+	if err != nil {
+		slog.Error("service GetProfile error: " + err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}
 func (p *Profiles) UpdateProfile(ctx context.Context, userId int64, name, avatarImage, description, link string) (*emptypb.Empty, error) {
 	slog.Info("service start UpdateProfile")
 	_, err := p.Api.UpdateProfile(ctx, userId, name, avatarImage, description, link)
