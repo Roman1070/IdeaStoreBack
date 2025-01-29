@@ -23,12 +23,12 @@ import (
 type ChatsClient struct {
 	api      chatsv1.ChatsClient
 	producer *kafka.Producer
-	clients  map[*websocket.Conn]bool
+	clients  map[*websocket.Conn]int64
 }
 
 func NewChatsClient(addr string, timeout time.Duration, retriesCount int) (*ChatsClient, error) {
 	const op = "client.boards.New"
-	clients := make(map[*websocket.Conn]bool) // Track active clients
+	clients := make(map[*websocket.Conn]int64) // Track active clients
 	retryOptions := []grpcretry.CallOption{
 		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),
 		grpcretry.WithMax(uint(retriesCount)),
@@ -71,22 +71,39 @@ func (c *ChatsClient) HandleChatWebSocket(w http.ResponseWriter, r *http.Request
 		delete(c.clients, ws)
 		ws.Close()
 	}()
-
-	c.clients[ws] = true
+	userId, err := GetUserIdByRequestWithCookie(r)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	c.clients[ws] = userId
 	for {
 		// Read message from browser
 		_, msg, err := ws.ReadMessage()
+
 		if err != nil {
 			fmt.Println("read error:", err)
 			utils.WriteError(w, err.Error())
 			break
 		}
 
-		for client := range c.clients {
-			if err := client.WriteMessage(websocket.TextMessage, msg); err != nil {
-				fmt.Println("broadcast error:", err)
-				client.Close()
-				delete(c.clients, client)
+		fmt.Println(string(msg))
+		type recieverIdWrapper struct {
+			ReceiverId int64 `json:"reciever_id"`
+		}
+		var reciever recieverIdWrapper
+		err = json.Unmarshal(msg, &reciever)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		for client, id := range c.clients {
+			if id == reciever.ReceiverId {
+				if err := client.WriteMessage(websocket.TextMessage, msg); err != nil {
+					fmt.Println("broadcast error:", err)
+					client.Close()
+					delete(c.clients, client)
+				}
 			}
 		}
 	}
