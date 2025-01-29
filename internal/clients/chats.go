@@ -5,7 +5,6 @@ import (
 	"fmt"
 	chatsv1 "idea-store-auth/gen/go/chats"
 	"idea-store-auth/internal/utils"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -61,7 +60,7 @@ var upgrader = websocket.Upgrader{
 
 func (c *ChatsClient) HandleChatWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Upgrade initial GET request to a WebSocket
-	slog.Info("web socket recieved ")
+
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -82,9 +81,7 @@ func (c *ChatsClient) HandleChatWebSocket(w http.ResponseWriter, r *http.Request
 			utils.WriteError(w, err.Error())
 			break
 		}
-		fmt.Printf("Received: %s\n", msg)
 
-		fmt.Printf("ws clients: %v\n", c.clients)
 		for client := range c.clients {
 			if err := client.WriteMessage(websocket.TextMessage, msg); err != nil {
 				fmt.Println("broadcast error:", err)
@@ -103,7 +100,7 @@ func (c *ChatsClient) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	checkChatExistance := r.URL.Query().Get("checkChatExistance") == "true"
+	checkChatExistance := r.URL.Query().Get("check_chat") == "true"
 	type request struct {
 		RecieverId int64  `json:"recieverId"`
 		Text       string `json:"text"`
