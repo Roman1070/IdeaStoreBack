@@ -38,7 +38,7 @@ func (s *serverAPI) SendMessage(ctx context.Context, req *chatsv1.SendMessageReq
 		Text:               req.Data.Text,
 		CreationDate:       req.Data.SendingDate,
 		CheckChatExistance: req.Data.CheckChatExistance,
-		IdeaLink:           req.Data.IdeaLink,
+		IdeaId:             req.Data.IdeaId,
 	})
 	if err != nil {
 		slog.Error("grpc error SendMessage")
@@ -67,7 +67,7 @@ func (s *serverAPI) GetMessages(ctx context.Context, req *chatsv1.GetMessagesReq
 			Text:               m.Text,
 			SendingDate:        m.CreationDate,
 			CheckChatExistance: m.CheckChatExistance,
-			IdeaLink:           m.IdeaLink,
+			IdeaId:             m.IdeaId,
 		})
 	}
 	return &chatsv1.GetMessagesResponse{

@@ -119,6 +119,7 @@ func (c *ChatsClient) SendMessage(w http.ResponseWriter, r *http.Request) {
 		RecieverId int64  `json:"recieverId"`
 		Text       string `json:"text"`
 		FileName   string `json:"fileName"`
+		IdeaId     string `json:"ideaId,omitempty"`
 	}
 	var req request
 	err = json.NewDecoder(r.Body).Decode(&req)
@@ -127,8 +128,15 @@ func (c *ChatsClient) SendMessage(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, err.Error())
 		return
 	}
+
 	creationDate := time.Now()
 	creationDateStr := fmt.Sprintf("%02d.%02d.%04d %02d:%02d:%02d", creationDate.Day(), creationDate.Month(), creationDate.Year(), creationDate.Hour(), creationDate.Minute(), creationDate.Second())
+	ideaId, err := strconv.ParseInt(req.IdeaId, 10, 64)
+	if err != nil {
+		fmt.Printf("client SendMessage error: %v\n", err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
 
 	resp, err := c.api.SendMessage(r.Context(), &chatsv1.SendMessageRequest{
 		Data: &chatsv1.MessageData{
@@ -138,6 +146,7 @@ func (c *ChatsClient) SendMessage(w http.ResponseWriter, r *http.Request) {
 			FileName:           req.FileName,
 			SendingDate:        creationDateStr,
 			CheckChatExistance: checkChatExistance,
+			IdeaId:             ideaId,
 		},
 	})
 	if err != nil {

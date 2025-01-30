@@ -31,6 +31,7 @@ func (c *Chats) SendMessage(ctx context.Context, message models.Message) (int64,
 		Text:               message.Text,
 		CreationDate:       message.CreationDate,
 		CheckChatExistance: message.CheckChatExistance,
+		IdeaId:             message.IdeaId,
 	})
 	if err != nil {
 		c.log.Error("service error SendMessage: " + err.Error())
