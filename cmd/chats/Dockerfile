@@ -22,6 +22,6 @@ RUN mkdir -p /app/internal/configs
 COPY configs app/configs
 
 WORKDIR /app
-EXPOSE 8003
+EXPOSE 44005
 
-ENTRYPOINT ./main
+ENTRYPOINT ["./main"]
