@@ -31,6 +31,7 @@ message MessageData{
     string text = 5;
     string sending_date = 6;
     bool check_chat_existance=7;
+    string idea_link = 8;
 }
 
 message GetMessagesResponse{

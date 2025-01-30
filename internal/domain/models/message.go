@@ -8,4 +8,5 @@ type Message struct {
 	Text               string
 	CreationDate       string
 	CheckChatExistance bool
+	IdeaLink           string
 }

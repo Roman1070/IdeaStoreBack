@@ -9,9 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	mykafka "idea-store-auth/internal/kafka"
-
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gorilla/websocket"
 
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
@@ -21,9 +18,9 @@ import (
 )
 
 type ChatsClient struct {
-	api      chatsv1.ChatsClient
-	producer *kafka.Producer
-	clients  map[*websocket.Conn]int64
+	api chatsv1.ChatsClient
+	//producer *kafka.Producer
+	clients map[*websocket.Conn]int64
 }
 
 func NewChatsClient(addr string, timeout time.Duration, retriesCount int) (*ChatsClient, error) {
@@ -42,15 +39,15 @@ func NewChatsClient(addr string, timeout time.Duration, retriesCount int) (*Chat
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	producer, err := mykafka.StartProducer()
+	/*producer, err := mykafka.StartProducer()
 
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
-	}
+	}*/
 	return &ChatsClient{
-		api:      chatsv1.NewChatsClient(cc),
-		producer: producer,
-		clients:  clients,
+		api: chatsv1.NewChatsClient(cc),
+		//	producer: producer,
+		clients: clients,
 	}, nil
 }
 
@@ -147,7 +144,7 @@ func (c *ChatsClient) SendMessage(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, err.Error())
 		return
 	}
-	mykafka.OnMessageSent(c.producer, resp.Id, req.RecieverId)
+	//mykafka.OnMessageSent(c.producer, resp.Id, req.RecieverId)
 	result, err := json.Marshal(resp)
 
 	if err != nil {

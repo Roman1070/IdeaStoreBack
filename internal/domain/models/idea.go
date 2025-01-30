@@ -8,5 +8,5 @@ type Idea struct {
 	Link        string
 	Tags        string
 	UserID      int64
-	Likes       int
+	Likes       int32
 }

@@ -36,7 +36,13 @@ func Register(gRPC *grpc.Server, ideas Ideas) {
 func (s *serverAPI) CreateIdea(ctx context.Context, req *ideasv1.CreateRequest) (*ideasv1.CreateResponse, error) {
 	slog.Info("started to save an idea...")
 
-	id, err := s.ideas.CreateIdea(ctx, models.Idea{Image: req.Image, Name: req.Name, Description: req.Description, Link: req.Link, Tags: req.Tags, UserID: req.UserId})
+	id, err := s.ideas.CreateIdea(ctx, models.Idea{
+		Image:       req.Image,
+		Name:        req.Name,
+		Description: req.Description,
+		Link:        req.Link,
+		Tags:        req.Tags,
+		UserID:      req.UserId})
 	if err != nil {
 		slog.Error(err.Error())
 		return nil, status.Error(codes.Internal, "Internal error creating idea")
@@ -51,7 +57,14 @@ func (s *serverAPI) GetIdea(ctx context.Context, req *ideasv1.GetRequest) (*idea
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error getting idea")
 	}
-	resp := &ideasv1.GetResponse{Name: idea.Name, Image: idea.Image, Description: idea.Description, Link: idea.Link, Tags: idea.Tags, Likes: int32(idea.Likes), UserId: idea.UserID}
+	resp := &ideasv1.GetResponse{
+		Name:        idea.Name,
+		Image:       idea.Image,
+		Description: idea.Description,
+		Link:        idea.Link,
+		Tags:        idea.Tags,
+		Likes:       idea.Likes,
+		UserId:      idea.UserID}
 	return resp, nil
 }
 func (s *serverAPI) DeleteIdea(ctx context.Context, req *ideasv1.DeleteRequest) (*emptypb.Empty, error) {
@@ -74,8 +87,8 @@ func (s *serverAPI) GetAllIdeas(ctx context.Context, req *ideasv1.GetAllRequest)
 	return &ideasv1.GetAllResponse{Ideas: ideas}, nil
 }
 
-func (s *serverAPI) GetIdeas(ctx context.Context,req *ideasv1.GetIdeasRequest) (*ideasv1.GetIdeasResponse, error){
-	
+func (s *serverAPI) GetIdeas(ctx context.Context, req *ideasv1.GetIdeasRequest) (*ideasv1.GetIdeasResponse, error) {
+
 	slog.Info("started to get ideas")
 	ideas, err := s.ideas.GetIdeas(ctx, req.Ids)
 
