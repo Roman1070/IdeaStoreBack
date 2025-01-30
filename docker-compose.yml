@@ -31,73 +31,61 @@ services:
     depends_on:
       - sqlite_db
 
-  profile_go:
+  profiles_go:
     build:
       context: .
-      dockerfile: ./cmd/profile/Dockerfile
+      dockerfile: ./cmd/profiles/Dockerfile
     ports:
-      - "8003:8003"
-      - "8083:8083"
-    image: profile-go-image
-    container_name: profile_go
+      - "44002:44002"
+    image: profiles-go-image
+    container_name: profiles_go
     restart: unless-stopped
     networks:
       - app-network
     depends_on:
-      - pg_db
-      - redis_service
-      - main_go
+      - sqlite_db
 
-  wishlists_go:
+  boards_go:
     build:
       context: .
-      dockerfile: ./cmd/wish_list/Dockerfile
+      dockerfile: ./cmd/boards/Dockerfile
     ports:
-      - "8007:8007"
-      - "8087:8087"
-    image: wishlists-go-image
-    container_name: wishlists_go
+      - "44003:44003"
+    image: boards-go-image
+    container_name: boards_go
     restart: unless-stopped
     networks:
       - app-network
     depends_on:
-      - pg_db
-      - mongo_db
-      - main_go
+      - sqlite_db
 
-  notifications_go:
+  comments_go:
     build:
       context: .
-      dockerfile: ./cmd/notifications/Dockerfile
+      dockerfile: ./cmd/comments/Dockerfile
     ports:
-      - "8006:8006"
-    image: notifications-go-image
-    container_name: notifications_go
+      - "44004:44004"
+    image: comments-go-image
+    container_name: comments_go
     restart: unless-stopped
     networks:
       - app-network
     depends_on:
-      - pg_db
-      - redis_service
-      - main_go
+      - sqlite_db
 
-  promocodes_go:
+  chats_go:
     build:
       context: .
-      dockerfile: ./cmd/promocodes/Dockerfile
+      dockerfile: ./cmd/chats/Dockerfile
     ports:
-      - "8005:8005"
-    #      - "8083:8083"
-    image: promocodes-go-image
-    container_name: promocodes_go
+      - "44005:44005"
+    image: chats-go-image
+    container_name: chats_go
     restart: unless-stopped
     networks:
       - app-network
     depends_on:
-      - pg_db
-      - redis_service
-      - main_go
-      - kafka
+      - sqlite_db
 
   sqlite_db:
     image: alpine/sqlite:3.47.1
