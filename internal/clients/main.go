@@ -52,6 +52,7 @@ func main() {
 	router.HandleFunc("/is-idea-saved", profilesClient.IsIdeaSaved).Methods("GET", "OPTIONS")
 	router.HandleFunc("/get-saved-ideas", profilesClient.GetSavedIdeas).Methods("GET", "OPTIONS")
 	router.HandleFunc("/search-profiles", profilesClient.GetProfilesFromSearch).Methods("GET", "OPTIONS")
+	router.HandleFunc("/toggle-like-idea", profilesClient.ToggleLikeIdea).Methods("POST", "OPTIONS")
 
 	router.HandleFunc("/comments", commentsClient.GetComments).Methods("GET", "OPTIONS")
 	router.HandleFunc("/comment", commentsClient.CreateComment).Methods("POST", "OPTIONS")

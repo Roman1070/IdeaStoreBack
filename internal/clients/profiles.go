@@ -74,6 +74,51 @@ func (c *ProfilesClient) CreateProfile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (c *ProfilesClient) ToggleLikeIdea(w http.ResponseWriter, r *http.Request) {
+	userId, err := GetUserIdByRequestWithCookie(r)
+
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, "Error ToggleLikeIdea: "+err.Error())
+		return
+	}
+	type request struct {
+		IdeaIdStr string `json:"ideaId"`
+	}
+	var req request
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, "Error ToggleLikeIdea: "+err.Error())
+		return
+	}
+	ideaId, err := strconv.ParseInt(req.IdeaIdStr, 10, 64)
+
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, "Error ToggleLikeIdea: "+err.Error())
+		return
+	}
+	resp, err := c.api.ToggleLikeIdea(r.Context(), &profilesv1.ToggleLikeIdeaRequest{
+		UserId: userId,
+		IdeaId: ideaId,
+	})
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
+
+	result, err := m.Marshal(resp)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+
 func (c *ProfilesClient) GetCurrentProfile(w http.ResponseWriter, r *http.Request) {
 	userId, err := GetUserIdByRequestWithCookie(r)
 

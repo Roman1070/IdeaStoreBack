@@ -116,7 +116,7 @@ func (s *Storage) ChangeLikesCount(ctx context.Context, ideaId int64, increase b
 		slog.Error("storage ChangeLikesCount error: " + err.Error())
 		return emptyValue, fmt.Errorf("storage ChangeLikesCount error: " + err.Error())
 	}
-	return likesCount + 1, nil
+	return newLikesCount, nil
 }
 func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaData, error) {
 	const op = "storage.sqlite.GetAllIdeas"
