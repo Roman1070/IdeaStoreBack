@@ -54,7 +54,16 @@ func (i *Ideas) GetIdea(ctx context.Context, id int64) (models.Idea, error) {
 	}
 	return idea, nil
 }
+func (i *Ideas) ChangeLikesCount(ctx context.Context, ideaId int64, increase bool) (int64, error) {
+	slog.Info("ideas service started to ChangeLikesCount")
 
+	likesCount, err := i.Api.ChangeLikesCount(ctx, ideaId, increase)
+	if err != nil {
+		slog.Error("ideas service ChangeLikesCount error:" + err.Error())
+		return -1, fmt.Errorf("ideas service ChangeLikesCount error: %v", err.Error())
+	}
+	return likesCount, nil
+}
 func (i *Ideas) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error) {
 	const op = "service.ideas.Delete"
 
@@ -90,8 +99,8 @@ func (i *Ideas) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaD
 	return ideas, nil
 }
 
-func (i *Ideas) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaData, error){
-	
+func (i *Ideas) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaData, error) {
+
 	const op = "service.ideas.GetIdeas"
 
 	log := i.log.With(

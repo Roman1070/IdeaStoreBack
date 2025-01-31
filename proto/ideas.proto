@@ -15,8 +15,15 @@ service Ideas {
   //GetAllIdeas retrurs all ideas deom database
   rpc GetAllIdeas(GetAllRequest) returns (GetAllResponse);
   rpc GetIdeas(GetIdeasRequest) returns (GetIdeasResponse);
+  rpc ChangeLikesCount(ChangeLikesCountRequest) returns (ChangeLikesCountResponse);
 }
-
+message ChangeLikesCountRequest{
+  int64 idea_id= 1;
+  bool increase=2;
+}
+message ChangeLikesCountResponse{
+  int64 likes_count=1;
+}
 message GetAllRequest{
   int64 user_id=1;
 }

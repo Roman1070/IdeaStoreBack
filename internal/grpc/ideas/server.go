@@ -24,6 +24,7 @@ type Ideas interface {
 	DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error)
 	GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaData, error)
 	GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaData, error)
+	ChangeLikesCount(ctx context.Context, ideaId int64, increase bool) (int64, error)
 }
 type serverAPI struct {
 	ideasv1.UnimplementedIdeasServer
@@ -49,6 +50,18 @@ func (s *serverAPI) CreateIdea(ctx context.Context, req *ideasv1.CreateRequest) 
 	}
 	resp := &ideasv1.CreateResponse{IdeaId: id}
 	return resp, nil
+}
+func (s *serverAPI) ChangeLikesCount(ctx context.Context, req *ideasv1.ChangeLikesCountRequest) (*ideasv1.ChangeLikesCountResponse, error) {
+	slog.Info("ideas grpc started to ChangeLikesCount")
+
+	likesCount, err := s.ideas.ChangeLikesCount(ctx, req.IdeaId, req.Increase)
+	if err != nil {
+		slog.Error("ideas grpc error: " + err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &ideasv1.ChangeLikesCountResponse{
+		LikesCount: likesCount,
+	}, nil
 }
 func (s *serverAPI) GetIdea(ctx context.Context, req *ideasv1.GetRequest) (*ideasv1.GetResponse, error) {
 	slog.Info("started to get idea")

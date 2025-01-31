@@ -69,6 +69,55 @@ func (s *Storage) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, erro
 	}
 	return emptypb.Empty{}, nil
 }
+func (s *Storage) ChangeLikesCount(ctx context.Context, ideaId int64, increase bool) (int64, error) {
+	slog.Info("storage started to ChangeLikesCount")
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		slog.Error("storage ChangeLikesCount error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage ChangeLikesCount error: " + err.Error())
+	}
+	stmt, err := tx.Prepare("SELECT likes_count from ideas WHERE id = ?")
+
+	if err != nil {
+		slog.Error("storage ChangeLikesCount error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage ChangeLikesCount error: " + err.Error())
+	}
+	row := stmt.QueryRowContext(ctx, ideaId)
+	var likesCount int64
+	err = row.Scan(&likesCount)
+
+	if err != nil {
+		slog.Error("storage ChangeLikesCount error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage ChangeLikesCount error: " + err.Error())
+	}
+
+	stmt, err = tx.Prepare("UPDATE ideas SET likes_count = ? WHERE id = ?")
+
+	if err != nil {
+		slog.Error("storage ChangeLikesCount error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage ChangeLikesCount error: " + err.Error())
+	}
+	var newLikesCount int64
+	if increase {
+		newLikesCount = likesCount + 1
+	} else {
+		newLikesCount = likesCount - 1
+	}
+	_, err = stmt.ExecContext(ctx, newLikesCount, ideaId)
+
+	if err != nil {
+		slog.Error("storage ChangeLikesCount error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage ChangeLikesCount error: " + err.Error())
+	}
+	err = tx.Commit()
+
+	if err != nil {
+		slog.Error("storage ChangeLikesCount error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage ChangeLikesCount error: " + err.Error())
+	}
+	return likesCount + 1, nil
+}
 func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaData, error) {
 	const op = "storage.sqlite.GetAllIdeas"
 	var savedIdsResponse *profilesv1.GetSavedIdeasIdsResponse

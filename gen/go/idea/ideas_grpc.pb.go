@@ -32,6 +32,7 @@ type IdeasClient interface {
 	// GetAllIdeas retrurs all ideas deom database
 	GetAllIdeas(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error)
 	GetIdeas(ctx context.Context, in *GetIdeasRequest, opts ...grpc.CallOption) (*GetIdeasResponse, error)
+	ChangeLikesCount(ctx context.Context, in *ChangeLikesCountRequest, opts ...grpc.CallOption) (*ChangeLikesCountResponse, error)
 }
 
 type ideasClient struct {
@@ -87,6 +88,15 @@ func (c *ideasClient) GetIdeas(ctx context.Context, in *GetIdeasRequest, opts ..
 	return out, nil
 }
 
+func (c *ideasClient) ChangeLikesCount(ctx context.Context, in *ChangeLikesCountRequest, opts ...grpc.CallOption) (*ChangeLikesCountResponse, error) {
+	out := new(ChangeLikesCountResponse)
+	err := c.cc.Invoke(ctx, "/ideas.Ideas/ChangeLikesCount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IdeasServer is the server API for Ideas service.
 // All implementations must embed UnimplementedIdeasServer
 // for forward compatibility
@@ -100,6 +110,7 @@ type IdeasServer interface {
 	// GetAllIdeas retrurs all ideas deom database
 	GetAllIdeas(context.Context, *GetAllRequest) (*GetAllResponse, error)
 	GetIdeas(context.Context, *GetIdeasRequest) (*GetIdeasResponse, error)
+	ChangeLikesCount(context.Context, *ChangeLikesCountRequest) (*ChangeLikesCountResponse, error)
 	mustEmbedUnimplementedIdeasServer()
 }
 
@@ -121,6 +132,9 @@ func (UnimplementedIdeasServer) GetAllIdeas(context.Context, *GetAllRequest) (*G
 }
 func (UnimplementedIdeasServer) GetIdeas(context.Context, *GetIdeasRequest) (*GetIdeasResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetIdeas not implemented")
+}
+func (UnimplementedIdeasServer) ChangeLikesCount(context.Context, *ChangeLikesCountRequest) (*ChangeLikesCountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeLikesCount not implemented")
 }
 func (UnimplementedIdeasServer) mustEmbedUnimplementedIdeasServer() {}
 
@@ -225,6 +239,24 @@ func _Ideas_GetIdeas_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Ideas_ChangeLikesCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangeLikesCountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdeasServer).ChangeLikesCount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ideas.Ideas/ChangeLikesCount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdeasServer).ChangeLikesCount(ctx, req.(*ChangeLikesCountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Ideas_ServiceDesc is the grpc.ServiceDesc for Ideas service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -251,6 +283,10 @@ var Ideas_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetIdeas",
 			Handler:    _Ideas_GetIdeas_Handler,
+		},
+		{
+			MethodName: "ChangeLikesCount",
+			Handler:    _Ideas_ChangeLikesCount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

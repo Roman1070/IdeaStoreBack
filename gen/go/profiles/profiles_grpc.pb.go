@@ -29,6 +29,7 @@ type ProfilesClient interface {
 	GetProfileLight(ctx context.Context, in *GetProfileLightRequest, opts ...grpc.CallOption) (*GetProfileLightResponse, error)
 	// ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
 	ToggleSaveIdea(ctx context.Context, in *ToggleSaveRequest, opts ...grpc.CallOption) (*ToggleSaveResponse, error)
+	ToggleLikeIdea(ctx context.Context, in *ToggleLikeIdeaRequest, opts ...grpc.CallOption) (*ToggleLikeIdeaResponse, error)
 	IsIdeaSaved(ctx context.Context, in *IsIdeaSavedRequest, opts ...grpc.CallOption) (*IsIdeaSavedResponse, error)
 	GetSavedIdeas(ctx context.Context, in *GetSavedIdeasRequest, opts ...grpc.CallOption) (*GetSavedIdeasResponse, error)
 	GetSavedIdeasIds(ctx context.Context, in *GetSavedIdeasIdsRequest, opts ...grpc.CallOption) (*GetSavedIdeasIdsResponse, error)
@@ -85,6 +86,15 @@ func (c *profilesClient) GetProfileLight(ctx context.Context, in *GetProfileLigh
 func (c *profilesClient) ToggleSaveIdea(ctx context.Context, in *ToggleSaveRequest, opts ...grpc.CallOption) (*ToggleSaveResponse, error) {
 	out := new(ToggleSaveResponse)
 	err := c.cc.Invoke(ctx, "/profiles.Profiles/ToggleSaveIdea", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *profilesClient) ToggleLikeIdea(ctx context.Context, in *ToggleLikeIdeaRequest, opts ...grpc.CallOption) (*ToggleLikeIdeaResponse, error) {
+	out := new(ToggleLikeIdeaResponse)
+	err := c.cc.Invoke(ctx, "/profiles.Profiles/ToggleLikeIdea", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -164,6 +174,7 @@ type ProfilesServer interface {
 	GetProfileLight(context.Context, *GetProfileLightRequest) (*GetProfileLightResponse, error)
 	// ToggleSaveIdea saves the idea to the board if not saved and removes it otherwise
 	ToggleSaveIdea(context.Context, *ToggleSaveRequest) (*ToggleSaveResponse, error)
+	ToggleLikeIdea(context.Context, *ToggleLikeIdeaRequest) (*ToggleLikeIdeaResponse, error)
 	IsIdeaSaved(context.Context, *IsIdeaSavedRequest) (*IsIdeaSavedResponse, error)
 	GetSavedIdeas(context.Context, *GetSavedIdeasRequest) (*GetSavedIdeasResponse, error)
 	GetSavedIdeasIds(context.Context, *GetSavedIdeasIdsRequest) (*GetSavedIdeasIdsResponse, error)
@@ -192,6 +203,9 @@ func (UnimplementedProfilesServer) GetProfileLight(context.Context, *GetProfileL
 }
 func (UnimplementedProfilesServer) ToggleSaveIdea(context.Context, *ToggleSaveRequest) (*ToggleSaveResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToggleSaveIdea not implemented")
+}
+func (UnimplementedProfilesServer) ToggleLikeIdea(context.Context, *ToggleLikeIdeaRequest) (*ToggleLikeIdeaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToggleLikeIdea not implemented")
 }
 func (UnimplementedProfilesServer) IsIdeaSaved(context.Context, *IsIdeaSavedRequest) (*IsIdeaSavedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IsIdeaSaved not implemented")
@@ -313,6 +327,24 @@ func _Profiles_ToggleSaveIdea_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProfilesServer).ToggleSaveIdea(ctx, req.(*ToggleSaveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Profiles_ToggleLikeIdea_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ToggleLikeIdeaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfilesServer).ToggleLikeIdea(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/profiles.Profiles/ToggleLikeIdea",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfilesServer).ToggleLikeIdea(ctx, req.(*ToggleLikeIdeaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -469,6 +501,10 @@ var Profiles_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ToggleSaveIdea",
 			Handler:    _Profiles_ToggleSaveIdea_Handler,
+		},
+		{
+			MethodName: "ToggleLikeIdea",
+			Handler:    _Profiles_ToggleLikeIdea_Handler,
 		},
 		{
 			MethodName: "IsIdeaSaved",
