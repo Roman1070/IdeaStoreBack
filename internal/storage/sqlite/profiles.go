@@ -345,6 +345,31 @@ func (s *Storage) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, 
 	}
 }
 
+func (s *Storage) IsIdeaLiked(ctx context.Context, userId, ideaId int64) (bool, error) {
+	slog.Info("storage started IsIdeaLiked")
+
+	stmt, err := s.db.Prepare("SELECT liked_ideas from profiles WHERE id = ?")
+	if err != nil {
+		slog.Error("storage IsIdeaLiked error: " + err.Error())
+		return false, fmt.Errorf("storage IsIdeaLiked error: %v", err.Error())
+	}
+
+	row := stmt.QueryRowContext(ctx, userId)
+	var likedIdeas string
+	err = row.Scan(&likedIdeas)
+	if err != nil {
+		slog.Error("storage IsIdeaLiked error: " + err.Error())
+		return false, fmt.Errorf("storage IsIdeaLiked error: %v", err.Error())
+	}
+
+	likedIdeasSlice, err := ParseIdsSqlite(likedIdeas)
+	if err != nil {
+		slog.Error("storage IsIdeaLiked error: " + err.Error())
+		return false, fmt.Errorf("storage IsIdeaLiked error: %v", err.Error())
+	}
+	return slices.Contains(likedIdeasSlice, ideaId), nil
+}
+
 func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error) {
 	slog.Info("storage start GetSavedIdeas")
 

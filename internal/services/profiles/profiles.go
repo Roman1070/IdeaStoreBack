@@ -2,6 +2,7 @@ package profiles
 
 import (
 	"context"
+	"fmt"
 	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
 	"idea-store-auth/internal/grpc/profiles"
@@ -100,6 +101,17 @@ func (p *Profiles) ToggleLikeIdea(ctx context.Context, userId, ideaId int64) (bo
 		return false, -1, err
 	}
 	return nowLiked, likesCount, nil
+}
+func (p *Profiles) IsIdeaLiked(ctx context.Context, userId, ideaId int64) (bool, error) {
+	slog.Info("service started IsIdeaLiked")
+
+	resp, err := p.Api.IsIdeaLiked(ctx, userId, ideaId)
+
+	if err != nil {
+		slog.Error("service IsIdeaLiked error: " + err.Error())
+		return false, fmt.Errorf("service IsIdeaLiked error: %v", err.Error())
+	}
+	return resp, nil
 }
 func (p *Profiles) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error) {
 	slog.Info("service start ToggleSaveIdea")

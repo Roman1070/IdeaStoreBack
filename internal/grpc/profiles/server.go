@@ -21,6 +21,7 @@ type Profiles interface {
 	ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error)
 	ToggleLikeIdea(ctx context.Context, userId, ideaId int64) (bool, int64, error)
 	IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, int64, error)
+	IsIdeaLiked(ctx context.Context, userId, ideaId int64) (bool, error)
 	GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error)
 	GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, error)
 	MoveIdeasToBoard(ctx context.Context, userId, oldBoardId, newBoardId int64) (*emptypb.Empty, error)
@@ -48,7 +49,19 @@ func (s *serverAPI) CreateProfile(ctx context.Context, req *profilesv1.CreatePro
 	}
 	return &emptypb.Empty{}, nil
 }
+func (s *serverAPI) IsIdeaLiked(ctx context.Context, req *profilesv1.IsIdeaLikedRequest) (*profilesv1.IsIdeaLikedResponse, error) {
+	slog.Info("grpc started IsIdeaLiked")
 
+	resp, err := s.profiles.IsIdeaLiked(ctx, req.UserId, req.IdeaId)
+	if err != nil {
+		slog.Error("grpc IsIdeaLiked error: " + err.Error())
+		return nil, fmt.Errorf("grpc IsIdeaLiked error: %v", err.Error())
+	}
+
+	return &profilesv1.IsIdeaLikedResponse{
+		Liked: resp,
+	}, nil
+}
 func (s *serverAPI) GetProfile(ctx context.Context, req *profilesv1.GetProfileRequest) (*profilesv1.GetProfileResponse, error) {
 	slog.Info("grpc start GetProfile")
 

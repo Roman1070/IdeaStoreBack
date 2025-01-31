@@ -118,7 +118,42 @@ func (c *ProfilesClient) ToggleLikeIdea(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
+func (c *ProfilesClient) IsIdeaLiked(w http.ResponseWriter, r *http.Request) {
+	userId, err := GetUserIdByRequestWithCookie(r)
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, "Error IsIdeaLiked: "+err.Error())
+		return
+	}
 
+	ideaIdStr := r.URL.Query().Get("id")
+	ideaId, err := strconv.ParseInt(ideaIdStr, 10, 64)
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, "Error IsIdeaLiked: "+err.Error())
+		return
+	}
+
+	resp, err := c.api.IsIdeaLiked(r.Context(), &profilesv1.IsIdeaLikedRequest{
+		UserId: userId,
+		IdeaId: ideaId,
+	})
+	if err != nil {
+		slog.Error(err.Error())
+		utils.WriteError(w, "Error IsIdeaLiked: "+err.Error())
+		return
+	}
+
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
+	result, err := m.Marshal(resp)
+	if err != nil {
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
 func (c *ProfilesClient) GetCurrentProfile(w http.ResponseWriter, r *http.Request) {
 	userId, err := GetUserIdByRequestWithCookie(r)
 
@@ -138,7 +173,6 @@ func (c *ProfilesClient) GetCurrentProfile(w http.ResponseWriter, r *http.Reques
 	}
 
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
-
 	result, err := m.Marshal(resp)
 	if err != nil {
 		utils.WriteError(w, err.Error())
