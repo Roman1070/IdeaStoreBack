@@ -79,10 +79,11 @@ func ParseIdsSqlite(str string) ([]int64, error) {
 	}
 	slice := strings.Split(str, " ")
 	var ids []int64
+
 	for _, i := range slice {
 		val, err := strconv.ParseInt(i, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing id %v", i)
+			return nil, fmt.Errorf("error parsing id \"%v\"", i)
 		}
 		ids = append(ids, val)
 	}
@@ -103,4 +104,23 @@ func ParseIdPairs(str string) ([]ideaBoardPair, error) {
 		pairs = append(pairs, val)
 	}
 	return pairs, nil
+}
+
+func IdsSliceToString(slice []int64, exclude int64) string {
+	sliceLen := len(slice)
+	if sliceLen == 0 {
+		return ""
+	}
+	var result string
+	for i := 0; i < sliceLen; i++ {
+		if slice[i] != exclude {
+			if i < sliceLen-1 {
+				result += strconv.FormatInt(slice[i], 10) + " "
+			} else {
+				result += strconv.FormatInt(slice[i], 10)
+			}
+		}
+	}
+
+	return result
 }

@@ -8,6 +8,7 @@ import (
 	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
 	"log/slog"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -112,34 +113,121 @@ func (s *Storage) GetProfilesFromSearch(ctx context.Context, input string) ([]*m
 	}
 	return result, nil
 }
+func (s *Storage) ToggleLikeIdea(ctx context.Context, userId, ideaId int64) (bool, int64, error) {
+	slog.Info("storage started ToggleLikeIdea")
+
+	tx, err := s.db.Begin()
+
+	if err != nil {
+		slog.Error("storage ToggleLikeIdea error: " + err.Error())
+		return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+	}
+	stmt, err := tx.Prepare("SELECT liked_ideas FROM profiles WHERE id = ?")
+
+	if err != nil {
+		slog.Error("storage ToggleLikeIdea error: " + err.Error())
+		return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+	}
+	row := stmt.QueryRowContext(ctx, userId)
+	var likedIdeas string
+	err = row.Scan(&likedIdeas)
+
+	if err != nil {
+		slog.Error("storage ToggleLikeIdea error: " + err.Error())
+		return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+	}
+	likedIdeasSlice, err := ParseIdsSqlite(likedIdeas)
+
+	if err != nil {
+		slog.Error("storage ToggleLikeIdea error: " + err.Error())
+		return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+	}
+	fmt.Printf("liked ideas slice : \"%v\"\n", likedIdeasSlice)
+	if slices.Contains(likedIdeasSlice, ideaId) {
+		likesCountReponse, err := s.ideasClient.ChangeLikesCount(ctx, &ideasv1.ChangeLikesCountRequest{
+			IdeaId:   ideaId,
+			Increase: false,
+		})
+		if err != nil {
+			slog.Error("storage ToggleLikeIdea error: " + err.Error())
+			return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+		}
+		newLikedIdeas := IdsSliceToString(likedIdeasSlice, ideaId)
+		fmt.Printf("newLikedIdeas : \"%v\"\n", newLikedIdeas)
+		stmt, err = tx.Prepare("UPDATE profiles SET liked_ideas = ? WHERE id = ?")
+
+		if err != nil {
+			slog.Error("storage ToggleLikeIdea error: " + err.Error())
+			return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+		}
+		_, err = stmt.ExecContext(ctx, newLikedIdeas, userId)
+
+		if err != nil {
+			slog.Error("storage ToggleLikeIdea error: " + err.Error())
+			return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+		}
+		err = tx.Commit()
+
+		if err != nil {
+			slog.Error("storage ToggleLikeIdea error: " + err.Error())
+			return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+		}
+		return false, likesCountReponse.LikesCount, nil
+	} else {
+		likesCountReponse, err := s.ideasClient.ChangeLikesCount(ctx, &ideasv1.ChangeLikesCountRequest{
+			IdeaId:   ideaId,
+			Increase: true,
+		})
+		if err != nil {
+			slog.Error("storage ToggleLikeIdea error: " + err.Error())
+			return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+		}
+		likedIdeasSlice = append(likedIdeasSlice, ideaId)
+		newLikedIdeas := IdsSliceToString(likedIdeasSlice, -1)
+		fmt.Printf("newLikedIdeas : \"%v\"\n", newLikedIdeas)
+		stmt, err = tx.Prepare("UPDATE profiles SET liked_ideas = ? WHERE id = ?")
+
+		if err != nil {
+			slog.Error("storage ToggleLikeIdea error: " + err.Error())
+			return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+		}
+		_, err = stmt.ExecContext(ctx, newLikedIdeas, userId)
+
+		if err != nil {
+			slog.Error("storage ToggleLikeIdea error: " + err.Error())
+			return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+		}
+		err = tx.Commit()
+
+		if err != nil {
+			slog.Error("storage ToggleLikeIdea error: " + err.Error())
+			return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
+		}
+		return true, likesCountReponse.LikesCount, nil
+	}
+}
 func (s *Storage) UpdateProfile(ctx context.Context, userId int64, name, avatarImage, description, link string) (*emptypb.Empty, error) {
 	slog.Info("storage started UpdateProfile")
+	var query string
 	if avatarImage != "" {
-		stmt, err := s.db.Prepare("UPDATE profiles SET name = ?, avatarImage = ?, description = ?, link=? WHERE id = ?")
-		if err != nil {
-			slog.Error("storage UpdateProfile error: " + err.Error())
-			return nil, err
-		}
-
-		_, err = stmt.ExecContext(ctx, name, avatarImage, description, link, userId)
-
-		if err != nil {
-			slog.Error("storage UpdateProfile error: " + err.Error())
-			return nil, err
-		}
+		query = "UPDATE profiles SET name = ?, avatarImage = ?, description = ?, link=? WHERE id = ?"
 	} else {
-		stmt, err := s.db.Prepare("UPDATE profiles SET name = ?, description = ?, link=? WHERE id = ?")
-		if err != nil {
-			slog.Error("storage UpdateProfile error: " + err.Error())
-			return nil, err
-		}
-
+		query = "UPDATE profiles SET name = ?, description = ?, link=? WHERE id = ?"
+	}
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		slog.Error("storage UpdateProfile error: " + err.Error())
+		return nil, err
+	}
+	if avatarImage != "" {
+		_, err = stmt.ExecContext(ctx, name, avatarImage, description, link, userId)
+	} else {
 		_, err = stmt.ExecContext(ctx, name, description, link, userId)
+	}
 
-		if err != nil {
-			slog.Error("storage UpdateProfile error: " + err.Error())
-			return nil, err
-		}
+	if err != nil {
+		slog.Error("storage UpdateProfile error: " + err.Error())
+		return nil, err
 	}
 
 	return nil, nil

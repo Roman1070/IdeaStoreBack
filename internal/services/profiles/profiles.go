@@ -90,7 +90,17 @@ func (p *Profiles) UpdateProfile(ctx context.Context, userId int64, name, avatar
 	}
 	return nil, nil
 }
+func (p *Profiles) ToggleLikeIdea(ctx context.Context, userId, ideaId int64) (bool, int64, error) {
+	slog.Info("service started ToggleLikeIdea")
 
+	nowLiked, likesCount, err := p.Api.ToggleLikeIdea(ctx, userId, ideaId)
+
+	if err != nil {
+		slog.Error("service ToggleLikeIdea error: " + err.Error())
+		return false, -1, err
+	}
+	return nowLiked, likesCount, nil
+}
 func (p *Profiles) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error) {
 	slog.Info("service start ToggleSaveIdea")
 

@@ -19,6 +19,7 @@ type Profiles interface {
 	GetProfileLight(ctx context.Context, id int64) (models.ProfileLight, error)
 	UpdateProfile(ctx context.Context, userId int64, name, avatarImage, description, link string) (*emptypb.Empty, error)
 	ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error)
+	ToggleLikeIdea(ctx context.Context, userId, ideaId int64) (bool, int64, error)
 	IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, int64, error)
 	GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error)
 	GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, error)
@@ -67,6 +68,20 @@ func (s *serverAPI) GetProfile(ctx context.Context, req *profilesv1.GetProfileRe
 			Boards:      resp.Boards,
 			SavedIdeas:  resp.SavedIdeas,
 		},
+	}, nil
+}
+func (s *serverAPI) ToggleLikeIdea(ctx context.Context, req *profilesv1.ToggleLikeIdeaRequest) (*profilesv1.ToggleLikeIdeaResponse, error) {
+	slog.Info("grpc started ToggleLikeIdea")
+
+	nowLiked, likesCount, err := s.profiles.ToggleLikeIdea(ctx, req.UserId, req.IdeaId)
+
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, fmt.Errorf("grpc ToggleLikeIdea error: " + err.Error())
+	}
+	return &profilesv1.ToggleLikeIdeaResponse{
+		NowLiked:   nowLiked,
+		LikesCount: likesCount,
 	}, nil
 }
 func (s *serverAPI) GetProfilesFromSearch(ctx context.Context, req *profilesv1.GetProfilesFromSearchRequest) (*profilesv1.GetProfilesFromSearchResponse, error) {
