@@ -122,5 +122,5 @@ func IdsSliceToString(slice []int64, exclude int64) string {
 		}
 	}
 
-	return result
+	return strings.TrimSpace(result)
 }
