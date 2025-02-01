@@ -99,7 +99,7 @@ services:
   pg_db:
     image: postgres:16.4
     ports:
-      - "54320:5432"
+      - "5432:5432"
     env_file:
       - .env
     environment:

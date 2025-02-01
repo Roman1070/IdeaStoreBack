@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS chats(
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     first_id INTEGER NOT NULL,
     second_id INTEGER NOT NULL
 );
@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS chats(
 CREATE INDEX IF NOT EXISTS  ids_index ON chats(first_id,second_id);
 
 CREATE TABLE IF NOT EXISTS messages(
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     sender_id INTEGER NOT NULL,
     reciever_id INTEGER NOT NULL,
     file_name TEXT,

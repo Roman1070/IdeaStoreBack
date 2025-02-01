@@ -1,2 +1,0 @@
-ALTER TABLE messages
-ADD COLUMN idea_id NOT NULL DEFAULT -1
