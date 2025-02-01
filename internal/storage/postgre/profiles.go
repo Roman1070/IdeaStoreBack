@@ -57,7 +57,7 @@ func (s *Storage) GetProfile(ctx context.Context, id int64) (models.Profile, err
 		return models.Profile{}, fmt.Errorf("storage GetProfile error parsing ideas-board: %v", err.Error())
 	}
 	profile.SavedIdeas = toGRPCFormat(pairsSlice)
-	profile.Boards, err = ParseIdsSqlite(boardsStr)
+	profile.Boards, err = ParseIdsString(boardsStr)
 
 	if err != nil {
 		slog.Error("storage GetProfile error parsing boards ids: " + err.Error())
@@ -143,7 +143,7 @@ func (s *Storage) ToggleLikeIdea(ctx context.Context, userId, ideaId int64) (boo
 		return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
 	}
 
-	likedIdeasSlice, err := ParseIdsSqlite(likedIdeas)
+	likedIdeasSlice, err := ParseIdsString(likedIdeas)
 	if err != nil {
 		slog.Error("storage ToggleLikeIdea error: " + err.Error())
 		return false, emptyValue, fmt.Errorf("storage ToggleLikeIdea error: " + err.Error())
@@ -334,7 +334,7 @@ func (s *Storage) IsIdeaLiked(ctx context.Context, userId, ideaId int64) (bool, 
 		return false, fmt.Errorf("storage IsIdeaLiked error: %v", err.Error())
 	}
 
-	likedIdeasSlice, err := ParseIdsSqlite(likedIdeas)
+	likedIdeasSlice, err := ParseIdsString(likedIdeas)
 	if err != nil {
 		slog.Error("storage IsIdeaLiked error: " + err.Error())
 		return false, fmt.Errorf("storage IsIdeaLiked error: %v", err.Error())

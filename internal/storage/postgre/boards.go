@@ -2,152 +2,161 @@ package postgre
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	boardsv1 "idea-store-auth/gen/go/boards"
 	ideasv1 "idea-store-auth/gen/go/idea"
 	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
-	"idea-store-auth/internal/storage"
 	"log/slog"
-	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (s *Storage) CreateBoard(ctx context.Context, name string, userId int64) (int64, error) {
-	const op = "storage.sqlite.CreateBoard"
+	slog.Info("storage started to CreateBoard")
 
-	stmt, err := s.db.Prepare("INSERT INTO boards(name,ideas_ids,user_id) VALUES(?,?,?)")
+	const query = `
+		INSERT INTO boards(name,ideas_ids,user_id) 
+		VALUES($1,$2,$3)
+		RETURNING id;
+	`
+
+	var lastInsertId int64
+	err := s.db.QueryRow(ctx, query, name, "", userId).Scan(&lastInsertId)
 	if err != nil {
-		return emptyValue, fmt.Errorf("%s: %w", op, err)
+		slog.Error("storage CreateBoard error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage CreateBoard error: %v", err.Error())
 	}
 
-	res, err := stmt.ExecContext(ctx, name, "", userId)
+	_, err = s.profilesClient.AddBoardToProfile(ctx, &profilesv1.AddBoardToProfileRequest{BoardId: lastInsertId, UserId: userId})
+	if err != nil {
+		slog.Error("storage CreateBoard error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage CreateBoard error: %v", err.Error())
+	}
 
-	if err != nil {
-		return emptyValue, fmt.Errorf("%s: %w", op, err)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return emptyValue, fmt.Errorf("%s: %w", op, err)
-	}
-	_, err = s.profilesClient.AddBoardToProfile(ctx, &profilesv1.AddBoardToProfileRequest{BoardId: id, UserId: userId})
-	if err != nil {
-		return emptyValue, fmt.Errorf("%s: %w", op, err)
-	}
-	return id, nil
+	return lastInsertId, nil
 }
 
 func (s *Storage) GetBoard(ctx context.Context, id int64) (models.Board, error) {
+	slog.Info("storage started to GetBoard")
 
-	const op = "storage.sqlite.CreateBoard"
-
-	stmt, err := s.db.Prepare("SELECT id,name,ideas_ids FROM boards WHERE id=?")
-	if err != nil {
-		slog.Error(err.Error())
-		return models.Board{}, fmt.Errorf("%s: %w", op, err)
-	}
+	const query = `
+		SELECT id,name,ideas_ids 
+		FROM boards 
+		WHERE id=$1;
+	`
 	var board models.Board
 	var idsString string
-	row := stmt.QueryRowContext(ctx, id)
-	err = row.Scan(&board.ID, &board.Name, &idsString)
+
+	err := s.db.QueryRow(ctx, query, id).Scan(&board.ID, &board.Name, &idsString)
 	if err != nil {
-		slog.Error(err.Error())
-		return models.Board{}, fmt.Errorf("internal error %v", err.Error())
+		slog.Error("storage GetBoard error: " + err.Error())
+		return models.Board{}, fmt.Errorf("storage GetBoard error: %v", err.Error())
 	}
+
 	var ids []int64
 	if len(idsString) > 0 {
-		ids, err = ParseIdsSqlite(idsString)
+		ids, err = ParseIdsString(idsString)
 		if err != nil {
-			slog.Error(err.Error())
-			return models.Board{}, fmt.Errorf("internal error %v", err.Error())
+			slog.Error("storage GetBoard error: " + err.Error())
+			return models.Board{}, fmt.Errorf("storage GetBoard error: %v", err.Error())
 		}
 	}
+
 	board.IdeasIds = ids
 	return board, nil
 }
 func (s *Storage) SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved bool) (*emptypb.Empty, error) {
 	slog.Info("storage started SetIdeaSaved")
-	tx, err := s.db.Begin()
+
+	const selectQuery = `
+		SELECT ideas_ids 
+		FROM boards 
+		WHERE id = $1;
+	`
+	const updateQuery = `
+		UPDATE boards 
+		SET ideas_ids = $1
+		WHERE id = $2;
+	`
+	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("storage error SetIdeaSaved : %v", err.Error())
+		slog.Error("storage SetIdeaSaved error: " + err.Error())
+		return nil, fmt.Errorf("storage SetIdeaSaved error: %v", err.Error())
 	}
-	stmt, err := tx.Prepare("SELECT ideas_ids FROM boards WHERE id = ?")
-	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("storage error SetIdeaSaved : %v", err.Error())
-	}
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		} else {
+			tx.Commit(ctx)
+		}
+	}()
+
 	var idsString string
 	var newIdsString string
-	row := stmt.QueryRowContext(ctx, boardId)
-	err = row.Scan(&idsString)
-
+	err = tx.QueryRow(ctx, selectQuery, boardId).Scan(&idsString)
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("internal error %v", err.Error())
+		slog.Error("storage SetIdeaSaved error: " + err.Error())
+		return nil, fmt.Errorf("storage SetIdeaSaved error: %v", err.Error())
 	}
+
 	if saved {
 		newIdsString = idsString + " " + fmt.Sprint(ideaId)
 	} else {
-		newIdsString = strings.Replace(idsString, fmt.Sprint(ideaId), "", 1)
-	}
-	newIdsString = strings.Trim(strings.ReplaceAll(newIdsString, "  ", " "), " ")
-	stmt, err = tx.Prepare("UPDATE boards SET ideas_ids = ? WHERE id = ?")
-	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("storage error SetIdeaSaved : %v", err.Error())
-	}
-	_, err = stmt.ExecContext(ctx, newIdsString, boardId)
+		idsSlice, err := ParseIdsString(idsString)
+		if err != nil {
+			slog.Error("storage SetIdeaSaved error: " + err.Error())
+			return nil, fmt.Errorf("storage SetIdeaSaved error: %v", err.Error())
+		}
 
-	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("storage error SetIdeaSaved : %v", err.Error())
+		newIdsString = IdsSliceToString(idsSlice, ideaId)
 	}
-	err = tx.Commit()
+
+	_, err = tx.Exec(ctx, updateQuery, newIdsString, boardId)
 	if err != nil {
-		return nil, fmt.Errorf("storage error SetIdeaSaved : %v", err.Error())
+		slog.Error("storage SetIdeaSaved error: " + err.Error())
+		return nil, fmt.Errorf("storage SetIdeaSaved error: %v", err.Error())
 	}
+
 	return &emptypb.Empty{}, nil
 }
 func (s *Storage) GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.BoardData, error) {
-	const op = "storage.sqlite.GetAllBoards"
+	slog.Info("storage started to GetAllBoards")
 
-	stmt, err := s.db.Prepare("SELECT id,name,ideas_ids FROM boards WHERE user_id = ?")
+	const query = `
+		SELECT id,name,ideas_ids 
+		FROM boards 
+		WHERE user_id = $1;
+	`
+
+	rows, err := s.db.Query(ctx, query, userId)
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("%s: %w", op, err)
+		slog.Error("storage GetAllBoards error: " + err.Error())
+		return nil, fmt.Errorf("storage GetAllBoards error: %v", err.Error())
 	}
-	rows, err := stmt.QueryContext(ctx, userId)
-	if err != nil {
-		slog.Error(err.Error())
-		return nil, err
-	}
+
 	defer rows.Close()
+
 	var boards []*boardsv1.BoardData
 	for rows.Next() {
 		board := new(boardsv1.BoardData)
 		var ideasStr string
 		err = rows.Scan(&board.Id, &board.Name, &ideasStr)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				slog.Error(err.Error())
-				return nil, fmt.Errorf("%s: %w", op, storage.ErrBoardNotFound)
-			}
-			slog.Error(err.Error())
-			return nil, fmt.Errorf("%s: %w", op, err)
+			slog.Error("storage GetAllBoards error: " + err.Error())
+			return nil, fmt.Errorf("storage GetAllBoards error: %v", err.Error())
 		}
+
 		var ids []int64
 		if len(ideasStr) > 0 {
-			ids, err = ParseIdsSqlite(ideasStr)
+			ids, err = ParseIdsString(ideasStr)
 			if err != nil {
-				slog.Error(err.Error())
-				slog.Error(err.Error())
-				return nil, fmt.Errorf("internal error %v", err.Error())
+				slog.Error("storage GetAllBoards error: " + err.Error())
+				return nil, fmt.Errorf("storage GetAllBoards error: %v", err.Error())
 			}
 		}
+
 		board.IdeasIds = ids
 		boards = append(boards, board)
 	}
@@ -155,37 +164,39 @@ func (s *Storage) GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.B
 }
 
 func (s *Storage) GetIdeasInBoard(ctx context.Context, boardId int64) ([]*boardsv1.IdeaData, error) {
-	const op = "storage.sqlite.GetAllBoards"
+	slog.Info("storage started to GetIdeasInBoard")
 
-	stmt, err := s.db.Prepare("SELECT ideas_ids FROM boards WHERE id = ?")
-	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-	row := stmt.QueryRowContext(ctx, boardId)
+	const query = `
+		SELECT ideas_ids 
+		FROM boards 
+		WHERE id = $1;
+	`
+
 	var idsStr string
-	err = row.Scan(&idsStr)
+	err := s.db.QueryRow(ctx, query, boardId).Scan(&idsStr)
 	if err != nil {
-		slog.Error("Error scanning ideas_ids")
-		return nil, fmt.Errorf("internal storage error: %v", err.Error())
+		slog.Error("storage GetIdeasInBoard error: " + err.Error())
+		return nil, fmt.Errorf("storage GetIdeasInBoard error: %v", err.Error())
 	}
-	idsSlice, err := ParseIdsSqlite(idsStr)
+
+	idsSlice, err := ParseIdsString(idsStr)
 	if err != nil {
-		slog.Error("Error parsing ideas_ids")
-		return nil, fmt.Errorf("internal storage error: %v", err.Error())
+		slog.Error("storage GetIdeasInBoard error: " + err.Error())
+		return nil, fmt.Errorf("storage GetIdeasInBoard error: %v", err.Error())
 	}
-	//TODO: сделать за один запрос
+
+	ideas, err := s.ideasClient.GetIdeas(ctx, &ideasv1.GetIdeasRequest{
+		Ids: idsSlice,
+	})
+	if err != nil {
+		slog.Error("storage GetIdeasInBoard error: " + err.Error())
+		return nil, fmt.Errorf("storage GetIdeasInBoard error: %v", err.Error())
+	}
+
 	var result []*boardsv1.IdeaData
-	for _, id := range idsSlice {
-		idea, err := s.ideasClient.GetIdea(ctx, &ideasv1.GetRequest{
-			IdeaId: id,
-		})
-		if err != nil {
-			slog.Error("Error parsing ideas_ids")
-			return nil, fmt.Errorf("internal storage error: %v", err.Error())
-		}
+	for _, idea := range ideas.Ideas {
 		result = append(result, &boardsv1.IdeaData{
-			IdeaId: id,
+			IdeaId: idea.Id,
 			Image:  idea.Image,
 			Name:   idea.Name,
 		})
@@ -195,31 +206,33 @@ func (s *Storage) GetIdeasInBoard(ctx context.Context, boardId int64) ([]*boards
 }
 
 func (s *Storage) DeleteBoard(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error) {
-	const op = "storage.sqlite.DeleteBoard"
+	slog.Info("storage started to DeleteBoard")
 
-	stmt, err := s.db.Prepare("DELETE FROM boards WHERE id = ?")
+	const query = `
+		DELETE FROM boards 
+		WHERE id = $1;
+	`
+
+	_, err := s.db.Exec(ctx, query, boardId)
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("%s: %w", op, err)
+		slog.Error("storage DeleteBoard error: " + err.Error())
+		return nil, fmt.Errorf("storage DeleteBoard error: %v", err.Error())
 	}
-	_, err = stmt.ExecContext(ctx, boardId)
-	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
+
 	_, err = s.profilesClient.MoveIdeasToBoard(ctx, &profilesv1.MoveIdeaToBoardRequest{
 		UserId:     userId,
 		OldBoardId: boardId,
 		NewBoardId: -1,
 	})
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("%s: %w", op, err)
+		slog.Error("storage DeleteBoard error: " + err.Error())
+		return nil, fmt.Errorf("storage DeleteBoard error: %v", err.Error())
 	}
 
 	_, err = s.profilesClient.RemoveBoardFromProfile(ctx, &profilesv1.RemoveBoardFromProfileRequest{BoardId: boardId, UserId: userId})
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		slog.Error("storage DeleteBoard error: " + err.Error())
+		return nil, fmt.Errorf("storage DeleteBoard error: %v", err.Error())
 	}
 	return nil, nil
 }

@@ -32,7 +32,6 @@ type UserSaver interface {
 
 type UserProvider interface {
 	User(ctx context.Context, email string) (models.User, error)
-	IsAdmin(ctx context.Context, userID int64) (bool, error)
 }
 
 type AppProvider interface {
@@ -40,10 +39,10 @@ type AppProvider interface {
 }
 
 var (
-	ErrInvalidCredentials = errors.New("Invalid credentials")
-	ErrInvalidAppID       = errors.New("Invalid app id")
-	ErrUserExists         = errors.New("User already exists")
-	ErrUserNotFound       = errors.New("User not found")
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrInvalidAppID       = errors.New("invalid app id")
+	ErrUserExists         = errors.New("user already exists")
+	ErrUserNotFound       = errors.New("user not found")
 )
 
 // New returns a new instance of the Auth service.
@@ -73,15 +72,15 @@ func (a *Auth) Login(
 	user, err := a.userProvider.User(ctx, email)
 	if err != nil {
 		if errors.Is(err, storage.ErrAppNotFound) {
-			a.log.Warn("User not found", sl.Err(err))
+			a.log.Warn("user not found", sl.Err(err))
 
 			return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 		}
-		a.log.Error("Failed to get user", sl.Err(err))
+		a.log.Error("failed to get user", sl.Err(err))
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
 	if err := bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(password)); err != nil {
-		a.log.Info("Invalid credentials", sl.Err(err))
+		a.log.Info("invalid credentials", sl.Err(err))
 
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
@@ -128,30 +127,4 @@ func (a *Auth) RegisterNewUser(
 	}
 
 	return id, nil
-}
-
-func (a *Auth) IsAdmin(
-	ctx context.Context,
-	userID int64,
-) (bool, error) {
-	const op = "auth.IsAdmin"
-	log := a.log.With(
-		slog.String("op", op),
-		slog.Int64("userID", userID),
-	)
-	log.Info("checking if user is admin")
-
-	isAdmin, err := a.userProvider.IsAdmin(ctx, userID)
-	if err != nil {
-		if errors.Is(err, storage.ErrAppNotFound) {
-			log.Warn("User not found", sl.Err(err))
-
-			return false, fmt.Errorf("%s: %w", op, ErrInvalidAppID)
-		}
-		return false, fmt.Errorf("%s: %w", op, err)
-	}
-
-	log.Info("checked if user is admin", slog.Bool("is_admin", isAdmin))
-
-	return isAdmin, nil
 }

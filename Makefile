@@ -23,8 +23,7 @@ chats:
 client:
 	go run internal/clients/main.go internal/clients/auth.go internal/clients/ideas.go internal/clients/boards.go internal/clients/profiles.go internal/clients/comments.go internal/clients/chats.go
 migrate_ideas:
-	go build ./cmd/migrator/main.go
-	go run ./cmd/migrator/main.go --storage_path=./storage/ideas.db --migrations_path=./migrations/ideas
+	migrate -path=migrations/ideas -database "postgresql://ideastore:yaro21u527@localhost:5432/ideas?sslmode=disable" -verbose up
 migrate_profiles:
 	go build ./cmd/migrator/main.go
 	go run ./cmd/migrator/main.go --storage_path=./storage/profiles.db --migrations_path=./migrations/profiles

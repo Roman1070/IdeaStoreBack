@@ -38,7 +38,7 @@ func New(storagePath string) (*Storage, error) {
 		grpcretry.WithMax(uint(5)),
 		grpcretry.WithPerRetryTimeout(5 * time.Second),
 	}
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL")+storagePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
@@ -76,7 +76,7 @@ func New(storagePath string) (*Storage, error) {
 		profilesClient: profilesv1.NewProfilesClient(profilesClient)}, nil
 }
 
-func ParseIdsSqlite(str string) ([]int64, error) {
+func ParseIdsString(str string) ([]int64, error) {
 	if len(str) == 0 {
 		return []int64{}, nil
 	}

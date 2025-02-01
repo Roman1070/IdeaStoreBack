@@ -8,10 +8,12 @@ services:
     image: auth-go-image
     container_name: auth_go
     restart: unless-stopped
+    networks:
+      - app-network
     volumes:
       - ./storage:/app/files
     depends_on:
-      - sqlite_db
+      - pg_db
 
   ideas_go:
     build:
@@ -22,11 +24,13 @@ services:
     image: ideas-go-image
     container_name: ideas_go
     restart: unless-stopped
+    networks:
+      - app-network
     volumes:
       - ./storage:/app/files
       - ./images:/delivery/files
     depends_on:
-      - sqlite_db
+      - pg_db
 
   profiles_go:
     build:
@@ -37,10 +41,12 @@ services:
     image: profiles-go-image
     container_name: profiles_go
     restart: unless-stopped
+    networks:
+      - app-network
     volumes:
       - ./storage:/app/files
     depends_on:
-      - sqlite_db
+      - pg_db
 
   boards_go:
     build:
@@ -51,10 +57,12 @@ services:
     image: boards-go-image
     container_name: boards_go
     restart: unless-stopped
+    networks:
+      - app-network
     volumes:
       - ./storage:/app/files
     depends_on:
-      - sqlite_db
+      - pg_db
 
   comments_go:
     build:
@@ -65,10 +73,12 @@ services:
     image: comments-go-image
     container_name: comments_go
     restart: unless-stopped
+    networks:
+      - app-network
     volumes:
       - ./storage:/app/files
     depends_on:
-      - sqlite_db
+      - pg_db
 
   chats_go:
     build:
@@ -79,21 +89,35 @@ services:
     image: chats-go-image
     container_name: chats_go
     restart: unless-stopped
+    networks:
+      - app-network
     volumes:
       - ./storage:/app/files
     depends_on:
-      - sqlite_db
+      - pg_db
 
-  sqlite_db:
-    image: alpine/sqlite:3.47.1
+  pg_db:
+    image: postgres:16.4
     ports:
       - "54320:5432"
     env_file:
       - .env
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
-    container_name: sqlite_db
+      - pg_data:/var/lib/postgresql/data/
+    container_name: pg_db
     restart: unless-stopped
+    networks:
+      - app-network
 
 volumes:
+  pg_data:
   go_back:
+
+networks:
+  app-network:
+    driver: bridge

@@ -34,7 +34,7 @@ func (s *Storage) SendMessage(ctx context.Context, message models.Message) (int6
 
 	if message.CheckChatExistance {
 		rowsCount := 0
-		s.db.QueryRow(ctx, insertChatQuery, message.RecieverId, message.SenderId).Scan(&rowsCount)
+		err = s.db.QueryRow(ctx, insertChatQuery, message.RecieverId, message.SenderId).Scan(&rowsCount)
 		if err != nil {
 			slog.Error("storage error SendMessage: " + err.Error())
 			return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())

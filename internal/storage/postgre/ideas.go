@@ -132,9 +132,7 @@ func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.Ide
 		return nil, fmt.Errorf("storage GetAllIdeas error: " + err.Error())
 	}
 
-	defer func(rows pgx.Rows) {
-		rows.Close()
-	}(rows)
+	defer rows.Close()
 
 	var ideas []*ideasv1.IdeaData
 	for rows.Next() {

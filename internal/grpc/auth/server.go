@@ -29,7 +29,6 @@ type Auth interface {
 		email string,
 		password string,
 	) (userId int64, err error)
-	IsAdmin(ctx context.Context, userID int64) (bool, error)
 }
 type serverAPI struct {
 	authv1.UnimplementedAuthServer
@@ -76,19 +75,6 @@ func (s *serverAPI) Register(ctx context.Context, req *authv1.RegisterRequest) (
 		UserId: userID,
 	}, nil
 }
-func (s *serverAPI) IsAdmin(ctx context.Context, req *authv1.IsAdminRequest) (*authv1.IsAdminResponse, error) {
-	if err := validateIsAdmin(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid user id")
-	}
-	isAdmin, err := s.auth.IsAdmin(ctx, req.GetUserId())
-	if err != nil {
-		if errors.Is(err, auth.ErrUserNotFound) {
-			return nil, status.Error(codes.NotFound, "User not found")
-		}
-		return nil, status.Error(codes.Internal, "Internal error")
-	}
-	return &authv1.IsAdminResponse{IsAdmin: isAdmin}, nil
-}
 func validateLogin(req *authv1.LoginRequest) error {
 	if req.GetEmail() == "" {
 		return status.Error(codes.InvalidArgument, "email must not be empty")
@@ -109,13 +95,6 @@ func validateRegister(req *authv1.RegisterRequest) error {
 	}
 	if req.GetPassword() == "" {
 		return status.Error(codes.InvalidArgument, "password must not be empty")
-	}
-	return nil
-}
-
-func validateIsAdmin(req *authv1.IsAdminRequest) error {
-	if req.GetUserId() == emptyValue {
-		return status.Error(codes.InvalidArgument, "used id is required")
 	}
 	return nil
 }

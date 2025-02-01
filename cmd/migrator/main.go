@@ -1,43 +1,32 @@
 package main
 
 import (
-	"errors"
-	"flag"
+	"database/sql"
 	"fmt"
+	"log"
+	"os"
 
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	var storagePath, migrationsPath, migrationsTable string
+	// load .env file
+	godotenv.Load()
 
-	flag.StringVar(&storagePath, "storage_path", "", "path to db")
-	flag.StringVar(&migrationsPath, "migrations_path", "", "path to migrations")
-	flag.StringVar(&migrationsTable, "migrations_table", "", "name of migrations table")
-	flag.Parse()
-
-	if storagePath == "" {
-		panic("storage-path is required")
-	}
-	if migrationsPath == "" {
-		panic("migrations-path is required")
-	}
-	m, err := migrate.New(
-		"file://"+migrationsPath,
-		fmt.Sprintf("sqlite3://%s?x-migrations_table=%s", storagePath, migrationsTable),
-	)
+	postgresURI := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", postgresURI)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
-	if err := m.Up(); err != nil {
-		if errors.Is(err, migrate.ErrNoChange) {
-			fmt.Println("no migrations to apply")
+	err = db.Ping()
+	if err != nil {
+		db.Close()
+		log.Panic(err)
+	}
 
-			return
-		}
-		panic(err)
-	}
-	fmt.Println("migrations applied successfully")
+	fmt.Println("Connected to database")
+
+	// keep the program running
+	select {}
 }

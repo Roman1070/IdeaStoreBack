@@ -7,7 +7,6 @@ import (
 	"idea-store-auth/internal/domain/models"
 	"log/slog"
 
-	"github.com/jackc/pgx/v5"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -40,9 +39,8 @@ func (s *Storage) GetComments(ctx context.Context, ideaId int64) ([]*models.Comm
 		slog.Error("storage GetComments error: " + err.Error())
 		return nil, fmt.Errorf("storage GetComments error: %v", err.Error())
 	}
-	defer func(rows pgx.Rows) {
-		rows.Close()
-	}(rows)
+
+	defer rows.Close()
 
 	var result []*models.Comment
 	for rows.Next() {

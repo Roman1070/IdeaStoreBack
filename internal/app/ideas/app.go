@@ -4,7 +4,7 @@ import (
 	common "idea-store-auth/internal/app"
 	grpcApp "idea-store-auth/internal/app/grpc/ideas"
 	"idea-store-auth/internal/services/ideas"
-	"idea-store-auth/internal/storage/sqlite"
+	"idea-store-auth/internal/storage/postgre"
 	"log/slog"
 )
 
@@ -17,12 +17,12 @@ func New(
 	grpcPort int,
 	storagePath string,
 ) *App {
-	ideasStorage, err := sqlite.New(storagePath)
+	storage, err := postgre.New(storagePath)
 	if err != nil {
 		panic(err)
 	}
 
-	ideasService := ideas.New(log, ideasStorage)
+	ideasService := ideas.New(log, storage)
 
 	grpcApp := grpcApp.New(log, ideasService, grpcPort)
 
