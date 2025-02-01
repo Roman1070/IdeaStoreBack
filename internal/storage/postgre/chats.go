@@ -13,6 +13,19 @@ import (
 
 func (s *Storage) SendMessage(ctx context.Context, message models.Message) (int64, error) {
 	slog.Info("storage started SendMessage")
+
+	const insertChatQuery = `
+		SELECT COUNT(*) 
+		FROM chats 
+		WHERE (first_id = $1 AND second_id = $2) 
+		OR (first_id = $2 AND second_id = $1);
+	`
+	const insertMessageQuery = `
+		INSERT INTO messages(sender_id, reciever_id, file_name, content, send_date, sending_date_seconds,idea_id) 
+		VALUES($1,$2,$3,$4,$5,$6,$7)
+		RETURNING id;
+	`
+
 	dateInSeconds, err := utils.DateTimeToSecondsForDb(message.CreationDate)
 	if err != nil {
 		slog.Error("storage error SendMessage: " + err.Error())
@@ -20,15 +33,8 @@ func (s *Storage) SendMessage(ctx context.Context, message models.Message) (int6
 	}
 
 	if message.CheckChatExistance {
-		stmt, err := s.db.Prepare("SELECT COUNT(*) FROM chats WHERE (first_id = ? AND second_id = ?) OR (first_id = ? AND second_id = ?)")
-		if err != nil {
-			slog.Error("storage error SendMessage: " + err.Error())
-			return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
-		}
-		row := stmt.QueryRowContext(ctx, message.RecieverId, message.SenderId, message.SenderId, message.RecieverId)
 		rowsCount := 0
-		err = row.Scan(&rowsCount)
-
+		s.db.QueryRow(ctx, insertChatQuery, message.RecieverId, message.SenderId).Scan(&rowsCount)
 		if err != nil {
 			slog.Error("storage error SendMessage: " + err.Error())
 			return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
@@ -43,51 +49,38 @@ func (s *Storage) SendMessage(ctx context.Context, message models.Message) (int6
 		}
 	}
 
-	stmt, err := s.db.Prepare(
-		"INSERT INTO messages(sender_id, reciever_id, file_name, content, send_date, sending_date_seconds,idea_id) VALUES(?,?,?,?,?,?,?)")
-
+	var lastInsertId int64
+	err = s.db.QueryRow(ctx, insertMessageQuery, message.SenderId, message.RecieverId, message.Filename,
+		message.Text, message.CreationDate, dateInSeconds, message.IdeaId).Scan(&lastInsertId)
 	if err != nil {
-		slog.Error("storage error SendMessage: " + err.Error())
-		return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
+		slog.Error("storage CreateIdea error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage CreateIdea error: %v", err.Error())
 	}
 
-	res, err := stmt.ExecContext(ctx, message.SenderId, message.RecieverId, message.Filename,
-		message.Text, message.CreationDate, dateInSeconds, message.IdeaId)
-
-	if err != nil {
-		slog.Error("storage error SendMessage: " + err.Error())
-		return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		slog.Error("storage error SendMessage: " + err.Error())
-		return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
-	}
-	return id, nil
+	return lastInsertId, nil
 }
 
 func (s *Storage) GetMessages(ctx context.Context, firstId, secondId int64) ([]*models.Message, error) {
-
 	slog.Info("storage started GetMessages")
 
-	stmt, err := s.db.Prepare("SELECT id,sender_id, reciever_id, file_name, content, send_date, idea_id FROM messages WHERE (sender_id=? AND reciever_id = ?) OR (sender_id=? AND reciever_id = ?) ORDER BY sending_date_seconds")
+	const query = `
+		SELECT id,sender_id, reciever_id, file_name, content, send_date, idea_id 
+		FROM messages 
+		WHERE (sender_id=$1 AND reciever_id = $2) 
+		OR (sender_id=$2 AND reciever_id = $1) 
+		ORDER BY sending_date_seconds;
+	`
 
+	rows, err := s.db.Query(ctx, query, firstId, secondId)
 	if err != nil {
 		slog.Error("storage error GetMessages: " + err.Error())
 		return nil, fmt.Errorf("storage error GetMessages: %v", err.Error())
 	}
 
-	rows, err := stmt.QueryContext(ctx, firstId, secondId, secondId, firstId)
-
-	if err != nil {
-		slog.Error("storage error GetMessages: " + err.Error())
-		return nil, fmt.Errorf("storage error GetMessages: %v", err.Error())
-	}
-	var result []*models.Message
+	result := make([]*models.Message, 0, 20)
 	for rows.Next() {
 		message := models.Message{}
 		err = rows.Scan(&message.ID, &message.SenderId, &message.RecieverId, &message.Filename, &message.Text, &message.CreationDate, &message.IdeaId)
-
 		if err != nil {
 			slog.Error("storage error GetMessages: " + err.Error())
 			return nil, fmt.Errorf("storage error GetMessages: %v", err.Error())
@@ -102,45 +95,44 @@ func (s *Storage) GetMessages(ctx context.Context, firstId, secondId int64) ([]*
 func (s *Storage) CreateChat(ctx context.Context, firstId, secondId int64) (*emptypb.Empty, error) {
 	slog.Info("storage started CreateChat")
 
-	stmt, err := s.db.Prepare("INSERT INTO chats(first_id,second_id) VALUES(?,?)")
+	const query = `
+		INSERT INTO chats(first_id,second_id) 
+		VALUES($1,$2);
+	`
+	_, err := s.db.Exec(ctx, query, firstId, secondId)
 	if err != nil {
 		slog.Error("storage error CreateChat: " + err.Error())
 		return nil, fmt.Errorf("storage error CreateChat: %v", err.Error())
 	}
-	_, err = stmt.ExecContext(ctx, firstId, secondId)
-	if err != nil {
-		slog.Error("storage error CreateChat: " + err.Error())
-		return nil, fmt.Errorf("storage error CreateChat: %v", err.Error())
-	}
+
 	return nil, nil
 }
 
 func (s *Storage) GetUsersChats(ctx context.Context, userId int64) ([]*models.ChatData, error) {
 	slog.Info("storage started GetUsersChats, id = " + fmt.Sprint(userId))
 
-	stmt, err := s.db.Prepare("SELECT id, first_id, second_id FROM chats WHERE first_id = ? OR second_id = ?")
+	const query = `
+		SELECT id, first_id, second_id 
+		FROM chats 
+		WHERE first_id = $1 
+		OR second_id = $1;
+	`
 
+	rows, err := s.db.Query(ctx, query, userId)
 	if err != nil {
 		slog.Error("storage error GetUsersChats: " + err.Error())
 		return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
 	}
 
-	rows, err := stmt.QueryContext(ctx, userId, userId)
-
-	if err != nil {
-		slog.Error("storage error GetUsersChats: " + err.Error())
-		return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
-	}
 	var result []*models.ChatData
 	for rows.Next() {
 		var chat models.ChatData
-
 		err = rows.Scan(&chat.ID, &chat.FirstData.UserId, &chat.SecondData.UserId)
-
 		if err != nil {
 			slog.Error("storage error GetUsersChats: " + err.Error())
 			return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
 		}
+
 		if userId == chat.SecondData.UserId {
 			profile, err := s.profilesClient.GetProfileLight(ctx, &profilesv1.GetProfileLightRequest{
 				UserId: chat.FirstData.UserId,
@@ -149,6 +141,7 @@ func (s *Storage) GetUsersChats(ctx context.Context, userId int64) ([]*models.Ch
 				slog.Error("storage error GetUsersChats: " + err.Error())
 				return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
 			}
+
 			chat.FirstData.Avatar = profile.Avatar
 			chat.FirstData.Username = profile.Name
 		} else {
@@ -159,6 +152,7 @@ func (s *Storage) GetUsersChats(ctx context.Context, userId int64) ([]*models.Ch
 				slog.Error("storage error GetUsersChats: " + err.Error())
 				return nil, fmt.Errorf("storage error GetUsersChats: %v", err.Error())
 			}
+
 			chat.SecondData.Avatar = profile.Avatar
 			chat.SecondData.Username = profile.Name
 		}
