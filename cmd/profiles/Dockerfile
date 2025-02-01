@@ -5,7 +5,6 @@ WORKDIR /var/backend
 COPY cmd/profiles/main.go main.go
 COPY . .
 
-RUN GOOS=linux go build -v github.com/mattn/go-sqlite3
 RUN go mod tidy
 RUN go build -o main main.go
 
