@@ -4,7 +4,7 @@ import (
 	common "idea-store-auth/internal/app"
 	grpcApp "idea-store-auth/internal/app/grpc/auth"
 	"idea-store-auth/internal/services/auth"
-	sqlite "idea-store-auth/internal/storage/postgre"
+	"idea-store-auth/internal/storage/postgre"
 	"log/slog"
 	"time"
 )
@@ -16,15 +16,14 @@ type App struct {
 func New(
 	log *slog.Logger,
 	grpcPort int,
-	authStoragePath string,
 	tokenTTL time.Duration,
 ) *App {
-	authStorage, err := sqlite.New(authStoragePath)
+	storage, err := postgre.New()
 	if err != nil {
 		panic(err)
 	}
 
-	authService := auth.New(log, authStorage, authStorage, authStorage, tokenTTL)
+	authService := auth.New(log, storage, storage, tokenTTL)
 
 	grpcApp := grpcApp.New(log, authService, grpcPort)
 

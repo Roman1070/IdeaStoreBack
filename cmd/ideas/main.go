@@ -1,13 +1,12 @@
 package main
 
 import (
-	"os"
-	"os/signal"
-	"syscall"
-
 	common "idea-store-auth/cmd"
 	appIdeas "idea-store-auth/internal/app/ideas"
 	"idea-store-auth/internal/config"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -15,7 +14,7 @@ func main() {
 
 	log := common.SetupLogger(cfg.Env)
 
-	ideasApp := appIdeas.New(log, cfg.GRPC.IdeasMS.Port, cfg.IdeasStoragePath)
+	ideasApp := appIdeas.New(log, cfg.GRPC.IdeasMS.Port)
 
 	go func() {
 		ideasApp.GRPCServer.MustRun()

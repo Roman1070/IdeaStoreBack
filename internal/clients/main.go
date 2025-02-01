@@ -14,7 +14,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const clientAddr = "localhost:8000"
+const clientAddr = "0.0.0.0:8000"
 
 func main() {
 
@@ -27,41 +27,41 @@ func main() {
 	chatsClient, _ := NewChatsClient(common.GrpcChatsAddress(cfg), cfg.Clients.Chats.Timeout, cfg.Clients.Chats.RetriesCount)
 
 	router := mux.NewRouter()
-	router.HandleFunc("/images/{name}", GetImages).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/images/{name}", GetImages).Methods(http.MethodGet)
 
-	router.HandleFunc("/idea", ideasClient.Create).Methods("POST", "OPTIONS")
-	router.HandleFunc("/idea", ideasClient.GetIdea).Methods("GET", "OPTIONS")
-	router.HandleFunc("/ideas", ideasClient.GetAllIdeas).Methods("GET", "OPTIONS")
-	router.HandleFunc("/ideas", ideasClient.GetIdeas).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/v1/idea", ideasClient.Create).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/idea", ideasClient.GetIdea).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/ideas", ideasClient.GetAllIdeas).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/ideas", ideasClient.GetIdeas).Methods(http.MethodPost, http.MethodOptions)
 
-	router.HandleFunc("/board", boardsClient.CreateBoard).Methods("POST", "OPTIONS")
-	router.HandleFunc("/board", boardsClient.GetBoard).Methods("GET", "OPTIONS")
-	router.HandleFunc("/board", boardsClient.DeleteBoard).Methods("DELETE", "OPTIONS")
-	router.HandleFunc("/my-boards", boardsClient.GetCurrentUsersBoards).Methods("GET", "OPTIONS")
-	router.HandleFunc("/boards", boardsClient.GetBoards).Methods("GET", "OPTIONS")
-	router.HandleFunc("/ideas-in-board", boardsClient.GetIdeasInBoard).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/board", boardsClient.CreateBoard).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/board", boardsClient.GetBoard).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/board", boardsClient.DeleteBoard).Methods(http.MethodDelete, http.MethodOptions)
+	router.HandleFunc("/api/v1/my-boards", boardsClient.GetCurrentUsersBoards).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/boards", boardsClient.GetBoards).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/ideas-in-board", boardsClient.GetIdeasInBoard).Methods(http.MethodGet, http.MethodOptions)
 
-	router.HandleFunc("/register", authClient.Regsiter).Methods("POST", "OPTIONS")
-	router.HandleFunc("/login", authClient.Login).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/v1/register", authClient.Regsiter).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/login", authClient.Login).Methods(http.MethodPost, http.MethodOptions)
 
-	router.HandleFunc("/profile", profilesClient.CreateProfile).Methods("POST", "OPTIONS")
-	router.HandleFunc("/profile", profilesClient.UpdateProfile).Methods("PUT", "OPTIONS")
-	router.HandleFunc("/profile", profilesClient.GetProfile).Methods("GET", "OPTIONS")
-	router.HandleFunc("/my-profile", profilesClient.GetCurrentProfile).Methods("GET", "OPTIONS")
-	router.HandleFunc("/toggle-save-idea", profilesClient.ToggleSaveIdea).Methods("GET", "OPTIONS")
-	router.HandleFunc("/is-idea-saved", profilesClient.IsIdeaSaved).Methods("GET", "OPTIONS")
-	router.HandleFunc("/get-saved-ideas", profilesClient.GetSavedIdeas).Methods("GET", "OPTIONS")
-	router.HandleFunc("/search-profiles", profilesClient.GetProfilesFromSearch).Methods("GET", "OPTIONS")
-	router.HandleFunc("/toggle-like-idea", profilesClient.ToggleLikeIdea).Methods("POST", "OPTIONS")
-	router.HandleFunc("/is-idea-liked", profilesClient.IsIdeaLiked).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/profile", profilesClient.CreateProfile).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile", profilesClient.UpdateProfile).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile", profilesClient.GetProfile).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/my-profile", profilesClient.GetCurrentProfile).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/toggle-save-idea", profilesClient.ToggleSaveIdea).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/is-idea-saved", profilesClient.IsIdeaSaved).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/get-saved-ideas", profilesClient.GetSavedIdeas).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/search-profiles", profilesClient.GetProfilesFromSearch).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/toggle-like-idea", profilesClient.ToggleLikeIdea).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/is-idea-liked", profilesClient.IsIdeaLiked).Methods(http.MethodGet, http.MethodOptions)
 
-	router.HandleFunc("/comments", commentsClient.GetComments).Methods("GET", "OPTIONS")
-	router.HandleFunc("/comment", commentsClient.CreateComment).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/v1/comments", commentsClient.GetComments).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/comment", commentsClient.CreateComment).Methods(http.MethodPost, http.MethodOptions)
 
-	router.HandleFunc("/chats", chatsClient.GetChats).Methods("GET", "OPTIONS")
-	router.HandleFunc("/chat_ws", chatsClient.HandleChatWebSocket).Methods("GET", "POST", "OPTIONS")
-	router.HandleFunc("/messages", chatsClient.GetMessages).Methods("GET", "OPTIONS")
-	router.HandleFunc("/message", chatsClient.SendMessage).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/v1/chats", chatsClient.GetChats).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/chat_ws", chatsClient.HandleChatWebSocket).Methods(http.MethodGet, http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/messages", chatsClient.GetMessages).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/message", chatsClient.SendMessage).Methods(http.MethodPost, http.MethodOptions)
 	handler := middlewares.CorsMiddleware(router)
 	fmt.Println("Server is listening...")
 
@@ -79,7 +79,7 @@ func GetUserIdByRequestWithCookie(r *http.Request) (int64, error) {
 	claims := jwt.MapClaims{}
 	tokenStr := tokenCookie.String()[6:]
 	_, err = jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("yaro-gas"), nil
+		return []byte("yaro21u527"), nil
 	})
 	if err != nil {
 		slog.Error(err.Error())

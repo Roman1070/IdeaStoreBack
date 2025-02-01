@@ -15,7 +15,7 @@ func main() {
 
 	log := common.SetupLogger(cfg.Env)
 
-	authApp := appAuth.New(log, cfg.GRPC.AuthMS.Port, cfg.AuthStoragePath, cfg.TokenTTL)
+	authApp := appAuth.New(log, cfg.GRPC.AuthMS.Port, cfg.TokenTTL)
 
 	go func() {
 		authApp.GRPCServer.MustRun()

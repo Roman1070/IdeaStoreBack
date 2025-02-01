@@ -14,7 +14,7 @@ func main() {
 
 	log := common.SetupLogger(cfg.Env)
 
-	boardsApp := appBoards.New(log, cfg.GRPC.BoardsMS.Port, cfg.BoardsStoragePath)
+	boardsApp := appBoards.New(log, cfg.GRPC.BoardsMS.Port)
 
 	go func() {
 		boardsApp.GRPCServer.MustRun()

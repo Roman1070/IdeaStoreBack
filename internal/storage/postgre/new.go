@@ -1,9 +1,9 @@
 package postgre
 
 import (
-	"context"
 	"fmt"
 	common "idea-store-auth/cmd"
+	"idea-store-auth/configs/postgres"
 	boardsv1 "idea-store-auth/gen/go/boards"
 	ideasv1 "idea-store-auth/gen/go/idea"
 	profilesv1 "idea-store-auth/gen/go/profiles"
@@ -14,14 +14,14 @@ import (
 	"time"
 
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Storage struct {
-	db             *pgx.Conn
+	db             *pgxpool.Pool
 	ideasClient    ideasv1.IdeasClient
 	boardsClient   boardsv1.BoardsClient
 	profilesClient profilesv1.ProfilesClient
@@ -29,7 +29,7 @@ type Storage struct {
 
 const emptyValue = -1
 
-func New(storagePath string) (*Storage, error) {
+func New() (*Storage, error) {
 	const op = "postgres.New"
 	cfg := config.MustLoad()
 
@@ -38,12 +38,12 @@ func New(storagePath string) (*Storage, error) {
 		grpcretry.WithMax(uint(5)),
 		grpcretry.WithPerRetryTimeout(5 * time.Second),
 	}
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL")+storagePath)
+	pool, err := postgres.LoadPgxPool()
+	//conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	defer conn.Close(context.Background())
 
 	ideasClient, err := grpc.NewClient(common.GrpcIdeasAddress(cfg), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithChainUnaryInterceptor(
 		grpcretry.UnaryClientInterceptor(retryOptions...),
@@ -71,7 +71,7 @@ func New(storagePath string) (*Storage, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &Storage{db: conn, ideasClient: ideasv1.NewIdeasClient(ideasClient),
+	return &Storage{db: pool, ideasClient: ideasv1.NewIdeasClient(ideasClient),
 		boardsClient:   boardsv1.NewBoardsClient(boardsClient),
 		profilesClient: profilesv1.NewProfilesClient(profilesClient)}, nil
 }

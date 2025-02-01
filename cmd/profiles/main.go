@@ -14,7 +14,7 @@ func main() {
 
 	log := common.SetupLogger(cfg.Env)
 
-	profilesApp := appProfiles.New(log, cfg.GRPC.ProfilesMS.Port, cfg.ProfilesStoragePath)
+	profilesApp := appProfiles.New(log, cfg.GRPC.ProfilesMS.Port)
 
 	go func() {
 		profilesApp.GRPCServer.MustRun()

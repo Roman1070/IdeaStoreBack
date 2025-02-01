@@ -19,8 +19,8 @@ func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (
 	var lastInsertId int64
 	err := s.db.QueryRow(ctx, query, email, passHash).Scan(&lastInsertId)
 	if err != nil {
-		slog.Error("storage CreateIdea error: " + err.Error())
-		return emptyValue, fmt.Errorf("storage CreateIdea error: %v", err.Error())
+		slog.Error("storage SaveUser error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage SaveUser error: %v", err.Error())
 	}
 
 	return lastInsertId, nil

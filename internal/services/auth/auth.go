@@ -18,7 +18,6 @@ type Auth struct {
 	log          *slog.Logger
 	userSaver    UserSaver
 	userProvider UserProvider
-	appProvider  AppProvider
 	tokenTTL     time.Duration
 }
 
@@ -34,10 +33,6 @@ type UserProvider interface {
 	User(ctx context.Context, email string) (models.User, error)
 }
 
-type AppProvider interface {
-	App(ctx context.Context, appID int) (models.App, error)
-}
-
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrInvalidAppID       = errors.New("invalid app id")
@@ -46,12 +41,11 @@ var (
 )
 
 // New returns a new instance of the Auth service.
-func New(log *slog.Logger, userProvider UserProvider, userSaver UserSaver, appProvider AppProvider, tokenTTL time.Duration) *Auth {
+func New(log *slog.Logger, userProvider UserProvider, userSaver UserSaver, tokenTTL time.Duration) *Auth {
 	return &Auth{
 		userSaver:    userSaver,
 		userProvider: userProvider,
 		log:          log,
-		appProvider:  appProvider,
 		tokenTTL:     tokenTTL,
 	}
 }
@@ -84,12 +78,9 @@ func (a *Auth) Login(
 
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
-	app, err := a.appProvider.App(ctx, appID)
-	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
-	}
+
 	log.Info("user logged in successfully")
-	token, err := jwt.NewToken(user, app, a.tokenTTL)
+	token, err := jwt.NewToken(user, a.tokenTTL)
 	if err != nil {
 		a.log.Error("Failed to generate token", sl.Err(err))
 

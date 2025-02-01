@@ -1,10 +1,5 @@
 env: "local"
-auth_storage_path: "./storage/auth.db"
-ideas_storage_path: "./storage/ideas.db"
-boards_storage_path: "./storage/boards.db"
-profiles_storage_path: "./storage/profiles.db"
-comments_storage_path: "./storage/comments.db"
-chats_storage_path: "./storage/chats.db"
+
 token_ttl: 72h
 grpc:
   auth:
@@ -13,10 +8,10 @@ grpc:
   ideas:
     port: 44001
     timeout: 10s
-  boards:
+  profiles:
     port: 44002
     timeout: 10s
-  profiles:
+  boards:
     port: 44003
     timeout: 10s
   comments:

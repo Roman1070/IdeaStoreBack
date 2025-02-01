@@ -14,7 +14,7 @@ func main() {
 
 	log := common.SetupLogger(cfg.Env)
 
-	chatsApp := appChats.New(log, cfg.GRPC.ChatsMS.Port, cfg.ChatsStoragePath)
+	chatsApp := appChats.New(log, cfg.GRPC.ChatsMS.Port)
 
 	go func() {
 		chatsApp.GRPCServer.MustRun()

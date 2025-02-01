@@ -14,7 +14,7 @@ func main() {
 
 	log := common.SetupLogger(cfg.Env)
 
-	commentsApp := appComments.New(log, cfg.GRPC.CommentsMS.Port, cfg.CommentsStoragePath)
+	commentsApp := appComments.New(log, cfg.GRPC.CommentsMS.Port)
 
 	go func() {
 		commentsApp.GRPCServer.MustRun()

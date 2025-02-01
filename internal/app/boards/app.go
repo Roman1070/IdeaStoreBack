@@ -15,9 +15,8 @@ type App struct {
 func New(
 	log *slog.Logger,
 	grpcPort int,
-	storagePath string,
 ) *App {
-	boardsStorage, err := postgre.New(storagePath)
+	boardsStorage, err := postgre.New()
 	if err != nil {
 		panic(err)
 	}

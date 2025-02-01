@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"idea-store-auth/internal/config"
 	"idea-store-auth/internal/lib/logger/handlers/slogpretty"
 	"log/slog"
@@ -48,7 +49,7 @@ func SetupPrettySlog() *slog.Logger {
 }
 
 func GrpcBoardsAddress(cfg *config.Config) string {
-	return net.JoinHostPort(grpcHost, strconv.Itoa(cfg.GRPC.BoardsMS.Port))
+	return fmt.Sprintf("boards_go:%v", cfg.GRPC.BoardsMS.Port)
 }
 func GrpcAuthAddress(cfg *config.Config) string {
 	return net.JoinHostPort(grpcHost, strconv.Itoa(cfg.GRPC.AuthMS.Port))
