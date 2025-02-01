@@ -4,7 +4,7 @@ import (
 	common "idea-store-auth/internal/app"
 	grpcApp "idea-store-auth/internal/app/grpc/auth"
 	"idea-store-auth/internal/services/auth"
-	"idea-store-auth/internal/storage/sqlite"
+	sqlite "idea-store-auth/internal/storage/postgre"
 	"log/slog"
 	"time"
 )

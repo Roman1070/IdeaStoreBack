@@ -5,7 +5,9 @@ WORKDIR /var/backend
 COPY cmd/chats/main.go main.go
 COPY . .
 
-RUN go mod tidy && go build -o main main.go
+RUN GOOS=linux go build -v github.com/mattn/go-sqlite3
+RUN go mod tidy
+RUN go build -o main main.go
 
 FROM alpine:edge as prod
 

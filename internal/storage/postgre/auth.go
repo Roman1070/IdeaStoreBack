@@ -1,4 +1,4 @@
-package sqlite
+package postgre
 
 import (
 	"context"
@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"idea-store-auth/internal/domain/models"
 	"idea-store-auth/internal/storage"
-
-	"github.com/mattn/go-sqlite3"
+	"log/slog"
 )
+
 func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (int64, error) {
 	const op = "storage.sqlite.SaveUser"
 	stmt, err := s.db.Prepare("INSERT INTO users(email, pass_hash) VALUES(?,?)")
@@ -18,17 +18,14 @@ func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (
 	}
 	res, err := stmt.ExecContext(ctx, email, passHash)
 	if err != nil {
-		var sqliteErr sqlite3.Error
-
-		if errors.As(err, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
-			return emptyValue, fmt.Errorf("%s: %w", op, storage.ErrUserExists)
-		}
-		return emptyValue, fmt.Errorf("%s: %w", op, err)
+		slog.Error("storage SaveUser error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage SaveUser error: %v", err.Error())
 
 	}
 	id, err := res.LastInsertId()
 	if err != nil {
-		return emptyValue, fmt.Errorf("%s: %w", op, err)
+		slog.Error("storage SaveUser error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage SaveUser error: %v", err.Error())
 	}
 	return id, nil
 }
@@ -54,7 +51,7 @@ func (s *Storage) User(ctx context.Context, email string) (models.User, error) {
 func (s *Storage) IsAdmin(ctx context.Context, userId int64) (bool, error) {
 
 	const op = "storage.sqlite.User"
-	stmt, err := s.db.Prepare("SELECT is_admin FROM users WHERE id = ?")
+	stmt, err := s.db.Query("SELECT is_admin FROM users WHERE id = ?")
 	if err != nil {
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
@@ -64,7 +61,7 @@ func (s *Storage) IsAdmin(ctx context.Context, userId int64) (bool, error) {
 	err = row.Scan(&isAdmin)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return false, fmt.Errorf("%s: %w", op, storage.ErrAppNotFound)
+			return false, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
 		}
 		return false, fmt.Errorf("%s: %w", op, err)
 	}
