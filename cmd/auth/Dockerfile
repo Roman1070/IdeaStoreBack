@@ -8,7 +8,7 @@ COPY . .
 RUN go mod tidy
 RUN go build -o main main.go
 
-FROM alpine:edge as prod
+FROM alpine:edge AS prod
 
 RUN apk add bash
 

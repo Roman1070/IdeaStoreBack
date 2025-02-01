@@ -23,7 +23,7 @@ func (s *Storage) CreateProfile(ctx context.Context, id int64, name, email strin
 		INSERT INTO profiles(id,email,avatarImage,name,description,link,boards,savedIdeas)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8);
 	`
-	_, err := s.db.Exec(ctx, query)
+	_, err := s.db.Exec(ctx, query, id, email, "", name, "", "", "", "")
 	if err != nil {
 		slog.Error("storage CreateProfile error: " + err.Error())
 		return nil, fmt.Errorf("storage CreateProfile error: %w", err)

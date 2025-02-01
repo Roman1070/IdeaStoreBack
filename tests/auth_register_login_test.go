@@ -36,7 +36,6 @@ func TestRegister_Login_HappyPath(t *testing.T) {
 	respLogin, err := st.AuthClient.Login(ctx, &authv1.LoginRequest{
 		Email:    email,
 		Password: pass,
-		AppId:    appID,
 	})
 
 	loginTime := time.Now()
