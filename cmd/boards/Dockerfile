@@ -5,8 +5,7 @@ WORKDIR /var/backend
 COPY cmd/boards/main.go main.go
 COPY . .
 
-RUN go mod tidy
-RUN go build -o main main.go
+RUN go mod tidy && go build -o main main.go
 
 FROM alpine:edge as prod
 
@@ -18,7 +17,7 @@ COPY --from=build /var/backend/.env /app/.env
 RUN mkdir -p /app/files
 COPY files /app/files
 
-RUN mkdir -p /app/internal/configs
+RUN mkdir -p /app/configs
 COPY configs app/configs
 
 WORKDIR /app

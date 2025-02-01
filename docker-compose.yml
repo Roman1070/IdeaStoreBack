@@ -9,9 +9,7 @@ services:
     container_name: auth_go
     restart: unless-stopped
     volumes:
-      - ./files:/app/files
-    networks:
-      - app-network
+      - ./storage:/app/files
     depends_on:
       - sqlite_db
 
@@ -21,13 +19,12 @@ services:
       dockerfile: ./cmd/ideas/Dockerfile
     ports:
       - "44001:44001"
-    image: main-go-image
-    container_name: main_go
+    image: ideas-go-image
+    container_name: ideas_go
     restart: unless-stopped
     volumes:
-      - ./files:/delivery/files
-    networks:
-      - app-network
+      - ./storage:/app/files
+      - ./images:/delivery/files
     depends_on:
       - sqlite_db
 
@@ -40,8 +37,8 @@ services:
     image: profiles-go-image
     container_name: profiles_go
     restart: unless-stopped
-    networks:
-      - app-network
+    volumes:
+      - ./storage:/app/files
     depends_on:
       - sqlite_db
 
@@ -54,8 +51,8 @@ services:
     image: boards-go-image
     container_name: boards_go
     restart: unless-stopped
-    networks:
-      - app-network
+    volumes:
+      - ./storage:/app/files
     depends_on:
       - sqlite_db
 
@@ -68,8 +65,8 @@ services:
     image: comments-go-image
     container_name: comments_go
     restart: unless-stopped
-    networks:
-      - app-network
+    volumes:
+      - ./storage:/app/files
     depends_on:
       - sqlite_db
 
@@ -82,8 +79,8 @@ services:
     image: chats-go-image
     container_name: chats_go
     restart: unless-stopped
-    networks:
-      - app-network
+    volumes:
+      - ./storage:/app/files
     depends_on:
       - sqlite_db
 
@@ -97,12 +94,6 @@ services:
       - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
     container_name: sqlite_db
     restart: unless-stopped
-    networks:
-      - app-network
 
 volumes:
   go_back:
-
-networks:
-  app-network:
-    driver: bridge
