@@ -35,7 +35,6 @@ message RegisterResponse {
 message LoginRequest {
   string email = 1; // Email of the user to login.
   string password = 2; // Password of the user to login.
-  int32 app_id = 3; // ID of the app to login to.
 }
 
 message LoginResponse {

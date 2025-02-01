@@ -16,10 +16,10 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
+
 type AuthClient struct {
 	authAPi authv1.AuthClient
 }
-const appID = 2
 
 func (c *AuthClient) Login(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
@@ -28,16 +28,15 @@ func (c *AuthClient) Login(w http.ResponseWriter, r *http.Request) {
 	request := &authv1.LoginRequest{
 		Email:    req.Email,
 		Password: req.Password,
-		AppId:    appID,
 	}
 
 	loginResponse, err := c.authAPi.Login(context.Background(), request)
 	if err != nil {
-		if(errors.Is(err, status.Error(codes.InvalidArgument,"Invalid credentials"))){
-		utils.WriteError(w,"Invalid credentials")
-					return
+		if errors.Is(err, status.Error(codes.InvalidArgument, "Invalid credentials")) {
+			utils.WriteError(w, "Invalid credentials")
+			return
 		}
-		utils.WriteError(w,err.Error())
+		utils.WriteError(w, err.Error())
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -47,18 +46,17 @@ func (c *AuthClient) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 type registerRequest struct {
-	Email string `json:"email"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-
-func(c *AuthClient)  Regsiter(w http.ResponseWriter, r *http.Request) {
+func (c *AuthClient) Regsiter(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 
-	err:=json.NewDecoder(r.Body).Decode(&req)
-	
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	err := json.NewDecoder(r.Body).Decode(&req)
+
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 	request := &authv1.RegisterRequest{
@@ -69,7 +67,7 @@ func(c *AuthClient)  Regsiter(w http.ResponseWriter, r *http.Request) {
 	registerResponse, err := c.authAPi.Register(r.Context(), request)
 	if err != nil {
 		if errors.Is(err, status.Error(codes.AlreadyExists, "User already exists")) {
-			utils.WriteError(w,"User already exists")
+			utils.WriteError(w, "User already exists")
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
@@ -79,12 +77,12 @@ func(c *AuthClient)  Regsiter(w http.ResponseWriter, r *http.Request) {
 
 	result, err := json.Marshal(registerResponse)
 	if err != nil {
-		utils.WriteError(w,"Error masrhalling response")
+		utils.WriteError(w, "Error masrhalling response")
 		return
 	}
-	w.WriteHeader(http.StatusOK) 
+	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	
+
 	w.Write(result)
 }
 func NewAuthClient(addr string, timeout time.Duration, retriesCount int) (*AuthClient, error) {

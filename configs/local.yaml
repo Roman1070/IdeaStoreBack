@@ -45,4 +45,4 @@ clients:
     timeout: "4s"
     retriesCount: 5
     insecure: true
-app_secret: "yaro-gas"
+app_secret: "yaro21u527"

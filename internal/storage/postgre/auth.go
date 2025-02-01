@@ -44,22 +44,3 @@ func (s *Storage) User(ctx context.Context, email string) (models.User, error) {
 
 	return user, nil
 }
-
-func (s *Storage) App(ctx context.Context, id int) (models.App, error) {
-	slog.Info("storage started to App")
-
-	const query = `
-		SELECT id, name, secret 
-		FROM apps 
-		WHERE id = $1;
-	`
-
-	var app models.App
-	err := s.db.QueryRow(ctx, query, id).Scan(&app.ID, &app.Name, &app.Secret)
-	if err != nil {
-		slog.Error("storage App error: " + err.Error())
-		return models.App{}, fmt.Errorf("storage App error: %v", err.Error())
-	}
-
-	return app, nil
-}

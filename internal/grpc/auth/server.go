@@ -12,16 +12,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const (
-	emptyValue = -1
-)
-
 type Auth interface {
 	Login(
 		ctx context.Context,
 		email string,
 		password string,
-		appId int,
 	) (token string, err error)
 
 	RegisterNewUser(
@@ -44,7 +39,7 @@ func (s *serverAPI) Login(ctx context.Context, req *authv1.LoginRequest) (*authv
 	if err := validateLogin(req); err != nil {
 		return nil, err
 	}
-	token, err := s.auth.Login(ctx, req.GetEmail(), req.GetPassword(), int(req.GetAppId()))
+	token, err := s.auth.Login(ctx, req.GetEmail(), req.GetPassword())
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			return nil, status.Error(codes.InvalidArgument, "Invalid credentials")
@@ -81,10 +76,6 @@ func validateLogin(req *authv1.LoginRequest) error {
 	}
 	if req.GetPassword() == "" {
 		return status.Error(codes.InvalidArgument, "password must not be empty")
-	}
-
-	if req.GetAppId() == emptyValue {
-		return status.Error(codes.InvalidArgument, "app id is required")
 	}
 	return nil
 }

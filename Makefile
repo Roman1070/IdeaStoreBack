@@ -1,3 +1,5 @@
+gen_auth:
+	protoc -I proto proto/auth.proto --go_out=./gen/go/auth/ --go_opt=paths=source_relative --go-grpc_out=./gen/go/auth/ --go-grpc_opt=paths=source_relative
 gen_ideas:
 	protoc -I proto proto/ideas.proto --go_out=./gen/go/idea/ --go_opt=paths=source_relative --go-grpc_out=./gen/go/idea/ --go-grpc_opt=paths=source_relative
 gen_boards:

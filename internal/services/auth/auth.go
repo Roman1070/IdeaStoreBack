@@ -54,7 +54,6 @@ func (a *Auth) Login(
 	ctx context.Context,
 	email string,
 	password string,
-	appID int,
 ) (string, error) {
 	const op = "auth.Login"
 	log := a.log.With(
