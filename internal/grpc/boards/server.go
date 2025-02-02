@@ -15,10 +15,10 @@ import (
 type Boards interface {
 	CreateBoard(ctx context.Context, name string, userId int64) (int64, error)
 	GetBoard(ctx context.Context, id int64) (models.Board, error)
-	GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.BoardData, error)
+	GetCurrentUsersBoards(ctx context.Context, userId int64) ([]*boardsv1.BoardData, error)
 	SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved bool) (*emptypb.Empty, error)
 	GetIdeasInBoard(ctx context.Context, boardId int64) ([]*boardsv1.IdeaData, error)
-	DeleteBoard(ctx context.Context,userId, boardId int64) (*emptypb.Empty, error)
+	DeleteBoard(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error)
 }
 
 type serverAPI struct {
@@ -55,7 +55,7 @@ func (s *serverAPI) GetBoard(ctx context.Context, req *boardsv1.GetBoardRequest)
 func (s *serverAPI) GetAllBoards(ctx context.Context, req *boardsv1.GetAllBoardsRequest) (*boardsv1.GetAllBoardsResponse, error) {
 
 	slog.Info("started to get all ideas")
-	boards, err := s.boards.GetAllBoards(ctx, req.UserId)
+	boards, err := s.boards.GetCurrentUsersBoards(ctx, req.UserId)
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error getting all ideas")
@@ -74,8 +74,8 @@ func (s *serverAPI) SetIdeaSaved(ctx context.Context, req *boardsv1.SetIdeaSaved
 	return &emptypb.Empty{}, nil
 }
 
-func (s *serverAPI) GetIdeasInBoard(ctx context.Context, req *boardsv1.GetIdeasInBoardRequest) (*boardsv1.GetIdeasInBoardResponse, error){
-	
+func (s *serverAPI) GetIdeasInBoard(ctx context.Context, req *boardsv1.GetIdeasInBoardRequest) (*boardsv1.GetIdeasInBoardResponse, error) {
+
 	slog.Info("started to GetIdeasInBoard grpc")
 	ideas, err := s.boards.GetIdeasInBoard(ctx, req.BoardId)
 
@@ -86,9 +86,9 @@ func (s *serverAPI) GetIdeasInBoard(ctx context.Context, req *boardsv1.GetIdeasI
 		Ideas: ideas,
 	}, nil
 }
-func (s *serverAPI) DeleteBoard(ctx context.Context, req *boardsv1.DeleteBoardRequest) (*emptypb.Empty, error){
+func (s *serverAPI) DeleteBoard(ctx context.Context, req *boardsv1.DeleteBoardRequest) (*emptypb.Empty, error) {
 	slog.Info("started to DeleteBoard grpc")
-	_, err := s.boards.DeleteBoard(ctx,req.UserId, req.BoardId)
+	_, err := s.boards.DeleteBoard(ctx, req.UserId, req.BoardId)
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error DeleteBoard")

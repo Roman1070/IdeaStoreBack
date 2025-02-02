@@ -57,9 +57,9 @@ func (c *BoardsClient) CreateBoard(w http.ResponseWriter, r *http.Request) {
 
 	var req request
 	err = json.NewDecoder(r.Body).Decode(&req)
-	
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 	log.Info(fmt.Sprintf("started to create a board, id = %v", req.Name))
@@ -142,10 +142,10 @@ func (c *BoardsClient) GetCurrentUsersBoards(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
-func(c *BoardsClient) GetBoards(w http.ResponseWriter, r *http.Request){
+func (c *BoardsClient) GetBoards(w http.ResponseWriter, r *http.Request) {
 	const op = "client.boards.GetAll"
 	userIdStr := r.URL.Query().Get("id")
-	userId, err := strconv.ParseInt(userIdStr,10,64)
+	userId, err := strconv.ParseInt(userIdStr, 10, 64)
 	if err != nil {
 		utils.WriteError(w, err.Error())
 		return
@@ -199,35 +199,35 @@ func (c *BoardsClient) GetIdeasInBoard(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 
-func(c *BoardsClient) DeleteBoard(w http.ResponseWriter, r *http.Request){
-	
-	type request struct{
+func (c *BoardsClient) DeleteBoard(w http.ResponseWriter, r *http.Request) {
+
+	type request struct {
 		Id string `json:"id"`
 	}
-	userId,err := GetUserIdByRequestWithCookie(r)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	userId, err := GetUserIdByRequestWithCookie(r)
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 	var req request
 	err = json.NewDecoder(r.Body).Decode(&req)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		slog.Error(err.Error())
 		return
 	}
-	id, err := strconv.ParseInt(req.Id,10,64)
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	id, err := strconv.ParseInt(req.Id, 10, 64)
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		slog.Error(err.Error())
 		return
 	}
-	_, err = c.api.DeleteBoard(r.Context(),&boardsv1.DeleteBoardRequest{
+	_, err = c.api.DeleteBoard(r.Context(), &boardsv1.DeleteBoardRequest{
 		BoardId: id,
-		UserId: userId,
+		UserId:  userId,
 	})
-	if err!=nil{
-		utils.WriteError(w,err.Error())
+	if err != nil {
+		utils.WriteError(w, err.Error())
 		return
 	}
 	w.WriteHeader(http.StatusOK)

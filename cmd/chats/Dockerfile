@@ -16,7 +16,7 @@ COPY --from=build /var/backend/main /app/main
 COPY --from=build /var/backend/.env /app/.env
 
 RUN mkdir -p /app/files
-COPY storage /app/files
+COPY files /app/files
 
 RUN mkdir -p /app/configs
 COPY configs app/configs

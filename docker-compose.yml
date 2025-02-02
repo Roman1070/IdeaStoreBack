@@ -95,10 +95,24 @@ services:
     depends_on:
       - pg_db
 
+  clients_go:
+    build:
+      context: .
+      dockerfile: ./internal/clients/Dockerfile
+    ports:
+      - "8000:8000"
+    image: clients-go-image
+    container_name: clients_go
+    restart: unless-stopped
+    networks:
+      - app-network
+    volumes:
+      - ./files:/app/files
+
   pg_db:
     image: postgres:16.4
     ports:
-      - "5432:5432"
+      - "54320:5432"
     env_file:
       - .env
     environment:

@@ -88,10 +88,10 @@ func (s *Storage) GetProfilesFromSearch(ctx context.Context, input string) ([]*m
 	const query = `
 		SELECT id,name,avatarImage 
 		FROM profiles 
-		WHERE name LIKE $1 OR email LIKE $1;
+		WHERE name LIKE $1 || '%' OR email LIKE $1 || '%';
 	`
-	rows, err := s.db.Query(ctx, query, "\""+input+"%"+"\"")
-	fmt.Println()
+	rows, err := s.db.Query(ctx, query, input)
+	fmt.Println(rows)
 	if err != nil {
 		slog.Error("storage GetProfilesFromSearch error: " + err.Error())
 		return nil, err
@@ -106,6 +106,7 @@ func (s *Storage) GetProfilesFromSearch(ctx context.Context, input string) ([]*m
 		}
 		result = append(result, &profile)
 	}
+	fmt.Println(result)
 	return result, nil
 }
 func (s *Storage) ToggleLikeIdea(ctx context.Context, userId, ideaId int64) (bool, int64, error) {
@@ -397,7 +398,7 @@ func (s *Storage) GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, 
 	`
 
 	var idsStr string
-	err := s.db.QueryRow(ctx, query, userId).Scan(idsStr)
+	err := s.db.QueryRow(ctx, query, userId).Scan(&idsStr)
 	if err != nil {
 		slog.Error("storage GetSavedIdeasIds error: " + err.Error())
 		return nil, fmt.Errorf("storage GetSavedIdeasIds error: " + err.Error())

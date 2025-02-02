@@ -61,7 +61,7 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 func GetImages(w http.ResponseWriter, r *http.Request) {
-	file, err := os.ReadFile("F:/Roman/WEB/IdeaStoreBack" + r.RequestURI)
+	file, err := os.ReadFile(r.RequestURI)
 	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, err.Error())
@@ -69,7 +69,7 @@ func GetImages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "image/*")
+	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write(file)
 }
 
@@ -94,7 +94,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	ext := filepath.Ext(h.Filename)
 	hash := md5.Sum([]byte(h.Filename))
-	path := "./images/" + hex.EncodeToString(hash[:]) + ext
+	path := "/app/files/" + hex.EncodeToString(hash[:]) + ext
 	tmpfile, err := os.Create(path)
 
 	if err != nil {

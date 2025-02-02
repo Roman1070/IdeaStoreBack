@@ -246,7 +246,7 @@ func (c *ProfilesClient) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		defer file.Close()
 		ext := filepath.Ext(h.Filename)
 		hash := md5.Sum([]byte(h.Filename))
-		path := "./images/" + hex.EncodeToString(hash[:]) + ext
+		path := "/app/files/" + hex.EncodeToString(hash[:]) + ext
 		tmpfile, err := os.Create(path)
 		if err != nil {
 			slog.Error(err.Error())

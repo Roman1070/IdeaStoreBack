@@ -17,13 +17,13 @@ func (s *Storage) CreateIdea(ctx context.Context, idea models.Idea) (int64, erro
 	slog.Info("storage started CreateIdea")
 
 	const query = `
-		INSERT INTO ideas(image,name,description,link,tags,user_id) 
-		VALUES($1,$2,$3,$4,$5,$6)
+		INSERT INTO ideas(image,name,description,link,tags,user_id,likes_count) 
+		VALUES($1,$2,$3,$4,$5,$6,$7)
 		RETURNING id;
 	`
 
 	var lastInsertId int64
-	err := s.db.QueryRow(ctx, query, idea.Image, idea.Name, idea.Description, idea.Link, idea.Tags, idea.UserID).Scan(&lastInsertId)
+	err := s.db.QueryRow(ctx, query, idea.Image, idea.Name, idea.Description, idea.Link, idea.Tags, idea.UserID, 0).Scan(&lastInsertId)
 	if err != nil {
 		slog.Error("storage CreateIdea error: " + err.Error())
 		return emptyValue, fmt.Errorf("storage CreateIdea error: %v", err.Error())
@@ -83,6 +83,13 @@ func (s *Storage) ChangeLikesCount(ctx context.Context, ideaId int64, increase b
 		slog.Error("storage ChangeLikesCount error: " + err.Error())
 		return emptyValue, fmt.Errorf("storage ChangeLikesCount error: " + err.Error())
 	}
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		} else {
+			tx.Commit(ctx)
+		}
+	}()
 
 	var likesCount int64
 	err = tx.QueryRow(ctx, selectQuery, ideaId).Scan(&likesCount)
@@ -173,7 +180,7 @@ func (s *Storage) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaDat
 	query := fmt.Sprintf(`
 		SELECT id,image,name 
 		FROM ideas 
-		WHERE id ID %v;`, idsRequestString)
+		WHERE id IN %v;`, idsRequestString)
 
 	rows, err := s.db.Query(ctx, query, anySlice...)
 	if err != nil {

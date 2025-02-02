@@ -8,6 +8,7 @@ import (
 	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
 	"log/slog"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -102,7 +103,7 @@ func (s *Storage) SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved
 	}
 
 	if saved {
-		newIdsString = idsString + " " + fmt.Sprint(ideaId)
+		newIdsString = strings.TrimSpace(idsString + " " + fmt.Sprint(ideaId))
 	} else {
 		idsSlice, err := ParseIdsString(idsString)
 		if err != nil {
@@ -121,8 +122,8 @@ func (s *Storage) SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved
 
 	return &emptypb.Empty{}, nil
 }
-func (s *Storage) GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.BoardData, error) {
-	slog.Info("storage started to GetAllBoards")
+func (s *Storage) GetCurrentUsersBoards(ctx context.Context, userId int64) ([]*boardsv1.BoardData, error) {
+	slog.Info("storage started to GetCurrentUsersBoards")
 
 	const query = `
 		SELECT id,name,ideas_ids 
@@ -132,8 +133,8 @@ func (s *Storage) GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.B
 
 	rows, err := s.db.Query(ctx, query, userId)
 	if err != nil {
-		slog.Error("storage GetAllBoards error: " + err.Error())
-		return nil, fmt.Errorf("storage GetAllBoards error: %v", err.Error())
+		slog.Error("storage GetCurrentUsersBoards error: " + err.Error())
+		return nil, fmt.Errorf("storage GetCurrentUsersBoards error: %v", err.Error())
 	}
 
 	defer rows.Close()
@@ -144,16 +145,16 @@ func (s *Storage) GetAllBoards(ctx context.Context, userId int64) ([]*boardsv1.B
 		var ideasStr string
 		err = rows.Scan(&board.Id, &board.Name, &ideasStr)
 		if err != nil {
-			slog.Error("storage GetAllBoards error: " + err.Error())
-			return nil, fmt.Errorf("storage GetAllBoards error: %v", err.Error())
+			slog.Error("storage GetCurrentUsersBoards error: " + err.Error())
+			return nil, fmt.Errorf("storage GetCurrentUsersBoards error: %v", err.Error())
 		}
 
 		var ids []int64
 		if len(ideasStr) > 0 {
 			ids, err = ParseIdsString(ideasStr)
 			if err != nil {
-				slog.Error("storage GetAllBoards error: " + err.Error())
-				return nil, fmt.Errorf("storage GetAllBoards error: %v", err.Error())
+				slog.Error("storage GetCurrentUsersBoards error: " + err.Error())
+				return nil, fmt.Errorf("storage GetCurrentUsersBoards error: %v", err.Error())
 			}
 		}
 
@@ -196,9 +197,9 @@ func (s *Storage) GetIdeasInBoard(ctx context.Context, boardId int64) ([]*boards
 	var result []*boardsv1.IdeaData
 	for _, idea := range ideas.Ideas {
 		result = append(result, &boardsv1.IdeaData{
-			IdeaId: idea.Id,
-			Image:  idea.Image,
-			Name:   idea.Name,
+			Id:    idea.Id,
+			Image: idea.Image,
+			Name:  idea.Name,
 		})
 	}
 
