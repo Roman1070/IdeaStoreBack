@@ -11,7 +11,7 @@ services:
     networks:
       - app-network
     volumes:
-      - ./storage:/app/files
+      - ./files:/app/files
     depends_on:
       - pg_db
 
@@ -27,8 +27,7 @@ services:
     networks:
       - app-network
     volumes:
-      - ./storage:/app/files
-      - ./images:/delivery/files
+      - ./files:/app/files
     depends_on:
       - pg_db
 
@@ -44,7 +43,7 @@ services:
     networks:
       - app-network
     volumes:
-      - ./storage:/app/files
+      - ./files:/app/files
     depends_on:
       - pg_db
 
@@ -60,7 +59,7 @@ services:
     networks:
       - app-network
     volumes:
-      - ./storage:/app/files
+      - ./files:/app/files
     depends_on:
       - pg_db
 
@@ -76,7 +75,7 @@ services:
     networks:
       - app-network
     volumes:
-      - ./storage:/app/files
+      - ./files:/app/files
     depends_on:
       - pg_db
 
@@ -92,7 +91,7 @@ services:
     networks:
       - app-network
     volumes:
-      - ./storage:/app/files
+      - ./files:/app/files
     depends_on:
       - pg_db
 

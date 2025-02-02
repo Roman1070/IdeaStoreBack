@@ -61,8 +61,7 @@ func (c *IdeasClient) GetIdea(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 func GetImages(w http.ResponseWriter, r *http.Request) {
-
-	file, err := os.ReadFile("F:/Roman/WEBw/IdeaStoreBack" + r.RequestURI)
+	file, err := os.ReadFile("F:/Roman/WEB/IdeaStoreBack" + r.RequestURI)
 	if err != nil {
 		slog.Error(err.Error())
 		utils.WriteError(w, err.Error())

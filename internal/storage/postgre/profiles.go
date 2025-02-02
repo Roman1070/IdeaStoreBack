@@ -20,10 +20,10 @@ func (s *Storage) CreateProfile(ctx context.Context, id int64, name, email strin
 	slog.Info("storage start CreateProfile")
 
 	const query = `
-		INSERT INTO profiles(id,email,avatarImage,name,description,link,boards,savedIdeas)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8);
+		INSERT INTO profiles(id,email,avatarImage,name,description,link,boards,savedIdeas,liked_ideas)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9);
 	`
-	_, err := s.db.Exec(ctx, query, id, email, "", name, "", "", "", "")
+	_, err := s.db.Exec(ctx, query, id, email, "", name, "", "", "", "", "")
 	if err != nil {
 		slog.Error("storage CreateProfile error: " + err.Error())
 		return nil, fmt.Errorf("storage CreateProfile error: %w", err)
@@ -90,8 +90,8 @@ func (s *Storage) GetProfilesFromSearch(ctx context.Context, input string) ([]*m
 		FROM profiles 
 		WHERE name LIKE $1 OR email LIKE $1;
 	`
-	rows, err := s.db.Query(ctx, query, input)
-
+	rows, err := s.db.Query(ctx, query, "\""+input+"%"+"\"")
+	fmt.Println()
 	if err != nil {
 		slog.Error("storage GetProfilesFromSearch error: " + err.Error())
 		return nil, err
@@ -180,14 +180,18 @@ func (s *Storage) UpdateProfile(ctx context.Context, userId int64, name, avatarI
 	var query string
 	if avatarImage != "" {
 		query = "UPDATE profiles SET name = $1, avatarImage = $2, description = $3, link=$4 WHERE id = $5"
+		_, err := s.db.Exec(ctx, query, name, avatarImage, description, link, userId)
+		if err != nil {
+			slog.Error("storage UpdateProfile error: " + err.Error())
+			return nil, fmt.Errorf("storage UpdateProfile error: %v", err.Error())
+		}
 	} else {
-		query = "UPDATE profiles SET name = $1, description = $3, link=$4 WHERE id = $5"
-	}
-
-	_, err := s.db.Exec(ctx, query, name, avatarImage, description, link, userId)
-	if err != nil {
-		slog.Error("storage UpdateProfile error: " + err.Error())
-		return nil, fmt.Errorf("storage UpdateProfile error: %v", err.Error())
+		query = "UPDATE profiles SET name = $1, description = $2, link=$3 WHERE id = $4"
+		_, err := s.db.Exec(ctx, query, name, description, link, userId)
+		if err != nil {
+			slog.Error("storage UpdateProfile error: " + err.Error())
+			return nil, fmt.Errorf("storage UpdateProfile error: %v", err.Error())
+		}
 	}
 
 	return nil, nil
