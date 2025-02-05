@@ -1,0 +1,48 @@
+env: "prod"
+
+token_ttl: 72h
+grpc:
+  auth:
+    port: 44000
+    timeout: 10s
+  ideas:
+    port: 44001
+    timeout: 10s
+  profiles:
+    port: 44002
+    timeout: 10s
+  boards:
+    port: 44003
+    timeout: 10s
+  comments:
+    port: 44004
+    timeout: 10s
+  chats:
+    port: 44005
+    timeout: 10s
+clients:
+  auth:
+    timeout: "4s"
+    retriesCount: 5
+    insecure: true
+  ideas:
+    timeout: "4s"
+    retriesCount: 5
+    insecure: true
+  boards:
+    timeout: "4s"
+    retriesCount: 5
+    insecure: true
+  profiles:
+    timeout: "4s"
+    retriesCount: 5
+    insecure: true
+  comments:
+    timeout: "4s"
+    retriesCount: 5
+    insecure: true
+  chats:
+    timeout: "4s"
+    retriesCount: 5
+    insecure: true
+app_secret: "yaro21u527"
