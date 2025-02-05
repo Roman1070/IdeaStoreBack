@@ -14,7 +14,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const clientAddr = "0.0.0.0:8000"
+const clientAddr = "176.114.67.252:8000"
 
 func main() {
 

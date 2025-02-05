@@ -12,6 +12,7 @@ func setupCORS(w http.ResponseWriter, req *http.Request, sessionLifetime string)
 		"http://localhost:8000": {},
 		"http://127.0.0.1:3000": {},
 		"http://127.0.0.1:8000": {},
+		"http://176.114.67.252": {},
 	}
 	origin := req.Header.Get("Origin")
 	if _, ok := allowedOrigins[origin]; ok {

@@ -18,7 +18,7 @@ type Suite struct {
 	AuthClient authv1.AuthClient
 }
 
-const grpcHost = "localhost"
+const grpcHost = "176.114.67.252"
 
 func New(t *testing.T) (context.Context, *Suite) {
 	t.Helper()
