@@ -151,12 +151,14 @@ func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, err.Error())
 		return
 	}
-	result, err := json.Marshal(resp.Ideas)
+
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
+
+	result, err := m.Marshal(resp)
 	if err != nil {
 		utils.WriteError(w, err.Error())
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
