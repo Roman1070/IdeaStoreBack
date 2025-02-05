@@ -8,13 +8,19 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 )
 
-const clientAddr = "0.0.0.0:8000"
+var (
+	AppPortEnv      = "APP_PORT"
+	AppSecretEnv    = "APP_SECRET"
+	TokenCookieName = "token"
+	EmptyValue      = int64(-1)
+)
 
 func main() {
 
@@ -65,26 +71,26 @@ func main() {
 	handler := middlewares.CorsMiddleware(router)
 	fmt.Println("Server is listening...")
 
-	log.Fatal(http.ListenAndServe(clientAddr, handler))
+	log.Fatal(http.ListenAndServe(os.Getenv(AppPortEnv), handler))
 }
 
 func GetUserIdByRequestWithCookie(r *http.Request) (int64, error) {
-
-	tokenCookie, err := r.Cookie("token")
+	tokenCookie, err := r.Cookie(TokenCookieName)
 	if err != nil {
 		slog.Error(err.Error())
-		return -1, err
+		return EmptyValue, err
 	}
 
 	claims := jwt.MapClaims{}
 	tokenStr := tokenCookie.String()[6:]
 	_, err = jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("yaro21u527"), nil
+		return []byte(os.Getenv(AppSecretEnv)), nil
 	})
 	if err != nil {
 		slog.Error(err.Error())
-		return -1, err
+		return EmptyValue, err
 	}
+
 	userId := claims["uid"].(float64)
 	userIdStr := fmt.Sprint(userId)
 	userIdInt, _ := strconv.ParseInt(userIdStr, 10, 64)

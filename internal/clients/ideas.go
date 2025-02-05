@@ -22,6 +22,10 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+var (
+	FilesPath = "/app/files/"
+)
+
 type IdeasClient struct {
 	api ideasv1.IdeasClient
 }
@@ -78,7 +82,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 
 	userId, err := GetUserIdByRequestWithCookie(r)
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("Error parsing JWT: " + err.Error())
 		utils.WriteError(w, "Error parsing JWT: "+err.Error())
 		return
 	}
@@ -94,7 +98,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	ext := filepath.Ext(h.Filename)
 	hash := md5.Sum([]byte(h.Filename))
-	path := "/app/files/" + hex.EncodeToString(hash[:]) + ext
+	path := FilesPath + hex.EncodeToString(hash[:]) + ext
 	tmpfile, err := os.Create(path)
 
 	if err != nil {
