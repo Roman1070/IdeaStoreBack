@@ -33,7 +33,7 @@ func main() {
 	chatsClient, _ := NewChatsClient(common.GrpcChatsAddress(cfg), cfg.Clients.Chats.Timeout, cfg.Clients.Chats.RetriesCount)
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/files/{name}", GetImages).Methods(http.MethodGet)
+	router.HandleFunc("/app/files/{name}", GetImages).Methods(http.MethodGet)
 
 	router.HandleFunc("/api/idea", ideasClient.Create).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/idea", ideasClient.GetIdea).Methods(http.MethodGet, http.MethodOptions)
