@@ -2,13 +2,7 @@ FROM golang:1.23.1-alpine3.20 AS build
 
 WORKDIR /var/backend
 
-COPY internal/clients/auth.go clients/auth.go
-COPY internal/clients/boards.go clients/boards.go
-COPY internal/clients/chats.go clients/chats.go
-COPY internal/clients/ideas.go clients/ideas.go
-COPY internal/clients/comments.go clients/comments.go
-COPY internal/clients/profiles.go clients/profiles.go
-COPY internal/clients/main.go clients/main.go
+COPY internal/clients/. clients/
 COPY . .
 
 RUN go mod tidy
