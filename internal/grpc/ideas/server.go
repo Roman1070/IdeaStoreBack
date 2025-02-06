@@ -158,7 +158,7 @@ func (s *serverAPI) GetIdeasFromSearch(ctx context.Context, req *ideasv1.GetIdea
 			Description: idea.Description,
 			Link:        idea.Link,
 			Tags:        idea.Tags,
-			Image:       idea.Tags,
+			Image:       idea.Image,
 			Saved:       idea.Saved,
 		})
 	}
