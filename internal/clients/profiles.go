@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
@@ -155,21 +156,36 @@ func (c *ProfilesClient) IsIdeaLiked(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 func (c *ProfilesClient) GetCurrentProfile(w http.ResponseWriter, r *http.Request) {
+	authorized := true
+
 	userId, err := GetUserIdByRequestWithCookie(r)
-
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, "Error getting profile: "+err.Error())
-		return
+		if !strings.Contains(err.Error(), NoCookieError) {
+			slog.Error("Error getting profile: " + err.Error())
+			utils.WriteError(w, "Error getting profile: "+err.Error())
+			return
+		} else {
+			authorized = false
+		}
 	}
-	resp, err := c.api.GetProfile(r.Context(), &profilesv1.GetProfileRequest{
-		Id: userId,
-	})
 
-	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, "Error getting profile: "+err.Error())
-		return
+	var resp *profilesv1.GetProfileResponse
+	if authorized {
+		resp, err = c.api.GetProfile(r.Context(), &profilesv1.GetProfileRequest{
+			Id: userId,
+		})
+
+		if err != nil {
+			slog.Error(err.Error())
+			utils.WriteError(w, "Error getting profile: "+err.Error())
+			return
+		}
+	} else {
+		resp = &profilesv1.GetProfileResponse{
+			Data: &profilesv1.ProfileData{
+				Id: -1,
+			},
+		}
 	}
 
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
