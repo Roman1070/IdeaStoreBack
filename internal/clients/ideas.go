@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
@@ -24,7 +25,7 @@ import (
 
 var (
 	FilesPath     = "/app/files/"
-	NoCookieError = "http: named cookie not present"
+	NoCookieError = "cookie not present"
 )
 
 type IdeasClient struct {
@@ -145,7 +146,7 @@ func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to get ideas")
 
 	userId, err := GetUserIdByRequestWithCookie(r)
-	if err != nil && err.Error() != NoCookieError {
+	if err != nil && !strings.Contains(err.Error(), NoCookieError) {
 		slog.Error("client GetAllIdeas error: " + err.Error())
 		utils.WriteError(w, err.Error())
 		return
