@@ -33,6 +33,7 @@ type IdeasClient interface {
 	GetAllIdeas(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error)
 	GetIdeas(ctx context.Context, in *GetIdeasRequest, opts ...grpc.CallOption) (*GetIdeasResponse, error)
 	ChangeLikesCount(ctx context.Context, in *ChangeLikesCountRequest, opts ...grpc.CallOption) (*ChangeLikesCountResponse, error)
+	GetIdeasFromSearch(ctx context.Context, in *GetIdeasFromSearchRequest, opts ...grpc.CallOption) (*GetIdeasFromSearchResponse, error)
 }
 
 type ideasClient struct {
@@ -97,6 +98,15 @@ func (c *ideasClient) ChangeLikesCount(ctx context.Context, in *ChangeLikesCount
 	return out, nil
 }
 
+func (c *ideasClient) GetIdeasFromSearch(ctx context.Context, in *GetIdeasFromSearchRequest, opts ...grpc.CallOption) (*GetIdeasFromSearchResponse, error) {
+	out := new(GetIdeasFromSearchResponse)
+	err := c.cc.Invoke(ctx, "/ideas.Ideas/GetIdeasFromSearch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IdeasServer is the server API for Ideas service.
 // All implementations must embed UnimplementedIdeasServer
 // for forward compatibility
@@ -111,6 +121,7 @@ type IdeasServer interface {
 	GetAllIdeas(context.Context, *GetAllRequest) (*GetAllResponse, error)
 	GetIdeas(context.Context, *GetIdeasRequest) (*GetIdeasResponse, error)
 	ChangeLikesCount(context.Context, *ChangeLikesCountRequest) (*ChangeLikesCountResponse, error)
+	GetIdeasFromSearch(context.Context, *GetIdeasFromSearchRequest) (*GetIdeasFromSearchResponse, error)
 	mustEmbedUnimplementedIdeasServer()
 }
 
@@ -135,6 +146,9 @@ func (UnimplementedIdeasServer) GetIdeas(context.Context, *GetIdeasRequest) (*Ge
 }
 func (UnimplementedIdeasServer) ChangeLikesCount(context.Context, *ChangeLikesCountRequest) (*ChangeLikesCountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeLikesCount not implemented")
+}
+func (UnimplementedIdeasServer) GetIdeasFromSearch(context.Context, *GetIdeasFromSearchRequest) (*GetIdeasFromSearchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetIdeasFromSearch not implemented")
 }
 func (UnimplementedIdeasServer) mustEmbedUnimplementedIdeasServer() {}
 
@@ -257,6 +271,24 @@ func _Ideas_ChangeLikesCount_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Ideas_GetIdeasFromSearch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetIdeasFromSearchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdeasServer).GetIdeasFromSearch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ideas.Ideas/GetIdeasFromSearch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdeasServer).GetIdeasFromSearch(ctx, req.(*GetIdeasFromSearchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Ideas_ServiceDesc is the grpc.ServiceDesc for Ideas service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -287,6 +319,10 @@ var Ideas_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ChangeLikesCount",
 			Handler:    _Ideas_ChangeLikesCount_Handler,
+		},
+		{
+			MethodName: "GetIdeasFromSearch",
+			Handler:    _Ideas_GetIdeasFromSearch_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

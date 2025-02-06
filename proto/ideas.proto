@@ -16,6 +16,14 @@ service Ideas {
   rpc GetAllIdeas(GetAllRequest) returns (GetAllResponse);
   rpc GetIdeas(GetIdeasRequest) returns (GetIdeasResponse);
   rpc ChangeLikesCount(ChangeLikesCountRequest) returns (ChangeLikesCountResponse);
+  rpc GetIdeasFromSearch(GetIdeasFromSearchRequest) returns (GetIdeasFromSearchResponse);
+}
+message GetIdeasFromSearchRequest{
+  int64 user_id = 1;
+  string input = 2;
+}
+message GetIdeasFromSearchResponse{
+  repeated IdeaData ideas=1;
 }
 message ChangeLikesCountRequest{
   int64 idea_id= 1;

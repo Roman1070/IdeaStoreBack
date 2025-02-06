@@ -87,7 +87,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.ParseMultipartForm(12 << 20)
+	r.ParseMultipartForm(20 << 20)
 	defer r.Body.Close()
 	file, h, err := r.FormFile("image")
 	if err != nil {
@@ -143,22 +143,62 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to get ideas")
 
-	userId, _ := GetUserIdByRequestWithCookie(r)
+	userId, err := GetUserIdByRequestWithCookie(r)
+	if err != nil {
+		slog.Error("client GetAllIdeas error: " + err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+
 	resp, err := c.api.GetAllIdeas(r.Context(), &ideasv1.GetAllRequest{
 		UserId: userId,
 	})
 	if err != nil {
+		slog.Error("client GetAllIdeas error: " + err.Error())
 		utils.WriteError(w, err.Error())
 		return
 	}
 
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
-
 	result, err := m.Marshal(resp)
 	if err != nil {
+		slog.Error("client GetAllIdeas error: " + err.Error())
 		utils.WriteError(w, err.Error())
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+func (c *IdeasClient) GetIdeasFromSearch(w http.ResponseWriter, r *http.Request) {
+	slog.Info("client started GetIdeasFromSearch")
+
+	userId, err := GetUserIdByRequestWithCookie(r)
+	if err != nil {
+		slog.Error("client GetIdeasFromSearch error: " + err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+	input := r.URL.Query().Get("input")
+
+	resp, err := c.api.GetIdeasFromSearch(r.Context(), &ideasv1.GetIdeasFromSearchRequest{
+		UserId: userId,
+		Input:  input,
+	})
+	if err != nil {
+		slog.Error("client GetIdeasFromSearch error: " + err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
+	result, err := m.Marshal(resp)
+	if err != nil {
+		slog.Error("client GetIdeasFromSearch error: " + err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
@@ -171,9 +211,11 @@ func (c *IdeasClient) GetIdeas(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&idsStringSlice)
 
 	if err != nil {
+		slog.Error("client GetIdeas error: " + err.Error())
 		utils.WriteError(w, err.Error())
 		return
 	}
+
 	ids := []int64{}
 	for _, s := range idsStringSlice.Ids {
 		id, err := strconv.ParseInt(s, 10, 64)
@@ -184,20 +226,24 @@ func (c *IdeasClient) GetIdeas(w http.ResponseWriter, r *http.Request) {
 		}
 		ids = append(ids, id)
 	}
+
 	resp, err := c.api.GetIdeas(r.Context(), &ideasv1.GetIdeasRequest{
 		Ids: ids,
 	})
 	if err != nil {
+		slog.Error("client GetIdeas error: " + err.Error())
 		utils.WriteError(w, err.Error())
 		return
 	}
-	m := protojson.MarshalOptions{EmitDefaultValues: true}
 
+	m := protojson.MarshalOptions{EmitDefaultValues: true}
 	result, err := m.Marshal(resp)
 	if err != nil {
+		slog.Error("client GetIdeas error: " + err.Error())
 		utils.WriteError(w, err.Error())
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }

@@ -39,6 +39,7 @@ func main() {
 	router.HandleFunc("/api/idea", ideasClient.GetIdea).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/ideas", ideasClient.GetAllIdeas).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/ideas", ideasClient.GetIdeas).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/search-ideas", ideasClient.GetIdeasFromSearch).Methods(http.MethodGet, http.MethodOptions)
 
 	router.HandleFunc("/api/board", boardsClient.CreateBoard).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/board", boardsClient.GetBoard).Methods(http.MethodGet, http.MethodOptions)

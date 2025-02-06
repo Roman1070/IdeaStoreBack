@@ -9,4 +9,5 @@ type Idea struct {
 	Tags        string
 	UserID      int64
 	Likes       int32
+	Saved       bool
 }

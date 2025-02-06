@@ -3,7 +3,6 @@ package ideas
 import (
 	"context"
 	"fmt"
-	ideasv1 "idea-store-auth/gen/go/idea"
 	"idea-store-auth/internal/domain/models"
 	"idea-store-auth/internal/grpc/ideas"
 	"log/slog"
@@ -80,7 +79,7 @@ func (i *Ideas) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error)
 	return emptypb.Empty{}, nil
 }
 
-func (i *Ideas) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaData, error) {
+func (i *Ideas) GetAllIdeas(ctx context.Context, userId int64) ([]*models.Idea, error) {
 
 	const op = "service.ideas.GetAllIdeas"
 
@@ -99,7 +98,7 @@ func (i *Ideas) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaD
 	return ideas, nil
 }
 
-func (i *Ideas) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaData, error) {
+func (i *Ideas) GetIdeas(ctx context.Context, ids []int64) ([]*models.Idea, error) {
 
 	const op = "service.ideas.GetIdeas"
 
@@ -116,4 +115,16 @@ func (i *Ideas) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaData,
 	}
 
 	return ideas, nil
+}
+
+func (i *Ideas) GetIdeasFromSearch(ctx context.Context, userId int64, input string) ([]*models.Idea, error) {
+	slog.Info("service started GetIdeasFromSearch")
+
+	resp, err := i.Api.GetIdeasFromSearch(ctx, userId, input)
+	if err != nil {
+		slog.Error("error GetIdeasFromSearch: " + err.Error())
+		return nil, fmt.Errorf("error GetIdeasFromSearch: " + err.Error())
+	}
+
+	return resp, nil
 }

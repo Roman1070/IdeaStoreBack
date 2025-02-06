@@ -3,7 +3,6 @@ package postgre
 import (
 	"context"
 	"fmt"
-	ideasv1 "idea-store-auth/gen/go/idea"
 	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
 	"log/slog"
@@ -113,12 +112,13 @@ func (s *Storage) ChangeLikesCount(ctx context.Context, ideaId int64, increase b
 
 	return newLikesCount, nil
 }
-func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.IdeaData, error) {
+func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*models.Idea, error) {
 	slog.Info("storage started GetAllIdeas")
 
 	const query = `
-		SELECT id,image,name,description,link,tags 
-		FROM ideas;
+		SELECT id,image,name
+		FROM ideas
+		ORDER BY id DESC;
 	`
 
 	var savedIdsResponse *profilesv1.GetSavedIdeasIdsResponse
@@ -141,12 +141,12 @@ func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.Ide
 
 	defer rows.Close()
 
-	var ideas []*ideasv1.IdeaData
+	var ideas []*models.Idea
 	for rows.Next() {
-		idea := new(ideasv1.IdeaData)
-		err = rows.Scan(&idea.Id, &idea.Image, &idea.Name, &idea.Description, &idea.Link, &idea.Tags)
+		idea := new(models.Idea)
+		err = rows.Scan(&idea.ID, &idea.Image, &idea.Name)
 		if userId != -1 {
-			idea.Saved = slices.Contains(savedIdsResponse.IdeasIds, idea.Id)
+			idea.Saved = slices.Contains(savedIdsResponse.IdeasIds, idea.ID)
 		}
 		if err != nil {
 			slog.Error("storage GetAllIdeas error: " + err.Error())
@@ -157,12 +157,57 @@ func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*ideasv1.Ide
 
 	return ideas, nil
 }
+func (s *Storage) GetIdeasFromSearch(ctx context.Context, userId int64, input string) ([]*models.Idea, error) {
+	slog.Info("storage started GetIdeasFromSearch")
 
-func (s *Storage) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaData, error) {
+	const query = `
+		SELECT id,image,name
+		FROM ideas
+		WHERE name LIKE $1 || '%' OR description LIKE $1 || '%' OR tags LIKE $1 || '%'
+		ORDER BY id DESC;
+	`
+	var savedIdsResponse *profilesv1.GetSavedIdeasIdsResponse
+	var err error
+	if userId != -1 {
+		savedIdsResponse, err = s.profilesClient.GetSavedIdeasIds(ctx, &profilesv1.GetSavedIdeasIdsRequest{
+			UserId: userId,
+		})
+	}
+	if err != nil {
+		slog.Error("storage GetIdeasFromSearch error: " + err.Error())
+		return nil, fmt.Errorf("storage GetIdeasFromSearch error: " + err.Error())
+	}
+
+	rows, err := s.db.Query(ctx, query, input)
+	if err != nil {
+		slog.Error("storage GetIdeasFromSearch error: " + err.Error())
+		return nil, fmt.Errorf("storage GetIdeasFromSearch error: " + err.Error())
+	}
+
+	defer rows.Close()
+
+	var ideas []*models.Idea
+	for rows.Next() {
+		idea := new(models.Idea)
+		err = rows.Scan(&idea.ID, &idea.Image, &idea.Name)
+		if userId != -1 {
+			idea.Saved = slices.Contains(savedIdsResponse.IdeasIds, idea.ID)
+		}
+		if err != nil {
+			slog.Error("storage GetIdeasFromSearch error: " + err.Error())
+			return nil, fmt.Errorf("storage GetIdeasFromSearch error: " + err.Error())
+		}
+		ideas = append(ideas, idea)
+	}
+
+	return ideas, nil
+}
+
+func (s *Storage) GetIdeas(ctx context.Context, ids []int64) ([]*models.Idea, error) {
 	slog.Info("storage started to GetIdeas")
 
 	if len(ids) == 0 {
-		return []*ideasv1.IdeaData{}, nil
+		return []*models.Idea{}, nil
 	}
 
 	anySlice := make([]any, len(ids))
@@ -188,10 +233,10 @@ func (s *Storage) GetIdeas(ctx context.Context, ids []int64) ([]*ideasv1.IdeaDat
 		return nil, fmt.Errorf("storage GetIdeas error: " + err.Error())
 	}
 
-	var ideas []*ideasv1.IdeaData
+	var ideas []*models.Idea
 	for rows.Next() {
-		idea := new(ideasv1.IdeaData)
-		err = rows.Scan(&idea.Id, &idea.Image, &idea.Name)
+		idea := new(models.Idea)
+		err = rows.Scan(&idea.ID, &idea.Image, &idea.Name)
 		if err != nil {
 			slog.Error("storage GetIdeas error: " + err.Error())
 			return nil, fmt.Errorf("storage GetIdeas error: " + err.Error())
