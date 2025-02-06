@@ -24,7 +24,7 @@ import (
 
 var (
 	FilesPath     = "/app/files/"
-	NoCookieError = "named cookie not present"
+	NoCookieError = "http: named cookie not present"
 )
 
 type IdeasClient struct {
