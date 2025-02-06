@@ -163,7 +163,7 @@ func (s *Storage) GetIdeasFromSearch(ctx context.Context, userId int64, input st
 	const query = `
 		SELECT id,image,name
 		FROM ideas
-		WHERE name LIKE $1 || '%' OR description LIKE $1 || '%' OR tags LIKE $1 || '%'
+		WHERE name LIKE '%' || $1 || '%' OR description LIKE '%' || $1 || '%' OR tags LIKE '%' || $1 || '%'
 		ORDER BY id DESC;
 	`
 	var savedIdsResponse *profilesv1.GetSavedIdeasIdsResponse
