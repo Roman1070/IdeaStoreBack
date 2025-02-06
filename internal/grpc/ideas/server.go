@@ -97,10 +97,7 @@ func (s *serverAPI) DeleteIdea(ctx context.Context, req *ideasv1.DeleteRequest) 
 func (s *serverAPI) GetAllIdeas(ctx context.Context, req *ideasv1.GetAllRequest) (*ideasv1.GetAllResponse, error) {
 	slog.Info("started to get all ideas")
 
-	ideas, err := s.ideas.GetAllIdeas(ctx, req.UserId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error getting all ideas")
-	}
+	ideas, _ := s.ideas.GetAllIdeas(ctx, req.UserId)
 
 	var result []*ideasv1.IdeaData
 	for _, idea := range ideas {
