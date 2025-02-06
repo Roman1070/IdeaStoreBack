@@ -13,7 +13,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
@@ -145,13 +144,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to get ideas")
 
-	userId, err := GetUserIdByRequestWithCookie(r)
-	if err != nil && !strings.Contains(err.Error(), NoCookieError) {
-		slog.Error("client GetAllIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
-		return
-	}
-
+	userId, _ := GetUserIdByRequestWithCookie(r)
 	resp, err := c.api.GetAllIdeas(r.Context(), &ideasv1.GetAllRequest{
 		UserId: userId,
 	})
