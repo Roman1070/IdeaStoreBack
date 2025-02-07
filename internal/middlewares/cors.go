@@ -7,9 +7,10 @@ import (
 
 func setupCORS(w http.ResponseWriter, req *http.Request, sessionLifetime string) {
 	allowedOrigins := map[string]struct{}{
-		"http://0.0.0.0":        {},
-		"http://0.0.0.0:8000":   {},
-		"http://176.114.67.252": {},
+		"http://0.0.0.0:3000":     {},
+		"http://0.0.0.0:8000":     {},
+		"http://176.114.67.252":   {},
+		"https://ideastore.space": {},
 	}
 	origin := req.Header.Get("Origin")
 	if _, ok := allowedOrigins[origin]; ok {
