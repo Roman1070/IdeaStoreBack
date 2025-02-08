@@ -145,6 +145,22 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to get ideas")
 
+	limitStr := r.URL.Query().Get("limit")
+	limit, err := strconv.ParseInt(limitStr, 10, 32)
+	if err != nil {
+		slog.Error("client GetAllIdeas error: " + err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	offsetStr := r.URL.Query().Get("offset")
+	offset, err := strconv.ParseInt(offsetStr, 10, 32)
+	if err != nil {
+		slog.Error("client GetAllIdeas error: " + err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+
 	userId, err := GetUserIdByRequestWithCookie(r)
 	if err != nil && !strings.Contains(err.Error(), NoCookieError) {
 		slog.Error("client GetAllIdeas error: " + err.Error())
@@ -154,6 +170,8 @@ func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := c.api.GetAllIdeas(r.Context(), &ideasv1.GetAllRequest{
 		UserId: userId,
+		Limit:  int32(limit),
+		Offset: int32(offset),
 	})
 	if err != nil {
 		slog.Error("client GetAllIdeas error: " + err.Error())
