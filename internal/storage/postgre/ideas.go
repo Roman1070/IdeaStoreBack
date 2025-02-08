@@ -118,9 +118,9 @@ func (s *Storage) GetAllIdeas(ctx context.Context, userId int64, limit, offset i
 	const query = `
 		SELECT id,image,name
 		FROM ideas
+		ORDER BY likes_count DESC, id ASC
 		LIMIT $1 
-		OFFSET $2 
-		ORDER BY likes_count DESC, id ASC;
+		OFFSET $2;
 	`
 
 	var savedIdsResponse *profilesv1.GetSavedIdeasIdsResponse
