@@ -79,7 +79,7 @@ func (i *Ideas) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error)
 	return emptypb.Empty{}, nil
 }
 
-func (i *Ideas) GetAllIdeas(ctx context.Context, userId int64) ([]*models.Idea, error) {
+func (i *Ideas) GetAllIdeas(ctx context.Context, userId int64, limit, offset int32) ([]*models.Idea, error) {
 
 	const op = "service.ideas.GetAllIdeas"
 
@@ -88,7 +88,7 @@ func (i *Ideas) GetAllIdeas(ctx context.Context, userId int64) ([]*models.Idea, 
 	)
 	log.Info("Getting all ideas...")
 
-	ideas, err := i.Api.GetAllIdeas(ctx, userId)
+	ideas, err := i.Api.GetAllIdeas(ctx, userId, limit, offset)
 
 	if err != nil {
 		log.Error(err.Error())

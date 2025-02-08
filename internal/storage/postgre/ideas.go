@@ -112,13 +112,13 @@ func (s *Storage) ChangeLikesCount(ctx context.Context, ideaId int64, increase b
 
 	return newLikesCount, nil
 }
-func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*models.Idea, error) {
+func (s *Storage) GetAllIdeas(ctx context.Context, userId int64, limit, offset int32) ([]*models.Idea, error) {
 	slog.Info("storage started GetAllIdeas")
 
 	const query = `
 		SELECT id,image,name
 		FROM ideas
-		ORDER BY id DESC;
+		LIMIT $1 OFFSET $2;
 	`
 
 	var savedIdsResponse *profilesv1.GetSavedIdeasIdsResponse
@@ -133,7 +133,7 @@ func (s *Storage) GetAllIdeas(ctx context.Context, userId int64) ([]*models.Idea
 		return nil, fmt.Errorf("storage GetAllIdeas error: " + err.Error())
 	}
 
-	rows, err := s.db.Query(ctx, query)
+	rows, err := s.db.Query(ctx, query, limit, offset)
 	if err != nil {
 		slog.Error("storage GetAllIdeas error: " + err.Error())
 		return nil, fmt.Errorf("storage GetAllIdeas error: " + err.Error())

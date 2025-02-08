@@ -23,7 +23,7 @@ type Ideas interface {
 		id int64,
 	) (idea models.Idea, err error)
 	DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error)
-	GetAllIdeas(ctx context.Context, userId int64) ([]*models.Idea, error)
+	GetAllIdeas(ctx context.Context, userId int64, limit, offset int32) ([]*models.Idea, error)
 	GetIdeas(ctx context.Context, ids []int64) ([]*models.Idea, error)
 	ChangeLikesCount(ctx context.Context, ideaId int64, increase bool) (int64, error)
 	GetIdeasFromSearch(ctx context.Context, userId int64, input string) ([]*models.Idea, error)
@@ -97,7 +97,7 @@ func (s *serverAPI) DeleteIdea(ctx context.Context, req *ideasv1.DeleteRequest) 
 func (s *serverAPI) GetAllIdeas(ctx context.Context, req *ideasv1.GetAllRequest) (*ideasv1.GetAllResponse, error) {
 	slog.Info("started to get all ideas")
 
-	ideas, err := s.ideas.GetAllIdeas(ctx, req.UserId)
+	ideas, err := s.ideas.GetAllIdeas(ctx, req.UserId, req.Limit, req.Offset)
 	if err != nil {
 		slog.Error("client GetAllIdeas error: " + err.Error())
 		return nil, fmt.Errorf("client GetAllIdeas error: " + err.Error())
