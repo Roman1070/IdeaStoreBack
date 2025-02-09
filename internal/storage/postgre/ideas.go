@@ -224,7 +224,7 @@ func (s *Storage) GetIdeas(ctx context.Context, ids []int64, limit, offset int32
 
 	idsRequestString := "("
 	i := 1
-	for ; i < len(ids)+2; i++ {
+	for ; i < len(ids); i++ {
 		idsRequestString += fmt.Sprintf("$%v,", i+2)
 	}
 
