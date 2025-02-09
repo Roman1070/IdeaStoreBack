@@ -380,6 +380,7 @@ func (c *ProfilesClient) IsIdeaSaved(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *ProfilesClient) GetSavedIdeas(w http.ResponseWriter, r *http.Request) {
+	slog.Info("client started GetSavedIdeas")
 	userId, err := GetUserIdByRequestWithCookie(r)
 	if err != nil {
 		slog.Error("cliet GetSavedIdeas error: " + err.Error())

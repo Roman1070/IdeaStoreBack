@@ -207,7 +207,7 @@ func (s *Storage) GetIdeasFromSearch(ctx context.Context, userId int64, input st
 }
 
 func (s *Storage) GetIdeas(ctx context.Context, ids []int64, limit, offset int32) ([]*models.Idea, error) {
-	slog.Info("storage started to GetIdeas")
+	slog.Info("storage started to GetIdeas, ids=" + fmt.Sprint(ids))
 	if limit == 0 {
 		limit = math.MaxInt32
 	}
@@ -216,14 +216,14 @@ func (s *Storage) GetIdeas(ctx context.Context, ids []int64, limit, offset int32
 	}
 
 	anySlice := make([]any, len(ids)+2)
-	anySlice[0] = limit
-	anySlice[1] = offset
+	anySlice[0] = int64(limit)
+	anySlice[1] = int64(offset)
 	for i, v := range ids {
 		anySlice[i+2] = v
 	}
 
 	idsRequestString := "("
-	i := 3
+	i := 1
 	for ; i < len(ids)+2; i++ {
 		idsRequestString += fmt.Sprintf("$%v,", i)
 	}
