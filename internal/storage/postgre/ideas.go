@@ -225,10 +225,10 @@ func (s *Storage) GetIdeas(ctx context.Context, ids []int64, limit, offset int32
 	idsRequestString := "("
 	i := 1
 	for ; i < len(ids)+2; i++ {
-		idsRequestString += fmt.Sprintf("$%v,", i)
+		idsRequestString += fmt.Sprintf("$%v,", i+2)
 	}
 
-	idsRequestString += fmt.Sprintf("$%v)", i)
+	idsRequestString += fmt.Sprintf("$%v)", i+2)
 	query := fmt.Sprintf(`
 		SELECT id,image,name 
 		FROM ideas 
