@@ -394,23 +394,6 @@ func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64, limit, offset
 		return nil, fmt.Errorf("storage GetSavedIdeas error: %v", err.Error())
 	}
 
-	for _, pair := range pairsSlice {
-		resp, err := s.ideasClient.GetIdea(ctx, &ideasv1.GetRequest{
-			IdeaId: pair.ideaId,
-		})
-		if err != nil {
-			slog.Error("storage GetSavedIdeas error: " + err.Error())
-			return nil, fmt.Errorf("storage GetSavedIdeas error: %v", err.Error())
-		}
-
-		ideas = append(ideas, &profilesv1.IdeaData{
-			Id:      pair.ideaId,
-			Name:    resp.Name,
-			Image:   resp.Image,
-			BoardId: pair.boardId,
-		})
-	}
-
 	return ideas, nil
 }
 
