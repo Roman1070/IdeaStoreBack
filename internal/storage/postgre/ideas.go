@@ -215,7 +215,7 @@ func (s *Storage) GetIdeas(ctx context.Context, ids []int64, limit, offset int32
 		return []*models.Idea{}, nil
 	}
 
-	anySlice := make([]any, len(ids))
+	anySlice := make([]any, len(ids)+2)
 	anySlice[0] = limit
 	anySlice[1] = offset
 	for i, v := range ids {
