@@ -373,14 +373,16 @@ func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64, limit, offset
 		idsSlice = append(idsSlice, pair.ideaId)
 	}
 
-	ideas := make([]*profilesv1.IdeaData, 0, 20)
 	resp, err := s.ideasClient.GetIdeas(ctx, &ideasv1.GetIdeasRequest{
 		Ids:    idsSlice,
 		Limit:  limit,
 		Offset: offset,
 	})
-	slog.Info("recieved SavedIdeas: " + fmt.Sprint(resp.Ideas))
+	ideas := make([]*profilesv1.IdeaData, 0, len(resp.Ideas))
+	slog.Info("recieved SavedIdeas: " + fmt.Sprint(resp.Ideas) + "\n")
+	slog.Info(fmt.Sprint("pairsSlice len = %v", len(pairsSlice)))
 	for i, idea := range resp.Ideas {
+		slog.Info(fmt.Sprintf("i=%v", i))
 		ideas = append(ideas, &profilesv1.IdeaData{
 			Id:      idea.Id,
 			Name:    idea.Name,
