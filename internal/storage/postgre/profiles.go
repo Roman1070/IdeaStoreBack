@@ -379,7 +379,7 @@ func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64, limit, offset
 		Limit:  limit,
 		Offset: offset,
 	})
-
+	slog.Info("recieved SavedIdeas: " + fmt.Sprint(resp.Ideas))
 	for i, idea := range resp.Ideas {
 		ideas = append(ideas, &profilesv1.IdeaData{
 			Id:      idea.Id,
