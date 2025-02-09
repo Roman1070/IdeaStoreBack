@@ -347,7 +347,7 @@ func (s *Storage) IsIdeaLiked(ctx context.Context, userId, ideaId int64) (bool, 
 	return slices.Contains(likedIdeasSlice, ideaId), nil
 }
 
-func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error) {
+func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64, limit, offset int32) ([]*profilesv1.IdeaData, error) {
 	slog.Info("storage start GetSavedIdeas")
 
 	const query = `
@@ -368,16 +368,41 @@ func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv
 		return nil, fmt.Errorf("storage GetSavedIdeas error: %v", err.Error())
 	}
 
-	ideas := make([]*profilesv1.IdeaData, 0, 20)
+	idsSlice := []int64{}
 	for _, pair := range pairsSlice {
+		idsSlice = append(idsSlice, pair.ideaId)
+	}
 
+	ideas := make([]*profilesv1.IdeaData, 0, 20)
+	resp, err := s.ideasClient.GetIdeas(ctx, &ideasv1.GetIdeasRequest{
+		Ids:    idsSlice,
+		Limit:  limit,
+		Offset: offset,
+	})
+
+	for i, idea := range resp.Ideas {
+		ideas = append(ideas, &profilesv1.IdeaData{
+			Id:      idea.Id,
+			Name:    idea.Name,
+			Image:   idea.Image,
+			BoardId: pairsSlice[i].boardId,
+		})
+	}
+
+	if err != nil {
+		slog.Error("storage GetSavedIdeas error: " + err.Error())
+		return nil, fmt.Errorf("storage GetSavedIdeas error: %v", err.Error())
+	}
+
+	for _, pair := range pairsSlice {
 		resp, err := s.ideasClient.GetIdea(ctx, &ideasv1.GetRequest{
 			IdeaId: pair.ideaId,
 		})
 		if err != nil {
-			slog.Error("storage IsIdeaSaved error: " + err.Error())
-			return nil, err
+			slog.Error("storage GetSavedIdeas error: " + err.Error())
+			return nil, fmt.Errorf("storage GetSavedIdeas error: %v", err.Error())
 		}
+
 		ideas = append(ideas, &profilesv1.IdeaData{
 			Id:      pair.ideaId,
 			Name:    resp.Name,
@@ -385,6 +410,7 @@ func (s *Storage) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv
 			BoardId: pair.boardId,
 		})
 	}
+
 	return ideas, nil
 }
 

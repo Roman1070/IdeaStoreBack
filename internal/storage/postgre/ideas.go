@@ -6,6 +6,7 @@ import (
 	profilesv1 "idea-store-auth/gen/go/profiles"
 	"idea-store-auth/internal/domain/models"
 	"log/slog"
+	"math"
 	"slices"
 
 	"github.com/jackc/pgx/v5"
@@ -205,9 +206,11 @@ func (s *Storage) GetIdeasFromSearch(ctx context.Context, userId int64, input st
 	return ideas, nil
 }
 
-func (s *Storage) GetIdeas(ctx context.Context, ids []int64) ([]*models.Idea, error) {
+func (s *Storage) GetIdeas(ctx context.Context, ids []int64, limit, offset int32) ([]*models.Idea, error) {
 	slog.Info("storage started to GetIdeas")
-
+	if limit == 0 {
+		limit = math.MaxInt32
+	}
 	if len(ids) == 0 {
 		return []*models.Idea{}, nil
 	}
@@ -227,9 +230,11 @@ func (s *Storage) GetIdeas(ctx context.Context, ids []int64) ([]*models.Idea, er
 	query := fmt.Sprintf(`
 		SELECT id,image,name 
 		FROM ideas 
-		WHERE id IN %v;`, idsRequestString)
+		WHERE id IN %v
+		LIMIT $1
+		OFFSET $2;`, idsRequestString)
 
-	rows, err := s.db.Query(ctx, query, anySlice...)
+	rows, err := s.db.Query(ctx, query, limit, offset)
 	if err != nil {
 		slog.Error("storage GetIdeas error: " + err.Error())
 		return nil, fmt.Errorf("storage GetIdeas error: " + err.Error())

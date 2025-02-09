@@ -22,7 +22,7 @@ type Profiles interface {
 	ToggleLikeIdea(ctx context.Context, userId, ideaId int64) (bool, int64, error)
 	IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool, int64, error)
 	IsIdeaLiked(ctx context.Context, userId, ideaId int64) (bool, error)
-	GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error)
+	GetSavedIdeas(ctx context.Context, userId int64, limit, offset int32) ([]*profilesv1.IdeaData, error)
 	GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64, error)
 	MoveIdeasToBoard(ctx context.Context, userId, oldBoardId, newBoardId int64) (*emptypb.Empty, error)
 	AddBoardToProfile(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error)
@@ -170,7 +170,7 @@ func (s *serverAPI) IsIdeaSaved(ctx context.Context, req *profilesv1.IsIdeaSaved
 func (s *serverAPI) GetSavedIdeas(ctx context.Context, req *profilesv1.GetSavedIdeasRequest) (*profilesv1.GetSavedIdeasResponse, error) {
 	slog.Info("grpc start GetSavedIdeas")
 
-	resp, err := s.profiles.GetSavedIdeas(ctx, req.UserId)
+	resp, err := s.profiles.GetSavedIdeas(ctx, req.UserId, req.Limit, req.Offset)
 	if err != nil {
 		slog.Error(err.Error())
 		return nil, fmt.Errorf("grpc error GetSavedIdeas: " + err.Error())

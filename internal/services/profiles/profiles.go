@@ -137,10 +137,10 @@ func (p *Profiles) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool,
 	return saved, boardId, nil
 }
 
-func (p *Profiles) GetSavedIdeas(ctx context.Context, userId int64) ([]*profilesv1.IdeaData, error) {
+func (p *Profiles) GetSavedIdeas(ctx context.Context, userId int64, limit, offset int32) ([]*profilesv1.IdeaData, error) {
 	slog.Info("service start GetSavedIdeas")
 
-	resp, err := p.Api.GetSavedIdeas(ctx, userId)
+	resp, err := p.Api.GetSavedIdeas(ctx, userId, limit, offset)
 
 	if err != nil {
 		slog.Error("service GetSavedIdeas error: " + err.Error())

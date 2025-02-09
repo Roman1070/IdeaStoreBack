@@ -98,20 +98,12 @@ func (i *Ideas) GetAllIdeas(ctx context.Context, userId int64, limit, offset int
 	return ideas, nil
 }
 
-func (i *Ideas) GetIdeas(ctx context.Context, ids []int64) ([]*models.Idea, error) {
-
-	const op = "service.ideas.GetIdeas"
-
-	log := i.log.With(
-		slog.String("op", op),
-	)
-	log.Info("Getting ideas...")
-
-	ideas, err := i.Api.GetIdeas(ctx, ids)
-
+func (i *Ideas) GetIdeas(ctx context.Context, ids []int64, limit, offset int32) ([]*models.Idea, error) {
+	slog.Info("service started to GetIdeas")
+	ideas, err := i.Api.GetIdeas(ctx, ids, limit, offset)
 	if err != nil {
-		log.Error(err.Error())
-		return nil, fmt.Errorf("%s: %v", op, "Internal error")
+		slog.Error("service GetIdeas error: " + err.Error())
+		return nil, fmt.Errorf("service GetIdeas error: " + err.Error())
 	}
 
 	return ideas, nil
