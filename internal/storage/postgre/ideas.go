@@ -216,13 +216,15 @@ func (s *Storage) GetIdeas(ctx context.Context, ids []int64, limit, offset int32
 	}
 
 	anySlice := make([]any, len(ids))
+	anySlice[0] = limit
+	anySlice[1] = offset
 	for i, v := range ids {
-		anySlice[i] = v
+		anySlice[i+2] = v
 	}
 
 	idsRequestString := "("
-	i := 1
-	for ; i < len(ids); i++ {
+	i := 3
+	for ; i < len(ids)+2; i++ {
 		idsRequestString += fmt.Sprintf("$%v,", i)
 	}
 
@@ -234,7 +236,7 @@ func (s *Storage) GetIdeas(ctx context.Context, ids []int64, limit, offset int32
 		LIMIT $1
 		OFFSET $2;`, idsRequestString)
 
-	rows, err := s.db.Query(ctx, query, limit, offset)
+	rows, err := s.db.Query(ctx, query, anySlice...)
 	if err != nil {
 		slog.Error("storage GetIdeas error: " + err.Error())
 		return nil, fmt.Errorf("storage GetIdeas error: " + err.Error())

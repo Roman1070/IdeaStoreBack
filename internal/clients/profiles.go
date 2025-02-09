@@ -380,16 +380,33 @@ func (c *ProfilesClient) IsIdeaSaved(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *ProfilesClient) GetSavedIdeas(w http.ResponseWriter, r *http.Request) {
-
 	userId, err := GetUserIdByRequestWithCookie(r)
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("cliet GetSavedIdeas error: " + err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	limitStr := r.URL.Query().Get("limit")
+	limit, err := strconv.ParseInt(limitStr, 10, 32)
+	if err != nil {
+		slog.Error("client GetSavedIdeas error: " + err.Error())
+		utils.WriteError(w, err.Error())
+		return
+	}
+
+	offsetStr := r.URL.Query().Get("offset")
+	offset, err := strconv.ParseInt(offsetStr, 10, 32)
+	if err != nil {
+		slog.Error("client GetSavedIdeas error: " + err.Error())
 		utils.WriteError(w, err.Error())
 		return
 	}
 
 	resp, err := c.api.GetSavedIdeas(r.Context(), &profilesv1.GetSavedIdeasRequest{
 		UserId: userId,
+		Limit:  int32(limit),
+		Offset: int32(offset),
 	})
 	if err != nil {
 		slog.Error("c.api.GetSavedIdeas err: " + err.Error())
