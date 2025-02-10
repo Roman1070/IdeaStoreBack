@@ -29,7 +29,8 @@ var (
 )
 
 type IdeasClient struct {
-	api ideasv1.IdeasClient
+	api         ideasv1.IdeasClient
+	maxFileSize int64
 }
 type getIdeaRequest struct {
 	Id int64 `json:"id"`
@@ -89,7 +90,7 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.ParseMultipartForm(20 << 20)
+	r.ParseMultipartForm(c.maxFileSize << 20)
 	defer r.Body.Close()
 	file, h, err := r.FormFile("image")
 	if err != nil {
@@ -283,7 +284,13 @@ func NewIdeasClient(addr string, timeout time.Duration, retriesCount int) (*Idea
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+
+	maxSize, err := strconv.ParseInt(os.Getenv("MAX_FILE_SIZE"), 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 	return &IdeasClient{
-		api: ideasv1.NewIdeasClient(cc),
+		api:         ideasv1.NewIdeasClient(cc),
+		maxFileSize: maxSize,
 	}, nil
 }
