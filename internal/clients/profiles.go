@@ -28,8 +28,6 @@ type ProfilesClient struct {
 }
 
 func NewProfilesClient(addr string, timeout time.Duration, retriesCount int) (*ProfilesClient, error) {
-	const op = "client.boards.New"
-
 	retryOptions := []grpcretry.CallOption{
 		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),
 		grpcretry.WithMax(uint(retriesCount)),
@@ -41,7 +39,8 @@ func NewProfilesClient(addr string, timeout time.Duration, retriesCount int) (*P
 	))
 
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		slog.Error("client NewProfilesClient error: " + err.Error())
+		return nil, fmt.Errorf("client NewProfilesClient error: " + err.Error())
 	}
 	return &ProfilesClient{
 		api: profilesv1.NewProfilesClient(cc),
@@ -54,65 +53,71 @@ func (c *ProfilesClient) CreateProfile(w http.ResponseWriter, r *http.Request) {
 		Email string `json:"email"`
 		Name  string `json:"name"`
 	}
+
 	var req request
-
 	err := json.NewDecoder(r.Body).Decode(&req)
-
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateProfile error : " + err.Error())
 		return
 	}
+
 	_, err = c.api.CreateProfile(r.Context(), &profilesv1.CreateProfileRequest{
 		Id:    req.Id,
 		Email: req.Email,
 		Name:  req.Name,
 	})
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, "Error creatingprofile: "+err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateProfile error : " + err.Error())
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
 func (c *ProfilesClient) ToggleLikeIdea(w http.ResponseWriter, r *http.Request) {
 	userId, err := GetUserIdByRequestWithCookie(r)
-
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, "Error ToggleLikeIdea: "+err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client ToggleLikeIdea error : " + err.Error())
 		return
 	}
+
 	type request struct {
 		IdeaIdStr string `json:"ideaId"`
 	}
 	var req request
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, "Error ToggleLikeIdea: "+err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client ToggleLikeIdea error : " + err.Error())
 		return
 	}
-	ideaId, err := strconv.ParseInt(req.IdeaIdStr, 10, 64)
 
+	ideaId, err := strconv.ParseInt(req.IdeaIdStr, 10, 64)
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, "Error ToggleLikeIdea: "+err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client ToggleLikeIdea error : " + err.Error())
 		return
 	}
+
 	resp, err := c.api.ToggleLikeIdea(r.Context(), &profilesv1.ToggleLikeIdeaRequest{
 		UserId: userId,
 		IdeaId: ideaId,
 	})
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client ToggleLikeIdea error : " + err.Error())
 		return
 	}
+
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
 
 	result, err := m.Marshal(resp)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client ToggleLikeIdea error : " + err.Error())
 		return
 	}
 
@@ -122,16 +127,16 @@ func (c *ProfilesClient) ToggleLikeIdea(w http.ResponseWriter, r *http.Request) 
 func (c *ProfilesClient) IsIdeaLiked(w http.ResponseWriter, r *http.Request) {
 	userId, err := GetUserIdByRequestWithCookie(r)
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, "Error IsIdeaLiked: "+err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client IsIdeaLiked error : " + err.Error())
 		return
 	}
 
 	ideaIdStr := r.URL.Query().Get("id")
 	ideaId, err := strconv.ParseInt(ideaIdStr, 10, 64)
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, "Error IsIdeaLiked: "+err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client IsIdeaLiked error : " + err.Error())
 		return
 	}
 
@@ -140,15 +145,16 @@ func (c *ProfilesClient) IsIdeaLiked(w http.ResponseWriter, r *http.Request) {
 		IdeaId: ideaId,
 	})
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, "Error IsIdeaLiked: "+err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client IsIdeaLiked error : " + err.Error())
 		return
 	}
 
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
 	result, err := m.Marshal(resp)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client IsIdeaLiked error : " + err.Error())
 		return
 	}
 
@@ -162,7 +168,7 @@ func (c *ProfilesClient) GetCurrentProfile(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		if !strings.Contains(err.Error(), NoCookieError) {
 			slog.Error("Error getting profile: " + err.Error())
-			utils.WriteError(w, "Error getting profile: "+err.Error())
+			utils.WriteError(w, "Internal error")
 			return
 		} else {
 			authorized = false
@@ -174,12 +180,12 @@ func (c *ProfilesClient) GetCurrentProfile(w http.ResponseWriter, r *http.Reques
 		resp, err = c.api.GetProfile(r.Context(), &profilesv1.GetProfileRequest{
 			Id: userId,
 		})
-
 		if err != nil {
-			slog.Error(err.Error())
-			utils.WriteError(w, "Error getting profile: "+err.Error())
+			utils.WriteError(w, "Internal error")
+			slog.Error("client GetCurrentProfile error : " + err.Error())
 			return
 		}
+
 	} else {
 		resp = &profilesv1.GetProfileResponse{
 			Data: &profilesv1.ProfileData{
@@ -191,7 +197,8 @@ func (c *ProfilesClient) GetCurrentProfile(w http.ResponseWriter, r *http.Reques
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
 	result, err := m.Marshal(resp)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetCurrentProfile error : " + err.Error())
 		return
 	}
 
@@ -201,19 +208,19 @@ func (c *ProfilesClient) GetCurrentProfile(w http.ResponseWriter, r *http.Reques
 func (c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Query().Get("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
-
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, "Error getting profile: "+err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetProfile error : " + err.Error())
 		return
 	}
+
 	resp, err := c.api.GetProfile(r.Context(), &profilesv1.GetProfileRequest{
 		Id: id,
 	})
 
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, "Error getting profile: "+err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetProfile error : " + err.Error())
 		return
 	}
 
@@ -221,7 +228,8 @@ func (c *ProfilesClient) GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	result, err := m.Marshal(resp)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetProfile error : " + err.Error())
 		return
 	}
 
@@ -235,25 +243,29 @@ func (c *ProfilesClient) GetProfilesFromSearch(w http.ResponseWriter, r *http.Re
 	})
 
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetProfilesFromSearch error : " + err.Error())
 		return
 	}
-	result, err := json.Marshal(&resp.Profiles)
 
+	result, err := json.Marshal(&resp.Profiles)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetProfilesFromSearch error : " + err.Error())
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
 func (c *ProfilesClient) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	userId, err := GetUserIdByRequestWithCookie(r)
-
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client UpdateProfile error : " + err.Error())
 		return
 	}
+
 	avatar := ""
 	r.ParseMultipartForm(12 << 20)
 	defer r.Body.Close()
@@ -265,15 +277,15 @@ func (c *ProfilesClient) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		path := "/app/files/" + hex.EncodeToString(hash[:]) + ext
 		tmpfile, err := os.Create(path)
 		if err != nil {
-			slog.Error(err.Error())
-			utils.WriteError(w, err.Error())
+			utils.WriteError(w, "Internal error")
+			slog.Error("client UpdateProfile error : " + err.Error())
 			return
 		}
 		defer tmpfile.Close()
 		_, err = io.Copy(tmpfile, file)
 		if err != nil {
-			slog.Error(err.Error())
-			utils.WriteError(w, err.Error())
+			utils.WriteError(w, "Internal error")
+			slog.Error("client UpdateProfile error : " + err.Error())
 			return
 		}
 		avatar = hex.EncodeToString(hash[:]) + ext
@@ -290,17 +302,18 @@ func (c *ProfilesClient) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := c.api.UpdateProfile(r.Context(), request)
-
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client UpdateProfile error : " + err.Error())
 		return
 	}
 
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
+
 	result, err := m.Marshal(resp)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client UpdateProfile error : " + err.Error())
 		return
 	}
 
@@ -310,36 +323,42 @@ func (c *ProfilesClient) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 }
 func (c *ProfilesClient) ToggleSaveIdea(w http.ResponseWriter, r *http.Request) {
 	userId, err := GetUserIdByRequestWithCookie(r)
-
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client ToggleSaveIdea error : " + err.Error())
 		return
 	}
 
 	boardId, err := strconv.ParseInt(r.URL.Query().Get("board_id"), 10, 64)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client ToggleSaveIdea error : " + err.Error())
 		return
 	}
 
 	ideaId, err := strconv.ParseInt(r.URL.Query().Get("idea_id"), 10, 64)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client ToggleSaveIdea error : " + err.Error())
 		return
 	}
+
 	resp, err := c.api.ToggleSaveIdea(r.Context(), &profilesv1.ToggleSaveRequest{
 		UserId:  userId,
 		BoardId: boardId,
 		IdeaId:  ideaId,
 	})
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client ToggleSaveIdea error : " + err.Error())
 		return
 	}
+
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
 	result, err := m.Marshal(resp)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client ToggleSaveIdea error : " + err.Error())
 		return
 	}
 
@@ -348,30 +367,35 @@ func (c *ProfilesClient) ToggleSaveIdea(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *ProfilesClient) IsIdeaSaved(w http.ResponseWriter, r *http.Request) {
-
 	userId, err := GetUserIdByRequestWithCookie(r)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client IsIdeaSaved error : " + err.Error())
 		return
 	}
 
 	ideaId, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client IsIdeaSaved error : " + err.Error())
 		return
 	}
+
 	resp, err := c.api.IsIdeaSaved(r.Context(), &profilesv1.IsIdeaSavedRequest{
 		UserId: userId,
 		IdeaId: ideaId,
 	})
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client IsIdeaSaved error : " + err.Error())
 		return
 	}
+
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
 	result, err := m.Marshal(resp)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client IsIdeaSaved error : " + err.Error())
 		return
 	}
 
@@ -383,24 +407,24 @@ func (c *ProfilesClient) GetSavedIdeas(w http.ResponseWriter, r *http.Request) {
 	slog.Info("client started GetSavedIdeas")
 	userId, err := GetUserIdByRequestWithCookie(r)
 	if err != nil {
-		slog.Error("cliet GetSavedIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetSavedIdeas error : " + err.Error())
 		return
 	}
 
 	limitStr := r.URL.Query().Get("limit")
 	limit, err := strconv.ParseInt(limitStr, 10, 32)
 	if err != nil {
-		slog.Error("client GetSavedIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetSavedIdeas error : " + err.Error())
 		return
 	}
 
 	offsetStr := r.URL.Query().Get("offset")
 	offset, err := strconv.ParseInt(offsetStr, 10, 32)
 	if err != nil {
-		slog.Error("client GetSavedIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetSavedIdeas error : " + err.Error())
 		return
 	}
 
@@ -410,15 +434,15 @@ func (c *ProfilesClient) GetSavedIdeas(w http.ResponseWriter, r *http.Request) {
 		Offset: int32(offset),
 	})
 	if err != nil {
-		slog.Error("c.api.GetSavedIdeas err: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetSavedIdeas error : " + err.Error())
 		return
 	}
 
 	result, err := json.Marshal(resp)
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetSavedIdeas error : " + err.Error())
 		return
 	}
 

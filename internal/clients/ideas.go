@@ -85,8 +85,8 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 
 	userId, err := GetUserIdByRequestWithCookie(r)
 	if err != nil {
-		slog.Error("Error parsing JWT: " + err.Error())
-		utils.WriteError(w, "Error parsing JWT: "+err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateIdea error : " + err.Error())
 		return
 	}
 
@@ -94,10 +94,11 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	file, h, err := r.FormFile("image")
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateIdea error : " + err.Error())
 		return
 	}
+
 	defer file.Close()
 	ext := filepath.Ext(h.Filename)
 	hash := md5.Sum([]byte(h.Filename))
@@ -105,16 +106,17 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 	tmpfile, err := os.Create(path)
 
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateIdea error : " + err.Error())
 		return
 	}
+
 	defer tmpfile.Close()
 
 	_, err = io.Copy(tmpfile, file)
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateIdea error : " + err.Error())
 		return
 	}
 
@@ -129,14 +131,15 @@ func (c *IdeasClient) Create(w http.ResponseWriter, r *http.Request) {
 
 	createResponse, err := c.api.CreateIdea(r.Context(), request)
 	if err != nil {
-		slog.Error(err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateIdea error : " + err.Error())
 		return
 	}
 
 	result, err := json.Marshal(createResponse)
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateIdea error : " + err.Error())
 		return
 	}
 
@@ -149,23 +152,23 @@ func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
 	limit, err := strconv.ParseInt(limitStr, 10, 32)
 	if err != nil {
-		slog.Error("client GetAllIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetAllIdeas error : " + err.Error())
 		return
 	}
 
 	offsetStr := r.URL.Query().Get("offset")
 	offset, err := strconv.ParseInt(offsetStr, 10, 32)
 	if err != nil {
-		slog.Error("client GetAllIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetAllIdeas error : " + err.Error())
 		return
 	}
 
 	userId, err := GetUserIdByRequestWithCookie(r)
 	if err != nil && !strings.Contains(err.Error(), NoCookieError) {
-		slog.Error("client GetAllIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetAllIdeas error : " + err.Error())
 		return
 	}
 
@@ -175,16 +178,16 @@ func (c *IdeasClient) GetAllIdeas(w http.ResponseWriter, r *http.Request) {
 		Offset: int32(offset),
 	})
 	if err != nil {
-		slog.Error("client GetAllIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetAllIdeas error : " + err.Error())
 		return
 	}
 
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
 	result, err := m.Marshal(resp)
 	if err != nil {
-		slog.Error("client GetAllIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetAllIdeas error : " + err.Error())
 		return
 	}
 
@@ -196,10 +199,11 @@ func (c *IdeasClient) GetIdeasFromSearch(w http.ResponseWriter, r *http.Request)
 
 	userId, err := GetUserIdByRequestWithCookie(r)
 	if err != nil {
-		slog.Error("client GetIdeasFromSearch error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetIdeasFromSearch error : " + err.Error())
 		return
 	}
+
 	input := r.URL.Query().Get("input")
 
 	resp, err := c.api.GetIdeasFromSearch(r.Context(), &ideasv1.GetIdeasFromSearchRequest{
@@ -207,16 +211,16 @@ func (c *IdeasClient) GetIdeasFromSearch(w http.ResponseWriter, r *http.Request)
 		Input:  input,
 	})
 	if err != nil {
-		slog.Error("client GetIdeasFromSearch error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetIdeasFromSearch error : " + err.Error())
 		return
 	}
 
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
 	result, err := m.Marshal(resp)
 	if err != nil {
-		slog.Error("client GetIdeasFromSearch error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetIdeasFromSearch error : " + err.Error())
 		return
 	}
 
@@ -225,26 +229,29 @@ func (c *IdeasClient) GetIdeasFromSearch(w http.ResponseWriter, r *http.Request)
 }
 func (c *IdeasClient) GetIdeas(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Client started to get ideas")
+
 	type ideasIds struct {
 		Ids []string `json:"ids"`
 	}
+
 	idsStringSlice := ideasIds{}
 	err := json.NewDecoder(r.Body).Decode(&idsStringSlice)
 
 	if err != nil {
-		slog.Error("client GetIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetIdeas error : " + err.Error())
 		return
 	}
 
 	ids := []int64{}
 	for _, s := range idsStringSlice.Ids {
 		id, err := strconv.ParseInt(s, 10, 64)
-
 		if err != nil {
-			utils.WriteError(w, err.Error())
+			utils.WriteError(w, "Internal error")
+			slog.Error("client GetIdeas error : " + err.Error())
 			return
 		}
+
 		ids = append(ids, id)
 	}
 
@@ -252,16 +259,16 @@ func (c *IdeasClient) GetIdeas(w http.ResponseWriter, r *http.Request) {
 		Ids: ids,
 	})
 	if err != nil {
-		slog.Error("client GetIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetIdeas error : " + err.Error())
 		return
 	}
 
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
 	result, err := m.Marshal(resp)
 	if err != nil {
-		slog.Error("client GetIdeas error: " + err.Error())
-		utils.WriteError(w, err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetIdeas error : " + err.Error())
 		return
 	}
 
@@ -269,8 +276,6 @@ func (c *IdeasClient) GetIdeas(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 func NewIdeasClient(addr string, timeout time.Duration, retriesCount int) (*IdeasClient, error) {
-	const op = "client.ideas.New"
-
 	retryOptions := []grpcretry.CallOption{
 		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),
 		grpcretry.WithMax(uint(retriesCount)),
@@ -280,15 +285,17 @@ func NewIdeasClient(addr string, timeout time.Duration, retriesCount int) (*Idea
 	cc, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithChainUnaryInterceptor(
 		grpcretry.UnaryClientInterceptor(retryOptions...),
 	))
-
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		slog.Error("client NewIdeasClient error : " + err.Error())
+		return nil, fmt.Errorf("client NewIdeasClient error : " + err.Error())
 	}
 
 	maxSize, err := strconv.ParseInt(os.Getenv("MAX_FILE_SIZE"), 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		slog.Error("client NewIdeasClient error : " + err.Error())
+		return nil, fmt.Errorf("client NewIdeasClient error : " + err.Error())
 	}
+
 	return &IdeasClient{
 		api:         ideasv1.NewIdeasClient(cc),
 		maxFileSize: maxSize,

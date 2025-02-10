@@ -78,8 +78,8 @@ func main() {
 func GetUserIdByRequestWithCookie(r *http.Request) (int64, error) {
 	tokenCookie, err := r.Cookie(TokenCookieName)
 	if err != nil {
-		slog.Error(err.Error())
-		return EmptyValue, err
+		slog.Error("GetUserIdByRequestWithCookie error: " + err.Error())
+		return EmptyValue, fmt.Errorf("GetUserIdByRequestWithCookie error: " + err.Error())
 	}
 
 	claims := jwt.MapClaims{}
@@ -88,8 +88,8 @@ func GetUserIdByRequestWithCookie(r *http.Request) (int64, error) {
 		return []byte(os.Getenv(AppSecretEnv)), nil
 	})
 	if err != nil {
-		slog.Error(err.Error())
-		return EmptyValue, err
+		slog.Error("GetUserIdByRequestWithCookie error: " + err.Error())
+		return EmptyValue, fmt.Errorf("GetUserIdByRequestWithCookie error: " + err.Error())
 	}
 
 	userId := claims["uid"].(float64)

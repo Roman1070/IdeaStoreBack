@@ -57,8 +57,6 @@ var upgrader = websocket.Upgrader{
 }
 
 func (c *ChatsClient) HandleChatWebSocket(w http.ResponseWriter, r *http.Request) {
-	// Upgrade initial GET request to a WebSocket
-
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		slog.Error("client HandleChatWebSocket error: " + err.Error())

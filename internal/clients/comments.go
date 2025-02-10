@@ -49,25 +49,29 @@ func (c *CommentsClient) CreateComment(w http.ResponseWriter, r *http.Request) {
 		Text         string `json:"text"`
 		CreationDate string
 	}
+
 	var req request
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		utils.WriteError(w, err.Error())
-		slog.Error("Client CreateComment error : " + err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateComment error : " + err.Error())
 		return
 	}
+
 	ideaId, err := strconv.ParseInt(req.IdeaId, 10, 64)
 	if err != nil {
-		utils.WriteError(w, err.Error())
-		slog.Error("Client CreateComment error : " + err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateComment error : " + err.Error())
 		return
 	}
+
 	id, err := GetUserIdByRequestWithCookie(r)
 	if err != nil {
-		utils.WriteError(w, err.Error())
-		slog.Error("Client CreateComment error : " + err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateComment error : " + err.Error())
 		return
 	}
+
 	time := time.Now()
 
 	req.CreationDate = fmt.Sprintf("%02d.%02d.%04d", time.Day(), time.Month(), time.Year())
@@ -80,8 +84,8 @@ func (c *CommentsClient) CreateComment(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		utils.WriteError(w, err.Error())
-		slog.Error("Client CreateComment error : " + err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client CreateComment error : " + err.Error())
 		return
 	}
 
@@ -102,23 +106,23 @@ func (c *CommentsClient) GetComments(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.WriteError(w, err.Error())
-		slog.Error("Client GetComments error : " + err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetComments error : " + err.Error())
 		return
 	}
-	resp, err := c.api.GetComments(r.Context(), &commentsv1.GetCommentsRequest{IdeaId: id})
 
+	resp, err := c.api.GetComments(r.Context(), &commentsv1.GetCommentsRequest{IdeaId: id})
 	if err != nil {
-		utils.WriteError(w, err.Error())
-		slog.Error("Client GetComments error : " + err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetComments error : " + err.Error())
 		return
 	}
 
 	m := protojson.MarshalOptions{EmitDefaultValues: true}
 	result, err := m.Marshal(resp)
 	if err != nil {
-		utils.WriteError(w, err.Error())
-		slog.Error("Client GetComments error : " + err.Error())
+		utils.WriteError(w, "Internal error")
+		slog.Error("client GetComments error : " + err.Error())
 		return
 	}
 
