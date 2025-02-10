@@ -22,8 +22,6 @@ type CommentsClient struct {
 }
 
 func NewCommentsClient(addr string, timeout time.Duration, retriesCount int) (*CommentsClient, error) {
-	const op = "client.comments.New"
-
 	retryOptions := []grpcretry.CallOption{
 		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),
 		grpcretry.WithMax(uint(retriesCount)),
@@ -33,10 +31,11 @@ func NewCommentsClient(addr string, timeout time.Duration, retriesCount int) (*C
 	cc, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithChainUnaryInterceptor(
 		grpcretry.UnaryClientInterceptor(retryOptions...),
 	))
-
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		slog.Error("Client NewCommentsClient error : " + err.Error())
+		return nil, fmt.Errorf("Client NewCommentsClient error : " + err.Error())
 	}
+
 	return &CommentsClient{
 		api: commentsv1.NewCommentsClient(cc),
 	}, nil
@@ -104,12 +103,14 @@ func (c *CommentsClient) GetComments(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		utils.WriteError(w, err.Error())
+		slog.Error("Client GetComments error : " + err.Error())
 		return
 	}
 	resp, err := c.api.GetComments(r.Context(), &commentsv1.GetCommentsRequest{IdeaId: id})
 
 	if err != nil {
 		utils.WriteError(w, err.Error())
+		slog.Error("Client GetComments error : " + err.Error())
 		return
 	}
 
@@ -117,6 +118,7 @@ func (c *CommentsClient) GetComments(w http.ResponseWriter, r *http.Request) {
 	result, err := m.Marshal(resp)
 	if err != nil {
 		utils.WriteError(w, err.Error())
+		slog.Error("Client GetComments error : " + err.Error())
 		return
 	}
 

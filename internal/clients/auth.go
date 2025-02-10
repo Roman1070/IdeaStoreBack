@@ -7,6 +7,7 @@ import (
 	"fmt"
 	authv1 "idea-store-auth/gen/go/auth"
 	"idea-store-auth/internal/utils"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -23,8 +24,13 @@ type AuthClient struct {
 
 func (c *AuthClient) Login(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		slog.Error("client Login error: " + err.Error())
+		utils.WriteError(w, "Internal error")
+		return
+	}
 
-	json.NewDecoder(r.Body).Decode(&req)
 	request := &authv1.LoginRequest{
 		Email:    req.Email,
 		Password: req.Password,
@@ -36,12 +42,20 @@ func (c *AuthClient) Login(w http.ResponseWriter, r *http.Request) {
 			utils.WriteError(w, "Invalid credentials")
 			return
 		}
-		utils.WriteError(w, err.Error())
+
+		slog.Error("client Login error: " + err.Error())
+		utils.WriteError(w, "Internal error")
 		return
 	}
+
+	responseJson, err := json.Marshal(loginResponse)
+	if err != nil {
+		slog.Error("client Login error: " + err.Error())
+		utils.WriteError(w, "Internal error")
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	responseJson, _ := json.Marshal(loginResponse)
 	w.Write(responseJson)
 }
 
@@ -52,13 +66,13 @@ type registerRequest struct {
 
 func (c *AuthClient) Regsiter(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
-
 	err := json.NewDecoder(r.Body).Decode(&req)
-
 	if err != nil {
-		utils.WriteError(w, err.Error())
+		slog.Error("client Regsiter error: " + err.Error())
+		utils.WriteError(w, "Internal error")
 		return
 	}
+
 	request := &authv1.RegisterRequest{
 		Email:    req.Email,
 		Password: req.Password,
@@ -70,24 +84,23 @@ func (c *AuthClient) Regsiter(w http.ResponseWriter, r *http.Request) {
 			utils.WriteError(w, "User already exists")
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf("%s: %v", "Error  during register", err.Error())))
+
+		slog.Error("client Regsiter error: " + err.Error())
+		utils.WriteError(w, "Internal error")
 		return
 	}
 
 	result, err := json.Marshal(registerResponse)
 	if err != nil {
-		utils.WriteError(w, "Error masrhalling response")
+		slog.Error("client Regsiter error: " + err.Error())
+		utils.WriteError(w, "Internal error")
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
 func NewAuthClient(addr string, timeout time.Duration, retriesCount int) (*AuthClient, error) {
-	const op = "client.auth.New"
-
 	retryOptions := []grpcretry.CallOption{
 		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),
 		grpcretry.WithMax(uint(retriesCount)),
@@ -97,10 +110,11 @@ func NewAuthClient(addr string, timeout time.Duration, retriesCount int) (*AuthC
 	cc, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithChainUnaryInterceptor(
 		grpcretry.UnaryClientInterceptor(retryOptions...),
 	))
-
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		slog.Error("client Regsiter error: " + err.Error())
+		return nil, fmt.Errorf("client Regsiter error: " + err.Error())
 	}
+
 	return &AuthClient{
 		authAPi: authv1.NewAuthClient(cc),
 	}, nil
