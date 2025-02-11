@@ -117,7 +117,6 @@ func (c *ChatsClient) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	checkChatExistance := r.URL.Query().Get("check_chat") == "true"
 	type request struct {
 		RecieverId int64  `json:"recieverId"`
 		Text       string `json:"text,omitempty"`
@@ -147,13 +146,12 @@ func (c *ChatsClient) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := c.api.SendMessage(r.Context(), &chatsv1.SendMessageRequest{
 		Data: &chatsv1.MessageData{
-			SenderId:           userId,
-			RecieverId:         req.RecieverId,
-			Text:               req.Text,
-			FileName:           req.FileName,
-			SendingDate:        creationDateStr,
-			CheckChatExistance: checkChatExistance,
-			IdeaId:             ideaId,
+			SenderId:    userId,
+			RecieverId:  req.RecieverId,
+			Text:        req.Text,
+			FileName:    req.FileName,
+			SendingDate: creationDateStr,
+			IdeaId:      ideaId,
 		},
 	})
 	if err != nil {

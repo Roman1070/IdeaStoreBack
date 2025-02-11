@@ -16,6 +16,7 @@ type Chats interface {
 	GetMessages(ctx context.Context, senderId, recieverId int64) ([]*models.Message, error)
 	CreateChat(ctx context.Context, user1, user2 int64) (*emptypb.Empty, error)
 	GetUsersChats(ctx context.Context, userId int64) ([]*models.ChatData, error)
+	CheckChatExistance(ctx context.Context, firstId, secondId int64) (bool, error)
 	DeleteChat(ctx context.Context, chatId int64) (*emptypb.Empty, error)
 }
 
@@ -28,17 +29,30 @@ func Register(gRPC *grpc.Server, chats Chats) {
 	chatsv1.RegisterChatsServer(gRPC, &serverAPI{chats: chats})
 }
 
+func (s *serverAPI) CheckChatExistance(ctx context.Context, req *chatsv1.CheckChatExistanceRequest) (*chatsv1.CheckChatExistanceResponse, error) {
+	slog.Info("grpc started SendMessage")
+	resp, err := s.chats.CheckChatExistance(ctx, req.FirstId, req.SecondId)
+
+	if err != nil {
+		slog.Error("grpc CheckChatExistance error: " + err.Error())
+		return nil, fmt.Errorf("grpc CheckChatExistance error: " + err.Error())
+	}
+
+	return &chatsv1.CheckChatExistanceResponse{
+		Exists: resp,
+	}, nil
+}
+
 func (s *serverAPI) SendMessage(ctx context.Context, req *chatsv1.SendMessageRequest) (*chatsv1.SendMessageResponse, error) {
 	slog.Info("grpc started SendMessage")
 
 	resp, err := s.chats.SendMessage(ctx, models.Message{
-		SenderId:           req.Data.SenderId,
-		RecieverId:         req.Data.RecieverId,
-		Filename:           req.Data.FileName,
-		Text:               req.Data.Text,
-		CreationDate:       req.Data.SendingDate,
-		CheckChatExistance: req.Data.CheckChatExistance,
-		IdeaId:             req.Data.IdeaId,
+		SenderId:     req.Data.SenderId,
+		RecieverId:   req.Data.RecieverId,
+		Filename:     req.Data.FileName,
+		Text:         req.Data.Text,
+		CreationDate: req.Data.SendingDate,
+		IdeaId:       req.Data.IdeaId,
 	})
 
 	if err != nil {
@@ -63,14 +77,13 @@ func (s *serverAPI) GetMessages(ctx context.Context, req *chatsv1.GetMessagesReq
 	var messages []*chatsv1.MessageData
 	for _, m := range resp {
 		messages = append(messages, &chatsv1.MessageData{
-			Id:                 m.ID,
-			SenderId:           m.SenderId,
-			RecieverId:         m.RecieverId,
-			FileName:           m.Filename,
-			Text:               m.Text,
-			SendingDate:        m.CreationDate,
-			CheckChatExistance: m.CheckChatExistance,
-			IdeaId:             m.IdeaId,
+			Id:          m.ID,
+			SenderId:    m.SenderId,
+			RecieverId:  m.RecieverId,
+			FileName:    m.Filename,
+			Text:        m.Text,
+			SendingDate: m.CreationDate,
+			IdeaId:      m.IdeaId,
 		})
 	}
 

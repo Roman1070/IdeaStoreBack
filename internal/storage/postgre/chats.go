@@ -11,16 +11,28 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *Storage) SendMessage(ctx context.Context, message models.Message) (int64, error) {
-	slog.Info("storage started SendMessage")
-
-	const insertChatQuery = `
+func (s *Storage) CheckChatExistance(ctx context.Context, firstId, secondId int64) (bool, error) {
+	const query = `
 		SELECT COUNT(*) 
 		FROM chats 
 		WHERE (first_id = $1 AND second_id = $2) 
 		OR (first_id = $2 AND second_id = $1);
 	`
-	const insertMessageQuery = `
+
+	rowsCount := 0
+	err := s.db.QueryRow(ctx, query, firstId, secondId).Scan(&rowsCount)
+	if err != nil {
+		slog.Error("storage error CheckChatExistance: " + err.Error())
+		return false, fmt.Errorf("storage error CheckChatExistance: %v", err.Error())
+	}
+
+	return rowsCount > 0, nil
+}
+
+func (s *Storage) SendMessage(ctx context.Context, message models.Message) (int64, error) {
+	slog.Info("storage started SendMessage")
+
+	const query = `
 		INSERT INTO messages(sender_id, reciever_id, file_name, content, send_date, sending_date_seconds,idea_id) 
 		VALUES($1,$2,$3,$4,$5,$6,$7)
 		RETURNING id;
@@ -32,29 +44,13 @@ func (s *Storage) SendMessage(ctx context.Context, message models.Message) (int6
 		return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
 	}
 
-	if message.CheckChatExistance {
-		rowsCount := 0
-		err = s.db.QueryRow(ctx, insertChatQuery, message.RecieverId, message.SenderId).Scan(&rowsCount)
-		if err != nil {
-			slog.Error("storage error SendMessage: " + err.Error())
-			return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
-		}
-
-		if rowsCount == 0 {
-			_, err = s.CreateChat(ctx, message.SenderId, message.RecieverId)
-			if err != nil {
-				slog.Error("storage error SendMessage: " + err.Error())
-				return emptyValue, fmt.Errorf("storage error SendMessage: %v", err.Error())
-			}
-		}
-	}
-
 	var lastInsertId int64
-	err = s.db.QueryRow(ctx, insertMessageQuery, message.SenderId, message.RecieverId, message.Filename,
+	err = s.db.QueryRow(ctx, query, message.SenderId, message.RecieverId, message.Filename,
 		message.Text, message.CreationDate, dateInSeconds, message.IdeaId).Scan(&lastInsertId)
+
 	if err != nil {
-		slog.Error("storage CreateIdea error: " + err.Error())
-		return emptyValue, fmt.Errorf("storage CreateIdea error: %v", err.Error())
+		slog.Error("storage SendMessage error: " + err.Error())
+		return emptyValue, fmt.Errorf("storage SendMessage error: %v", err.Error())
 	}
 
 	return lastInsertId, nil

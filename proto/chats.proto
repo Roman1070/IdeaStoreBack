@@ -10,8 +10,15 @@ service Chats{
     rpc CreateChat(CreateChatRequest) returns (google.protobuf.Empty) {}
     rpc GetUsersChats(GetUsersChatsRequest) returns (GetUsersChatsResponse);
     rpc DeleteChat(DeleteChatRequest) returns (google.protobuf.Empty) {}
+    rpc CheckChatExistance(CheckChatExistanceRequest) returns (CheckChatExistanceResponse);
 }
-
+message CheckChatExistanceRequest{
+    int64 first_id = 1;
+    int64 second_id = 2;
+}
+message CheckChatExistanceResponse{
+    bool exists = 1;
+}
 message SendMessageRequest{
     MessageData data = 1;
 }
@@ -30,8 +37,7 @@ message MessageData{
     string file_name = 4;
     string text = 5;
     string sending_date = 6;
-    bool check_chat_existance=7;
-    int64 idea_id = 8;
+    int64 idea_id = 7;
 }
 
 message GetMessagesResponse{

@@ -21,17 +21,43 @@ func New(log *slog.Logger, api chats.Chats) *Chats {
 		Api: api,
 	}
 }
+func (c *Chats) CheckChatExistance(ctx context.Context, firstId, secondId int64) (bool, error) {
+	c.log.Info("service started CheckChatExistance")
+
+	resp, err := c.Api.CheckChatExistance(ctx, firstId, secondId)
+
+	if err != nil {
+		c.log.Error("service error SendMessage: " + err.Error())
+		return false, fmt.Errorf("serivce error SendMessage: %v", err.Error())
+	}
+
+	return resp, nil
+}
+
 func (c *Chats) SendMessage(ctx context.Context, message models.Message) (int64, error) {
 	c.log.Info("service started SendMessage")
 
+	exists, err := c.CheckChatExistance(ctx, message.SenderId, message.RecieverId)
+	if err != nil {
+		c.log.Error("service error SendMessage: " + err.Error())
+		return -1, fmt.Errorf("serivce error SendMessage: %v", err.Error())
+	}
+
+	if !exists {
+		_, err = c.CreateChat(ctx, message.SenderId, message.RecieverId)
+		if err != nil {
+			c.log.Error("service error SendMessage: " + err.Error())
+			return -1, fmt.Errorf("serivce error SendMessage: %v", err.Error())
+		}
+	}
+
 	resp, err := c.Api.SendMessage(ctx, models.Message{
-		SenderId:           message.SenderId,
-		RecieverId:         message.RecieverId,
-		Filename:           message.Filename,
-		Text:               message.Text,
-		CreationDate:       message.CreationDate,
-		CheckChatExistance: message.CheckChatExistance,
-		IdeaId:             message.IdeaId,
+		SenderId:     message.SenderId,
+		RecieverId:   message.RecieverId,
+		Filename:     message.Filename,
+		Text:         message.Text,
+		CreationDate: message.CreationDate,
+		IdeaId:       message.IdeaId,
 	})
 	if err != nil {
 		c.log.Error("service error SendMessage: " + err.Error())

@@ -28,6 +28,7 @@ type ChatsClient interface {
 	CreateChat(ctx context.Context, in *CreateChatRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetUsersChats(ctx context.Context, in *GetUsersChatsRequest, opts ...grpc.CallOption) (*GetUsersChatsResponse, error)
 	DeleteChat(ctx context.Context, in *DeleteChatRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CheckChatExistance(ctx context.Context, in *CheckChatExistanceRequest, opts ...grpc.CallOption) (*CheckChatExistanceResponse, error)
 }
 
 type chatsClient struct {
@@ -83,6 +84,15 @@ func (c *chatsClient) DeleteChat(ctx context.Context, in *DeleteChatRequest, opt
 	return out, nil
 }
 
+func (c *chatsClient) CheckChatExistance(ctx context.Context, in *CheckChatExistanceRequest, opts ...grpc.CallOption) (*CheckChatExistanceResponse, error) {
+	out := new(CheckChatExistanceResponse)
+	err := c.cc.Invoke(ctx, "/chats.Chats/CheckChatExistance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChatsServer is the server API for Chats service.
 // All implementations must embed UnimplementedChatsServer
 // for forward compatibility
@@ -92,6 +102,7 @@ type ChatsServer interface {
 	CreateChat(context.Context, *CreateChatRequest) (*emptypb.Empty, error)
 	GetUsersChats(context.Context, *GetUsersChatsRequest) (*GetUsersChatsResponse, error)
 	DeleteChat(context.Context, *DeleteChatRequest) (*emptypb.Empty, error)
+	CheckChatExistance(context.Context, *CheckChatExistanceRequest) (*CheckChatExistanceResponse, error)
 	mustEmbedUnimplementedChatsServer()
 }
 
@@ -113,6 +124,9 @@ func (UnimplementedChatsServer) GetUsersChats(context.Context, *GetUsersChatsReq
 }
 func (UnimplementedChatsServer) DeleteChat(context.Context, *DeleteChatRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteChat not implemented")
+}
+func (UnimplementedChatsServer) CheckChatExistance(context.Context, *CheckChatExistanceRequest) (*CheckChatExistanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckChatExistance not implemented")
 }
 func (UnimplementedChatsServer) mustEmbedUnimplementedChatsServer() {}
 
@@ -217,6 +231,24 @@ func _Chats_DeleteChat_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Chats_CheckChatExistance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckChatExistanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatsServer).CheckChatExistance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chats.Chats/CheckChatExistance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatsServer).CheckChatExistance(ctx, req.(*CheckChatExistanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Chats_ServiceDesc is the grpc.ServiceDesc for Chats service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -243,6 +275,10 @@ var Chats_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteChat",
 			Handler:    _Chats_DeleteChat_Handler,
+		},
+		{
+			MethodName: "CheckChatExistance",
+			Handler:    _Chats_CheckChatExistance_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
