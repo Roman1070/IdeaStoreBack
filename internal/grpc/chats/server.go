@@ -40,10 +40,12 @@ func (s *serverAPI) SendMessage(ctx context.Context, req *chatsv1.SendMessageReq
 		CheckChatExistance: req.Data.CheckChatExistance,
 		IdeaId:             req.Data.IdeaId,
 	})
+
 	if err != nil {
-		slog.Error("grpc error SendMessage")
-		return nil, fmt.Errorf("grpc SendMessage error :%v", err.Error())
+		slog.Error("grpc SendMessage error: " + err.Error())
+		return nil, fmt.Errorf("grpc SendMessage error: " + err.Error())
 	}
+
 	return &chatsv1.SendMessageResponse{
 		Id: resp,
 	}, nil
@@ -54,9 +56,10 @@ func (s *serverAPI) GetMessages(ctx context.Context, req *chatsv1.GetMessagesReq
 	resp, err := s.chats.GetMessages(ctx, req.FirstId, req.SecondId)
 
 	if err != nil {
-		slog.Error("grpc error GetMessages")
-		return nil, fmt.Errorf("grpc GetMessages error :%v", err.Error())
+		slog.Error("grpc GetMessages error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetMessages error: " + err.Error())
 	}
+
 	var messages []*chatsv1.MessageData
 	for _, m := range resp {
 		messages = append(messages, &chatsv1.MessageData{
@@ -70,6 +73,7 @@ func (s *serverAPI) GetMessages(ctx context.Context, req *chatsv1.GetMessagesReq
 			IdeaId:             m.IdeaId,
 		})
 	}
+
 	return &chatsv1.GetMessagesResponse{
 		Messages: messages,
 	}, nil
@@ -80,9 +84,10 @@ func (s *serverAPI) CreateChat(ctx context.Context, req *chatsv1.CreateChatReque
 	_, err := s.chats.CreateChat(ctx, req.FirstId, req.SecondId)
 
 	if err != nil {
-		slog.Error("grpc error CreateChat")
-		return nil, fmt.Errorf("grpc CreateChat error :%v", err.Error())
+		slog.Error("grpc CreateChat error: " + err.Error())
+		return nil, fmt.Errorf("grpc CreateChat error: " + err.Error())
 	}
+
 	return nil, nil
 }
 
@@ -91,9 +96,10 @@ func (s *serverAPI) GetUsersChats(ctx context.Context, req *chatsv1.GetUsersChat
 
 	resp, err := s.chats.GetUsersChats(ctx, req.UserId)
 	if err != nil {
-		slog.Error("grpc error GetUsersChats")
-		return nil, fmt.Errorf("grpc GetUsersChats error :%v", err.Error())
+		slog.Error("grpc GetUsersChats error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetUsersChats error: " + err.Error())
 	}
+
 	var chats []*chatsv1.ChatUserData
 	for _, chat := range resp {
 
@@ -111,6 +117,7 @@ func (s *serverAPI) GetUsersChats(ctx context.Context, req *chatsv1.GetUsersChat
 			})
 		}
 	}
+
 	return &chatsv1.GetUsersChatsResponse{
 		Chats: chats,
 	}, nil
@@ -121,8 +128,8 @@ func (s *serverAPI) DeleteChat(ctx context.Context, req *chatsv1.DeleteChatReque
 
 	_, err := s.chats.DeleteChat(ctx, req.ChatId)
 	if err != nil {
-		slog.Error("grpc error DeleteChat")
-		return nil, fmt.Errorf("grpc DeleteChat error :%v", err.Error())
+		slog.Error("grpc DeleteChat error: " + err.Error())
+		return nil, fmt.Errorf("grpc DeleteChat error: " + err.Error())
 	}
 	return nil, nil
 }

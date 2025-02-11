@@ -59,8 +59,8 @@ func (s *serverAPI) ChangeLikesCount(ctx context.Context, req *ideasv1.ChangeLik
 
 	likesCount, err := s.ideas.ChangeLikesCount(ctx, req.IdeaId, req.Increase)
 	if err != nil {
-		slog.Error("ideas grpc error: " + err.Error())
-		return nil, status.Error(codes.Internal, err.Error())
+		slog.Error("grpc ChangeLikesCount error: " + err.Error())
+		return nil, fmt.Errorf("grpc ChangeLikesCount error: " + err.Error())
 	}
 
 	return &ideasv1.ChangeLikesCountResponse{
@@ -71,9 +71,12 @@ func (s *serverAPI) GetIdea(ctx context.Context, req *ideasv1.GetRequest) (*idea
 	slog.Info("started to get idea")
 
 	idea, err := s.ideas.GetIdea(ctx, req.IdeaId)
+
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error getting idea")
+		slog.Error("grpc GetIdea error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetIdea error: " + err.Error())
 	}
+
 	resp := &ideasv1.GetResponse{
 		Name:        idea.Name,
 		Image:       idea.Image,
@@ -89,7 +92,8 @@ func (s *serverAPI) DeleteIdea(ctx context.Context, req *ideasv1.DeleteRequest) 
 
 	_, err := s.ideas.DeleteIdea(ctx, req.IdeaId)
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error deleting idea")
+		slog.Error("grpc DeleteIdea error: " + err.Error())
+		return nil, fmt.Errorf("grpc DeleteIdea error: " + err.Error())
 	}
 
 	return nil, nil
@@ -99,8 +103,8 @@ func (s *serverAPI) GetAllIdeas(ctx context.Context, req *ideasv1.GetAllRequest)
 
 	ideas, err := s.ideas.GetAllIdeas(ctx, req.UserId, req.Limit, req.Offset)
 	if err != nil {
-		slog.Error("client GetAllIdeas error: " + err.Error())
-		return nil, fmt.Errorf("client GetAllIdeas error: " + err.Error())
+		slog.Error("grpc GetAllIdeas error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetAllIdeas error: " + err.Error())
 	}
 
 	var result []*ideasv1.IdeaData
@@ -119,12 +123,12 @@ func (s *serverAPI) GetAllIdeas(ctx context.Context, req *ideasv1.GetAllRequest)
 }
 
 func (s *serverAPI) GetIdeas(ctx context.Context, req *ideasv1.GetIdeasRequest) (*ideasv1.GetIdeasResponse, error) {
-	slog.Info("started to get ideas")
+	slog.Info("started to GetIdeas")
 
 	ideas, err := s.ideas.GetIdeas(ctx, req.Ids, req.Limit, req.Offset)
 	if err != nil {
-		slog.Error("grpc error GetIdeas: " + err.Error())
-		return nil, fmt.Errorf("grpc error GetIdeas: %v", err.Error())
+		slog.Error("grpc GetIdeas error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetIdeas error: " + err.Error())
 	}
 
 	var result []*ideasv1.IdeaData
@@ -148,9 +152,10 @@ func (s *serverAPI) GetIdeasFromSearch(ctx context.Context, req *ideasv1.GetIdea
 
 	resp, err := s.ideas.GetIdeasFromSearch(ctx, req.UserId, req.Input)
 	if err != nil {
-		slog.Error("grpc error GetIdeasFromSearch: " + err.Error())
-		return nil, fmt.Errorf("grpc error GetIdeasFromSearch: %v", err.Error())
+		slog.Error("grpc GetIdeasFromSearch error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetIdeasFromSearch error: " + err.Error())
 	}
+
 	var result []*ideasv1.IdeaData
 	for _, idea := range resp {
 		result = append(result, &ideasv1.IdeaData{
@@ -163,6 +168,7 @@ func (s *serverAPI) GetIdeasFromSearch(ctx context.Context, req *ideasv1.GetIdea
 			Saved:       idea.Saved,
 		})
 	}
+
 	return &ideasv1.GetIdeasFromSearchResponse{
 		Ideas: result,
 	}, nil

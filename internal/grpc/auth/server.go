@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	authv1 "idea-store-auth/gen/go/auth"
 	"idea-store-auth/internal/services/auth"
 	"log/slog"
@@ -13,18 +14,10 @@ import (
 )
 
 type Auth interface {
-	Login(
-		ctx context.Context,
-		email string,
-		password string,
-	) (token string, err error)
-
-	RegisterNewUser(
-		ctx context.Context,
-		email string,
-		password string,
-	) (userId int64, err error)
+	Login(ctx context.Context, email string, password string) (token string, err error)
+	RegisterNewUser(ctx context.Context, email string, password string) (userId int64, err error)
 }
+
 type serverAPI struct {
 	authv1.UnimplementedAuthServer
 	auth Auth
@@ -37,15 +30,20 @@ func Register(gRPC *grpc.Server, auth Auth) {
 func (s *serverAPI) Login(ctx context.Context, req *authv1.LoginRequest) (*authv1.LoginResponse, error) {
 	slog.Info("started to login")
 	if err := validateLogin(req); err != nil {
-		return nil, err
+		slog.Error("grpc Login error: " + err.Error())
+		return nil, fmt.Errorf("grpc Login error: " + err.Error())
 	}
+
 	token, err := s.auth.Login(ctx, req.GetEmail(), req.GetPassword())
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			return nil, status.Error(codes.InvalidArgument, "Invalid credentials")
 		}
-		return nil, status.Error(codes.Internal, "Internal error")
+
+		slog.Error("grpc Login error: " + err.Error())
+		return nil, fmt.Errorf("grpc Login error: " + err.Error())
 	}
+
 	resp := &authv1.LoginResponse{Token: token}
 	return resp, nil
 }
@@ -55,7 +53,8 @@ func (s *serverAPI) Register(ctx context.Context, req *authv1.RegisterRequest) (
 	password := req.GetPassword()
 
 	if err := validateRegister(req); err != nil {
-		return nil, err
+		slog.Error("grpc Register error: " + err.Error())
+		return nil, fmt.Errorf("grpc Register error: " + err.Error())
 	}
 
 	userID, err := s.auth.RegisterNewUser(ctx, email, password)
@@ -64,7 +63,8 @@ func (s *serverAPI) Register(ctx context.Context, req *authv1.RegisterRequest) (
 		if errors.Is(err, auth.ErrUserExists) {
 			return nil, status.Error(codes.AlreadyExists, "User already exists")
 		}
-		return nil, status.Error(codes.Internal, "Internal error")
+		slog.Error("grpc Register error: " + err.Error())
+		return nil, fmt.Errorf("grpc Register error: " + err.Error())
 	}
 	return &authv1.RegisterResponse{
 		UserId: userID,

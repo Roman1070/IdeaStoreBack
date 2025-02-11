@@ -2,13 +2,12 @@ package boards
 
 import (
 	"context"
+	"fmt"
 	boardsv1 "idea-store-auth/gen/go/boards"
 	"idea-store-auth/internal/domain/models"
 	"log/slog"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -34,10 +33,12 @@ func (s *serverAPI) CreateBoard(ctx context.Context, req *boardsv1.CreateBoardRe
 	slog.Info("started to save an idea...")
 
 	id, err := s.boards.CreateBoard(ctx, req.Name, req.UserId)
+
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, status.Error(codes.Internal, "Internal error creating board")
+		slog.Error("grpc CreateBoard error: " + err.Error())
+		return nil, fmt.Errorf("grpc CreateBoard error: " + err.Error())
 	}
+
 	resp := &boardsv1.CreateBoardResponse{Id: id}
 	return resp, nil
 }
@@ -45,32 +46,39 @@ func (s *serverAPI) GetBoard(ctx context.Context, req *boardsv1.GetBoardRequest)
 	slog.Info("started to get a board")
 
 	board, err := s.boards.GetBoard(ctx, req.Id)
+
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error getting board")
+		slog.Error("grpc GetBoard error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetBoard error: " + err.Error())
 	}
+
 	resp := &boardsv1.GetBoardResponse{Id: board.ID, Name: board.Name, IdeasIds: board.IdeasIds}
 	return resp, nil
 }
 
 func (s *serverAPI) GetAllBoards(ctx context.Context, req *boardsv1.GetAllBoardsRequest) (*boardsv1.GetAllBoardsResponse, error) {
-
 	slog.Info("started to get all ideas")
+
 	boards, err := s.boards.GetCurrentUsersBoards(ctx, req.UserId)
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error getting all ideas")
+		slog.Error("grpc GetAllBoards error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetAllBoards error: " + err.Error())
 	}
+
 	return &boardsv1.GetAllBoardsResponse{Boards: boards}, nil
 }
 
 func (s *serverAPI) SetIdeaSaved(ctx context.Context, req *boardsv1.SetIdeaSavedRequest) (*emptypb.Empty, error) {
-
 	slog.Info("started to SetIdeaSaved grpc")
+
 	_, err := s.boards.SetIdeaSaved(ctx, req.BoardId, req.IdeaId, req.Saved)
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error SetIdeaSaved")
+		slog.Error("grpc GetAllBoards error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetAllBoards error: " + err.Error())
 	}
+
 	return &emptypb.Empty{}, nil
 }
 
@@ -80,18 +88,22 @@ func (s *serverAPI) GetIdeasInBoard(ctx context.Context, req *boardsv1.GetIdeasI
 	ideas, err := s.boards.GetIdeasInBoard(ctx, req.BoardId)
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error SetIdeaSaved")
+		slog.Error("grpc GetAllBoards error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetAllBoards error: " + err.Error())
 	}
+
 	return &boardsv1.GetIdeasInBoardResponse{
 		Ideas: ideas,
 	}, nil
 }
 func (s *serverAPI) DeleteBoard(ctx context.Context, req *boardsv1.DeleteBoardRequest) (*emptypb.Empty, error) {
 	slog.Info("started to DeleteBoard grpc")
+
 	_, err := s.boards.DeleteBoard(ctx, req.UserId, req.BoardId)
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error DeleteBoard")
+		slog.Error("grpc DeleteBoard error: " + err.Error())
+		return nil, fmt.Errorf("grpc DeleteBoard error: " + err.Error())
 	}
 	return &emptypb.Empty{}, nil
 }

@@ -28,18 +28,22 @@ func (s *serverAPI) CreateComment(ctx context.Context, req *commentsv1.CreateCom
 	slog.Info("grpc started CreateComment")
 
 	_, err := s.comments.CreateComment(ctx, req.IdeaId, req.UserId, req.Text, req.CreationDate)
+
 	if err != nil {
-		return nil, fmt.Errorf("error grpc CreateComment: %v", err.Error())
+		slog.Error("grpc CreateComment error: " + err.Error())
+		return nil, fmt.Errorf("grpc CreateComment error: " + err.Error())
 	}
+
 	return nil, nil
 }
 func (s *serverAPI) GetComments(ctx context.Context, req *commentsv1.GetCommentsRequest) (*commentsv1.GetCommentsResponse, error) {
-
 	slog.Info("grpc started GetComments")
 
 	resp, err := s.comments.GetComments(ctx, req.IdeaId)
+
 	if err != nil {
-		return nil, fmt.Errorf("error grpc GetComments: %v", err.Error())
+		slog.Error("grpc GetComments error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetComments error: " + err.Error())
 	}
 
 	var result []*commentsv1.CommentData
@@ -53,6 +57,7 @@ func (s *serverAPI) GetComments(ctx context.Context, req *commentsv1.GetComments
 			Avatar:       c.Avatar,
 		})
 	}
+
 	return &commentsv1.GetCommentsResponse{
 		Comments: result,
 	}, nil

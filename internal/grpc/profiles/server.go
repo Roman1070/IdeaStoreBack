@@ -8,8 +8,6 @@ import (
 	"log/slog"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -44,8 +42,8 @@ func (s *serverAPI) CreateProfile(ctx context.Context, req *profilesv1.CreatePro
 
 	_, err := s.profiles.CreateProfile(ctx, req.Id, req.Name, req.Email)
 	if err != nil {
-		slog.Error(err.Error())
-		return &emptypb.Empty{}, fmt.Errorf("grpc create profile error: " + err.Error())
+		slog.Error("grpc CreateProfile error: " + err.Error())
+		return nil, fmt.Errorf("grpc CreateProfile error: " + err.Error())
 	}
 	return &emptypb.Empty{}, nil
 }
@@ -55,7 +53,7 @@ func (s *serverAPI) IsIdeaLiked(ctx context.Context, req *profilesv1.IsIdeaLiked
 	resp, err := s.profiles.IsIdeaLiked(ctx, req.UserId, req.IdeaId)
 	if err != nil {
 		slog.Error("grpc IsIdeaLiked error: " + err.Error())
-		return nil, fmt.Errorf("grpc IsIdeaLiked error: %v", err.Error())
+		return nil, fmt.Errorf("grpc IsIdeaLiked error: " + err.Error())
 	}
 
 	return &profilesv1.IsIdeaLikedResponse{
@@ -67,9 +65,10 @@ func (s *serverAPI) GetProfile(ctx context.Context, req *profilesv1.GetProfileRe
 
 	resp, err := s.profiles.GetProfile(ctx, req.Id)
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("grpc get profile error: " + err.Error())
+		slog.Error("grpc GetProfile error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetProfile error: " + err.Error())
 	}
+
 	var savedIdeas []*profilesv1.IdeaBoardPair
 	for _, pair := range resp.SavedIdeas {
 		savedIdeas = append(savedIdeas, &profilesv1.IdeaBoardPair{
@@ -96,7 +95,7 @@ func (s *serverAPI) ToggleLikeIdea(ctx context.Context, req *profilesv1.ToggleLi
 	nowLiked, likesCount, err := s.profiles.ToggleLikeIdea(ctx, req.UserId, req.IdeaId)
 
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("grpc ToggleLikeIdea error: " + err.Error())
 		return nil, fmt.Errorf("grpc ToggleLikeIdea error: " + err.Error())
 	}
 	return &profilesv1.ToggleLikeIdeaResponse{
@@ -109,9 +108,10 @@ func (s *serverAPI) GetProfilesFromSearch(ctx context.Context, req *profilesv1.G
 
 	resp, err := s.profiles.GetProfilesFromSearch(ctx, req.Input)
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("grpc get profile error: " + err.Error())
+		slog.Error("grpc GetProfilesFromSearch error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetProfilesFromSearch error: " + err.Error())
 	}
+
 	var result []*profilesv1.ProfileDataLight
 	for _, prof := range resp {
 		result = append(result, &profilesv1.ProfileDataLight{
@@ -120,6 +120,7 @@ func (s *serverAPI) GetProfilesFromSearch(ctx context.Context, req *profilesv1.G
 			Avatar: prof.AvatarImage,
 		})
 	}
+
 	return &profilesv1.GetProfilesFromSearchResponse{
 		Profiles: result,
 	}, nil
@@ -129,9 +130,10 @@ func (s *serverAPI) GetProfileLight(ctx context.Context, req *profilesv1.GetProf
 
 	resp, err := s.profiles.GetProfileLight(ctx, req.UserId)
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("grpc GetProfileLight error: " + err.Error())
 		return nil, fmt.Errorf("grpc GetProfileLight error: " + err.Error())
 	}
+
 	return &profilesv1.GetProfileLightResponse{
 		Name:   resp.Name,
 		Avatar: resp.AvatarImage,
@@ -141,10 +143,12 @@ func (s *serverAPI) UpdateProfile(ctx context.Context, req *profilesv1.UpdatePro
 	slog.Info("grpc start UpdateProfile")
 
 	_, err := s.profiles.UpdateProfile(ctx, req.UserId, req.Name, req.Avatar, req.Description, req.Link)
+
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("grpc update profile error: " + err.Error())
+		slog.Error("grpc UpdateProfile error: " + err.Error())
+		return nil, fmt.Errorf("grpc UpdateProfile error: " + err.Error())
 	}
+
 	return nil, nil
 }
 func (s *serverAPI) ToggleSaveIdea(ctx context.Context, req *profilesv1.ToggleSaveRequest) (*profilesv1.ToggleSaveResponse, error) {
@@ -152,9 +156,10 @@ func (s *serverAPI) ToggleSaveIdea(ctx context.Context, req *profilesv1.ToggleSa
 
 	resp, err := s.profiles.ToggleSaveIdea(ctx, req.UserId, req.IdeaId, req.BoardId)
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("grpc error toggle save idea: " + err.Error())
+		slog.Error("grpc ToggleSaveIdea error: " + err.Error())
+		return nil, fmt.Errorf("grpc ToggleSaveIdea error: " + err.Error())
 	}
+
 	return &profilesv1.ToggleSaveResponse{
 		NowSaved: resp,
 	}, nil
@@ -165,9 +170,10 @@ func (s *serverAPI) IsIdeaSaved(ctx context.Context, req *profilesv1.IsIdeaSaved
 
 	saved, boardId, err := s.profiles.IsIdeaSaved(ctx, req.UserId, req.IdeaId)
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("grpc error IsIdeaSaved: " + err.Error())
+		slog.Error("grpc IsIdeaSaved error: " + err.Error())
+		return nil, fmt.Errorf("grpc IsIdeaSaved error: " + err.Error())
 	}
+
 	return &profilesv1.IsIdeaSavedResponse{
 		Saved:   saved,
 		BoardId: boardId,
@@ -178,10 +184,12 @@ func (s *serverAPI) GetSavedIdeas(ctx context.Context, req *profilesv1.GetSavedI
 	slog.Info("grpc start GetSavedIdeas")
 
 	resp, err := s.profiles.GetSavedIdeas(ctx, req.UserId, req.Limit, req.Offset)
+
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("grpc error GetSavedIdeas: " + err.Error())
+		slog.Error("grpc GetSavedIdeas error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetSavedIdeas error: " + err.Error())
 	}
+
 	return &profilesv1.GetSavedIdeasResponse{
 		Ideas: resp,
 	}, nil
@@ -191,43 +199,51 @@ func (s *serverAPI) GetSavedIdeasIds(ctx context.Context, req *profilesv1.GetSav
 	slog.Info("grpc start GetSavedIdeasIds")
 
 	resp, err := s.profiles.GetSavedIdeasIds(ctx, req.UserId)
+
 	if err != nil {
-		slog.Error(err.Error())
-		return nil, fmt.Errorf("grpc error GetSavedIdeasIds: " + err.Error())
+		slog.Error("grpc GetSavedIdeasIds error: " + err.Error())
+		return nil, fmt.Errorf("grpc GetSavedIdeasIds error: " + err.Error())
 	}
+
 	return &profilesv1.GetSavedIdeasIdsResponse{
 		IdeasIds: resp,
 	}, nil
 }
 
 func (s *serverAPI) MoveIdeasToBoard(ctx context.Context, req *profilesv1.MoveIdeaToBoardRequest) (*emptypb.Empty, error) {
-
 	slog.Info("started to MoveIdeasToBoard grpc")
+
 	_, err := s.profiles.MoveIdeasToBoard(ctx, req.UserId, req.OldBoardId, req.NewBoardId)
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error MoveIdeasToBoard")
+		slog.Error("grpc MoveIdeasToBoard error: " + err.Error())
+		return nil, fmt.Errorf("grpc MoveIdeasToBoard error: " + err.Error())
 	}
+
 	return nil, nil
 }
 func (s *serverAPI) AddBoardToProfile(ctx context.Context, req *profilesv1.AddBoardToProfileRequest) (*emptypb.Empty, error) {
-
 	slog.Info("started to AddBoardToProfile grpc")
+
 	_, err := s.profiles.AddBoardToProfile(ctx, req.UserId, req.BoardId)
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error AddBoardToProfile")
+		slog.Error("grpc AddBoardToProfile error: " + err.Error())
+		return nil, fmt.Errorf("grpc AddBoardToProfile error: " + err.Error())
 	}
+
 	return nil, nil
 }
 
 func (s *serverAPI) RemoveBoardFromProfile(ctx context.Context, req *profilesv1.RemoveBoardFromProfileRequest) (*emptypb.Empty, error) {
-
 	slog.Info("started to RemoveBoardFromProfile grpc")
+
 	_, err := s.profiles.RemoveBoardFromProfile(ctx, req.UserId, req.BoardId)
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error RemoveBoardFromProfile")
+		slog.Error("grpc RemoveBoardFromProfile error: " + err.Error())
+		return nil, fmt.Errorf("grpc RemoveBoardFromProfile error: " + err.Error())
 	}
+
 	return nil, nil
 }
