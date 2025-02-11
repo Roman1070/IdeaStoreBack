@@ -24,83 +24,70 @@ func New(log *slog.Logger, boardsApi boards.Boards) *Boards {
 	}
 }
 func (b *Boards) CreateBoard(ctx context.Context, name string, userId int64) (int64, error) {
-	const op = "service.boards.Create"
-
-	log := b.log.With(
-		slog.String("op", op),
-		slog.String("board name", name),
-	)
-	log.Info("Creating a board...")
+	slog.Info("service started to CreateBoard")
 
 	id, err := b.Api.CreateBoard(ctx, name, userId)
 	if err != nil {
-		return -1, fmt.Errorf("%s: %v", op, "Internal error creating board")
+		slog.Error("service CreateBoard error: " + err.Error())
+		return -1, fmt.Errorf("service CreateBoard error: " + err.Error())
 	}
+
 	return id, nil
 }
 
 func (b *Boards) GetBoard(ctx context.Context, id int64) (models.Board, error) {
-	const op = "service.boards.Get"
-
-	log := b.log.With(
-		slog.String("op", op),
-		slog.Int64("board id", id),
-	)
-	log.Info("Getting a board...")
+	slog.Info("service started to GetBoard")
 
 	board, err := b.Api.GetBoard(ctx, id)
 	if err != nil {
-		return models.Board{}, fmt.Errorf("%s: %v", op, "Internal error getting board")
+		slog.Error("service GetBoard error: " + err.Error())
+		return models.Board{}, fmt.Errorf("service GetBoard error: " + err.Error())
 	}
+
 	return board, nil
 }
 
 func (b *Boards) GetCurrentUsersBoards(ctx context.Context, userId int64) ([]*boardsv1.BoardData, error) {
-
-	const op = "service.boards.GetAll"
-
-	slog.Info("Getting all boards...")
+	slog.Info("service started to GetCurrentUsersBoards")
 
 	board, err := b.Api.GetCurrentUsersBoards(ctx, userId)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", op, "Internal error getting board")
+		slog.Error("service GetCurrentUsersBoards error: " + err.Error())
+		return nil, fmt.Errorf("service GetCurrentUsersBoards error: " + err.Error())
 	}
+
 	return board, nil
 }
 
 func (b *Boards) SetIdeaSaved(ctx context.Context, boardId, ideaId int64, saved bool) (*emptypb.Empty, error) {
-
-	const op = "service.boards.GetAll"
-
-	slog.Info("started SetIdeaSaved...")
-
+	slog.Info("service started SetIdeaSaved")
 	_, err := b.Api.SetIdeaSaved(ctx, boardId, ideaId, saved)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", op, "Internal error SetIdeaSaved")
+		slog.Error("service SetIdeaSaved error: " + err.Error())
+		return nil, fmt.Errorf("service SetIdeaSaved error: " + err.Error())
 	}
+
 	return &emptypb.Empty{}, nil
 }
 
 func (b *Boards) GetIdeasInBoard(ctx context.Context, boardId int64) ([]*boardsv1.IdeaData, error) {
-
-	const op = "service.boards.GetIdeasInBoard"
-
-	slog.Info("started GetIdeasInBoard...")
+	slog.Info("service started GetIdeasInBoard")
 
 	ideas, err := b.Api.GetIdeasInBoard(ctx, boardId)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", op, "Internal error SetIdeaSaved")
+		slog.Error("service GetIdeasInBoard error: " + err.Error())
+		return nil, fmt.Errorf("service GetIdeasInBoard error: " + err.Error())
 	}
+
 	return ideas, nil
 }
 func (b *Boards) DeleteBoard(ctx context.Context, userId, boardId int64) (*emptypb.Empty, error) {
-	const op = "service.boards.DeleteBoard"
-
-	slog.Info("started DeleteBoard...")
+	slog.Info("service started DeleteBoard")
 
 	_, err := b.Api.DeleteBoard(ctx, userId, boardId)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", op, "Internal error DeleteBoard")
+		slog.Error("service DeleteBoard error: " + err.Error())
+		return nil, fmt.Errorf("service DeleteBoard error: " + err.Error())
 	}
 	return nil, nil
 }

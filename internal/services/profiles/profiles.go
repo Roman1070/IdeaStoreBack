@@ -30,8 +30,9 @@ func (p *Profiles) CreateProfile(ctx context.Context, id int64, name, email stri
 
 	if err != nil {
 		slog.Error("service CreateProfile error: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("service CreateProfile error: " + err.Error())
 	}
+
 	return &emptypb.Empty{}, nil
 }
 func (p *Profiles) GetProfile(ctx context.Context, id int64) (models.Profile, error) {
@@ -41,7 +42,7 @@ func (p *Profiles) GetProfile(ctx context.Context, id int64) (models.Profile, er
 
 	if err != nil {
 		slog.Error("service GetProfile error: " + err.Error())
-		return models.Profile{}, err
+		return models.Profile{}, fmt.Errorf("service GetProfile error: " + err.Error())
 	}
 
 	return models.Profile{
@@ -61,9 +62,10 @@ func (p *Profiles) GetProfileLight(ctx context.Context, id int64) (models.Profil
 	resp, err := p.Api.GetProfileLight(ctx, id)
 
 	if err != nil {
-		slog.Error("service GetProfile error: " + err.Error())
-		return models.ProfileLight{}, err
+		slog.Error("service GetProfileLight error: " + err.Error())
+		return models.ProfileLight{}, fmt.Errorf("service GetProfileLight error: " + err.Error())
 	}
+
 	return models.ProfileLight{
 		ID:          resp.ID,
 		Name:        resp.Name,
@@ -76,19 +78,22 @@ func (p *Profiles) GetProfilesFromSearch(ctx context.Context, input string) ([]*
 	resp, err := p.Api.GetProfilesFromSearch(ctx, input)
 
 	if err != nil {
-		slog.Error("service GetProfile error: " + err.Error())
-		return nil, err
+		slog.Error("service GetProfilesFromSearch error: " + err.Error())
+		return nil, fmt.Errorf("service GetProfilesFromSearch error: " + err.Error())
 	}
 
 	return resp, nil
 }
 func (p *Profiles) UpdateProfile(ctx context.Context, userId int64, name, avatarImage, description, link string) (*emptypb.Empty, error) {
 	slog.Info("service start UpdateProfile")
+
 	_, err := p.Api.UpdateProfile(ctx, userId, name, avatarImage, description, link)
+
 	if err != nil {
 		slog.Error("service UpdateProfile error: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("service UpdateProfile error: " + err.Error())
 	}
+
 	return nil, nil
 }
 func (p *Profiles) ToggleLikeIdea(ctx context.Context, userId, ideaId int64) (bool, int64, error) {
@@ -98,8 +103,9 @@ func (p *Profiles) ToggleLikeIdea(ctx context.Context, userId, ideaId int64) (bo
 
 	if err != nil {
 		slog.Error("service ToggleLikeIdea error: " + err.Error())
-		return false, -1, err
+		return false, -1, fmt.Errorf("service ToggleLikeIdea error: " + err.Error())
 	}
+
 	return nowLiked, likesCount, nil
 }
 func (p *Profiles) IsIdeaLiked(ctx context.Context, userId, ideaId int64) (bool, error) {
@@ -111,6 +117,7 @@ func (p *Profiles) IsIdeaLiked(ctx context.Context, userId, ideaId int64) (bool,
 		slog.Error("service IsIdeaLiked error: " + err.Error())
 		return false, fmt.Errorf("service IsIdeaLiked error: %v", err.Error())
 	}
+
 	return resp, nil
 }
 func (p *Profiles) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId int64) (bool, error) {
@@ -120,8 +127,9 @@ func (p *Profiles) ToggleSaveIdea(ctx context.Context, userId, ideaId, boardId i
 
 	if err != nil {
 		slog.Error("service ToggleSaveIdea error: " + err.Error())
-		return false, err
+		return false, fmt.Errorf("service ToggleSaveIdea error: %v", err.Error())
 	}
+
 	return resp, nil
 }
 
@@ -132,8 +140,9 @@ func (p *Profiles) IsIdeaSaved(ctx context.Context, userId, ideaId int64) (bool,
 
 	if err != nil {
 		slog.Error("service IsIdeaSaved error: " + err.Error())
-		return false, -1, err
+		return false, -1, fmt.Errorf("service IsIdeaSaved error: " + err.Error())
 	}
+
 	return saved, boardId, nil
 }
 
@@ -144,8 +153,9 @@ func (p *Profiles) GetSavedIdeas(ctx context.Context, userId int64, limit, offse
 
 	if err != nil {
 		slog.Error("service GetSavedIdeas error: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("service GetSavedIdeas error: " + err.Error())
 	}
+
 	return resp, nil
 }
 
@@ -155,9 +165,10 @@ func (p *Profiles) GetSavedIdeasIds(ctx context.Context, userId int64) ([]int64,
 	resp, err := p.Api.GetSavedIdeasIds(ctx, userId)
 
 	if err != nil {
-		slog.Error("service GetSavedIdeas error: " + err.Error())
-		return nil, err
+		slog.Error("service GetSavedIdeasIds error: " + err.Error())
+		return nil, fmt.Errorf("service GetSavedIdeasIds error: " + err.Error())
 	}
+
 	return resp, nil
 }
 
@@ -168,8 +179,9 @@ func (p *Profiles) MoveIdeasToBoard(ctx context.Context, userId, oldBoardId, new
 
 	if err != nil {
 		slog.Error("service MoveIdeasToBoard error: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("service MoveIdeasToBoard error: " + err.Error())
 	}
+
 	return resp, nil
 }
 
@@ -180,8 +192,9 @@ func (p *Profiles) AddBoardToProfile(ctx context.Context, userId, boardId int64)
 
 	if err != nil {
 		slog.Error("service AddBoardToProfile error: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("service AddBoardToProfile error: " + err.Error())
 	}
+
 	return resp, nil
 }
 
@@ -192,7 +205,8 @@ func (p *Profiles) RemoveBoardFromProfile(ctx context.Context, userId, boardId i
 
 	if err != nil {
 		slog.Error("service RemoveBoardFromProfile error: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("service RemoveBoardFromProfile error: " + err.Error())
 	}
+
 	return resp, nil
 }

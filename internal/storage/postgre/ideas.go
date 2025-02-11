@@ -48,7 +48,7 @@ func (s *Storage) GetIdea(ctx context.Context, id int64) (models.Idea, error) {
 	}
 	return idea, nil
 }
-func (s *Storage) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error) {
+func (s *Storage) DeleteIdea(ctx context.Context, id int64) (*emptypb.Empty, error) {
 	slog.Info("storage started to DeleteIdea")
 
 	const query = `
@@ -59,10 +59,10 @@ func (s *Storage) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, erro
 	_, err := s.db.Exec(ctx, query, id)
 	if err != nil {
 		slog.Error("storage DeleteIdea error: " + err.Error())
-		return emptypb.Empty{}, fmt.Errorf("storage DeleteIdea error: %v", err.Error())
+		return nil, fmt.Errorf("storage DeleteIdea error: %v", err.Error())
 	}
 
-	return emptypb.Empty{}, nil
+	return nil, nil
 }
 func (s *Storage) ChangeLikesCount(ctx context.Context, ideaId int64, increase bool) (int64, error) {
 	slog.Info("storage started to ChangeLikesCount")

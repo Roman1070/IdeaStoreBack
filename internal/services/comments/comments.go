@@ -24,19 +24,22 @@ func New(log *slog.Logger, commentsApi comments.Comments) *Comments {
 }
 
 func (c *Comments) CreateComment(ctx context.Context, ideaId, userId int64, text, creationDate string) (*emptypb.Empty, error) {
-	slog.Info("server started CreateComment")
+	slog.Info("service started CreateComment")
+
 	_, err := c.Api.CreateComment(ctx, ideaId, userId, text, creationDate)
 	if err != nil {
-		return nil, fmt.Errorf("server error CreateComment: %v", err.Error())
+		c.log.Error("service error CreateComment: " + err.Error())
+		return nil, fmt.Errorf("serivce error CreateComment: %v", err.Error())
 	}
 	return &emptypb.Empty{}, nil
 }
 func (c *Comments) GetComments(ctx context.Context, ideaId int64) ([]*models.Comment, error) {
-
 	slog.Info("server started GetComments")
+
 	resp, err := c.Api.GetComments(ctx, ideaId)
 	if err != nil {
-		return nil, fmt.Errorf("server error CreateComment: %v", err.Error())
+		c.log.Error("service error GetComments: " + err.Error())
+		return nil, fmt.Errorf("serivce error GetComments: %v", err.Error())
 	}
 
 	return resp, nil

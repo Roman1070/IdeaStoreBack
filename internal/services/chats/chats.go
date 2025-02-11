@@ -56,6 +56,7 @@ func (c *Chats) GetMessages(ctx context.Context, senderId, recieverId int64) ([]
 
 func (c *Chats) CreateChat(ctx context.Context, user1, user2 int64) (*emptypb.Empty, error) {
 	c.log.Info("service started CreateChat")
+
 	_, err := c.Api.CreateChat(ctx, user1, user2)
 
 	if err != nil {
@@ -81,6 +82,7 @@ func (c *Chats) GetUsersChats(ctx context.Context, userId int64) ([]*models.Chat
 
 func (c *Chats) DeleteChat(ctx context.Context, chatId int64) (*emptypb.Empty, error) {
 	c.log.Info("service started DeleteChat")
+
 	_, err := c.Api.DeleteChat(ctx, chatId)
 
 	if err != nil {

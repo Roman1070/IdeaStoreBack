@@ -22,7 +22,7 @@ type Ideas interface {
 		ctx context.Context,
 		id int64,
 	) (idea models.Idea, err error)
-	DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error)
+	DeleteIdea(ctx context.Context, id int64) (*emptypb.Empty, error)
 	GetAllIdeas(ctx context.Context, userId int64, limit, offset int32) ([]*models.Idea, error)
 	GetIdeas(ctx context.Context, ids []int64, limit, offset int32) ([]*models.Idea, error)
 	ChangeLikesCount(ctx context.Context, ideaId int64, increase bool) (int64, error)

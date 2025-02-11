@@ -23,76 +23,59 @@ func New(log *slog.Logger, ideasApi ideas.Ideas) *Ideas {
 	}
 }
 func (i *Ideas) CreateIdea(ctx context.Context, idea models.Idea) (int64, error) {
-	const op = "service.ideas.Create"
-
-	log := i.log.With(
-		slog.String("op", op),
-		slog.String("idea name", idea.Name),
-	)
-	log.Info("Creating an idea...")
+	slog.Info("service started to CreateIdea")
 
 	id, err := i.Api.CreateIdea(ctx, idea)
+
 	if err != nil {
-		return -1, fmt.Errorf("%s: %v", op, "Internal error")
+		slog.Error("service CreateIdea error: " + err.Error())
+		return -1, fmt.Errorf("service CreateIdea error: " + err.Error())
 	}
+
 	return id, nil
 }
 func (i *Ideas) GetIdea(ctx context.Context, id int64) (models.Idea, error) {
-	const op = "service.ideas.Create"
-
-	log := i.log.With(
-		slog.String("op", op),
-		slog.Int64("idea id", id),
-	)
-	log.Info("Getting an idea...")
+	slog.Info("service started to GetIdea")
 
 	idea, err := i.Api.GetIdea(ctx, id)
 
 	if err != nil {
-		return models.Idea{}, fmt.Errorf("%s: %v", op, "Internal error")
+		slog.Error("service GetIdea error: " + err.Error())
+		return models.Idea{}, fmt.Errorf("service GetIdea error: " + err.Error())
 	}
+
 	return idea, nil
 }
 func (i *Ideas) ChangeLikesCount(ctx context.Context, ideaId int64, increase bool) (int64, error) {
-	slog.Info("ideas service started to ChangeLikesCount")
+	slog.Info("service started to ChangeLikesCount")
 
 	likesCount, err := i.Api.ChangeLikesCount(ctx, ideaId, increase)
 	if err != nil {
-		slog.Error("ideas service ChangeLikesCount error:" + err.Error())
-		return -1, fmt.Errorf("ideas service ChangeLikesCount error: %v", err.Error())
+		slog.Error("service GetIdeas error: " + err.Error())
+		return -1, fmt.Errorf("service GetIdeas error: " + err.Error())
 	}
+
 	return likesCount, nil
 }
-func (i *Ideas) DeleteIdea(ctx context.Context, id int64) (emptypb.Empty, error) {
-	const op = "service.ideas.Delete"
-
-	log := i.log.With(
-		slog.String("op", op),
-		slog.Int64("idea id", id),
-	)
-	log.Info("Deleting an idea...")
-
+func (i *Ideas) DeleteIdea(ctx context.Context, id int64) (*emptypb.Empty, error) {
+	slog.Info("service started to DeleteIdea")
 	_, err := i.Api.DeleteIdea(ctx, id)
 	if err != nil {
-		return emptypb.Empty{}, fmt.Errorf("%s: %v", op, "Internal error")
+		slog.Error("service GetIdeas error: " + err.Error())
+		return nil, fmt.Errorf("service GetIdeas error: " + err.Error())
 	}
-	return emptypb.Empty{}, nil
+
+	return nil, nil
 }
 
 func (i *Ideas) GetAllIdeas(ctx context.Context, userId int64, limit, offset int32) ([]*models.Idea, error) {
-
-	const op = "service.ideas.GetAllIdeas"
-
-	log := i.log.With(
-		slog.String("op", op),
-	)
-	log.Info("Getting all ideas...")
+	slog.Info("service started to GetAllIdeas")
 
 	ideas, err := i.Api.GetAllIdeas(ctx, userId, limit, offset)
 
 	if err != nil {
-		log.Error(err.Error())
-		return nil, fmt.Errorf("%s: %v", op, "Internal error")
+		slog.Error("service GetIdeas error: " + err.Error())
+		return nil, fmt.Errorf("service GetIdeas error: " + err.Error())
 	}
 
 	return ideas, nil

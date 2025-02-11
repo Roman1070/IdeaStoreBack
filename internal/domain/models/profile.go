@@ -1,7 +1,5 @@
 package models
 
-import profilesv1 "idea-store-auth/gen/go/profiles"
-
 type Profile struct {
 	ID          int64
 	Email       string
@@ -10,10 +8,14 @@ type Profile struct {
 	Description string
 	Link        string
 	Boards      []int64
-	SavedIdeas  []*profilesv1.IdeaBoardPair
+	SavedIdeas  []*IdeaBoardPair
 }
 type ProfileLight struct {
 	ID          int64
 	Name        string
 	AvatarImage string
+}
+type IdeaBoardPair struct {
+	IdeaId  int64
+	BoardId int64
 }

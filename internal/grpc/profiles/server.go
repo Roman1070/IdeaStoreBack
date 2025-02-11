@@ -70,6 +70,13 @@ func (s *serverAPI) GetProfile(ctx context.Context, req *profilesv1.GetProfileRe
 		slog.Error(err.Error())
 		return nil, fmt.Errorf("grpc get profile error: " + err.Error())
 	}
+	var savedIdeas []*profilesv1.IdeaBoardPair
+	for _, pair := range resp.SavedIdeas {
+		savedIdeas = append(savedIdeas, &profilesv1.IdeaBoardPair{
+			IdeaId:  pair.IdeaId,
+			BoardId: pair.BoardId,
+		})
+	}
 	return &profilesv1.GetProfileResponse{
 		Data: &profilesv1.ProfileData{
 			Id:          resp.ID,
@@ -79,7 +86,7 @@ func (s *serverAPI) GetProfile(ctx context.Context, req *profilesv1.GetProfileRe
 			Description: resp.Description,
 			Link:        resp.Link,
 			Boards:      resp.Boards,
-			SavedIdeas:  resp.SavedIdeas,
+			SavedIdeas:  savedIdeas,
 		},
 	}, nil
 }

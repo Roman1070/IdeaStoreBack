@@ -73,16 +73,17 @@ func MustLoadPath(configPath string) *Config {
 // Priority: flag > env > default.
 // Default value is empty string.
 func fetchConfigPath() (string, error) {
-
 	const configFile = ".env"
 
 	err := godotenv.Load(configFile)
 	if err != nil {
 		return "", err
 	}
+
 	cfgPath, exists := os.LookupEnv("CONFIG_PATH")
 	if !exists {
 		return "", fmt.Errorf("config wasn't found")
 	}
+
 	return cfgPath, nil
 }

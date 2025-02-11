@@ -595,10 +595,10 @@ func parseIdeaBoardPair(s string) (ideaBoardPair, error) {
 		boardId: boardId,
 	}, nil
 }
-func toGRPCFormat(slice []ideaBoardPair) []*profilesv1.IdeaBoardPair {
-	var result []*profilesv1.IdeaBoardPair
+func toGRPCFormat(slice []ideaBoardPair) []*models.IdeaBoardPair {
+	var result []*models.IdeaBoardPair
 	for _, pair := range slice {
-		result = append(result, &profilesv1.IdeaBoardPair{
+		result = append(result, &models.IdeaBoardPair{
 			IdeaId:  pair.ideaId,
 			BoardId: pair.boardId,
 		})

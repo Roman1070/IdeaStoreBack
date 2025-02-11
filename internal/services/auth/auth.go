@@ -55,36 +55,30 @@ func (a *Auth) Login(
 	email string,
 	password string,
 ) (string, error) {
-	const op = "auth.Login"
-	log := a.log.With(
-		slog.String("op", op),
-		slog.String("email", email),
-	)
-	log.Info("Trying to login user")
-
 	user, err := a.userProvider.User(ctx, email)
 	if err != nil {
 		if errors.Is(err, storage.ErrAppNotFound) {
 			a.log.Warn("user not found", sl.Err(err))
 
-			return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+			return "", fmt.Errorf("servic Login error: " + ErrInvalidCredentials.Error())
 		}
+
 		a.log.Error("failed to get user", sl.Err(err))
-		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+		return "", fmt.Errorf("servic Login error: " + ErrInvalidCredentials.Error())
 	}
+
 	if err := bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(password)); err != nil {
 		a.log.Info("invalid credentials", sl.Err(err))
 
-		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+		return "", fmt.Errorf("servic Login error: " + ErrInvalidCredentials.Error())
 	}
 
-	log.Info("user logged in successfully")
 	token, err := jwt.NewToken(user, a.tokenTTL)
 	if err != nil {
 		a.log.Error("Failed to generate token", sl.Err(err))
-
-		return "", fmt.Errorf("%s: %w", op, err)
+		return "", fmt.Errorf("servic Login error: " + err.Error())
 	}
+
 	return token, nil
 }
 
@@ -93,27 +87,22 @@ func (a *Auth) RegisterNewUser(
 	email string,
 	password string,
 ) (int64, error) {
-	const op = "auth.RegisterNewUser"
-	log := a.log.With(
-		slog.String("op", op),
-		slog.String("email", email),
-	)
-	log.Info("Registering user")
+	slog.Info("Registering user")
 	passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 
-		log.Error("Failed to generate password hash", sl.Err(err))
-		return -1, fmt.Errorf("%s: %w", op, err)
+		slog.Error("Failed to generate password hash", sl.Err(err))
+		return -1, fmt.Errorf("servic RegisterNewUser error: " + err.Error())
 	}
 	id, err := a.userSaver.SaveUser(ctx, email, passHash)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserExists) {
-			log.Warn("User already exists")
+			slog.Warn("User already exists")
 
-			return -1, fmt.Errorf("%s: %w", op, ErrUserExists)
+			return -1, fmt.Errorf("servic RegisterNewUser error: " + storage.ErrUserExists.Error())
 		}
-		log.Error("Failed to save user", sl.Err(err))
-		return -1, fmt.Errorf("%s: %w", op, err)
+		slog.Error("Failed to save user", sl.Err(err))
+		return -1, fmt.Errorf("servic Login error: " + err.Error())
 	}
 
 	return id, nil
