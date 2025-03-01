@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -21,11 +22,10 @@ import (
 type ChatsClient struct {
 	api chatsv1.ChatsClient
 	//producer *kafka.Producer
-	clients map[*websocket.Conn]int64
+	clients sync.Map
 }
 
 func NewChatsClient(addr string, timeout time.Duration, retriesCount int) (*ChatsClient, error) {
-	clients := make(map[*websocket.Conn]int64) // Track active clients
 	retryOptions := []grpcretry.CallOption{
 		grpcretry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),
 		grpcretry.WithMax(uint(retriesCount)),
@@ -48,7 +48,7 @@ func NewChatsClient(addr string, timeout time.Duration, retriesCount int) (*Chat
 	return &ChatsClient{
 		api: chatsv1.NewChatsClient(cc),
 		//	producer: producer,
-		clients: clients,
+		clients: sync.Map{},
 	}, nil
 }
 
@@ -65,7 +65,7 @@ func (c *ChatsClient) HandleChatWebSocket(w http.ResponseWriter, r *http.Request
 	}
 
 	defer func() {
-		delete(c.clients, ws)
+		c.clients.Delete(ws)
 		ws.Close()
 	}()
 	userId, err := GetUserIdByRequestWithCookie(r)
@@ -74,7 +74,7 @@ func (c *ChatsClient) HandleChatWebSocket(w http.ResponseWriter, r *http.Request
 		utils.WriteError(w, "Internal error")
 		return
 	}
-	c.clients[ws] = userId
+	c.clients.Store(ws, userId)
 	for {
 		// Read message from browser
 		_, msg, err := ws.ReadMessage()
@@ -97,15 +97,17 @@ func (c *ChatsClient) HandleChatWebSocket(w http.ResponseWriter, r *http.Request
 			return
 		}
 
-		for client, id := range c.clients {
+		c.clients.Range(func(client, id interface{}) bool {
 			if id == reciever.ReceiverId {
-				if err := client.WriteMessage(websocket.TextMessage, msg); err != nil {
-					fmt.Println("broadcast error:", err)
-					client.Close()
-					delete(c.clients, client)
+				if err := client.(*websocket.Conn).WriteMessage(websocket.TextMessage, msg); err != nil {
+					fmt.Println("HandleChatWebSocket WriteMessage error:", err)
+					client.(*websocket.Conn).Close()
+					c.clients.Delete(client)
+					return false
 				}
 			}
-		}
+			return true
+		})
 	}
 }
 
